@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Monitor de Cámaras</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+  padding: 40px;
+}
+
+textarea {
+  width: 80%;
+  height: 150px;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+button {
+  margin: 10px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn1 { background: #22c55e; }
+.btn2 { background: #3b82f6; }
+
+#progress {
+  width: 80%;
+  height: 20px;
+  background: #1e293b;
+  margin: 20px auto;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#bar {
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>📡 Monitor de Cámaras</h1>
+
+<textarea id="texto" placeholder="Pegá las cámaras acá..."></textarea>
+
+<br>
+
+<button class="btn1" onclick="analizarTexto()">Analizar Texto</button>
+<button class="btn2" onclick="analizarTodas()">Escanear Todas</button>
+
+<div id="progress">
+  <div id="bar"></div>
+</div>
+
+<p id="contador">0 / 0</p>
+
+<div id="stats">
+  <p>🟢 Online: <span id="online">0</span></p>
+  <p>🔴 Sin respuesta: <span id="sinRespuesta">0</span></p>
+  <p>⚪ IP vacía: <span id="ipVacia">0</span></p>
+  <p>❌ No encontrada: <span id="noEncontrada">0</span></p>
+</div>
+
+<script>
+let intervalo;
+
+function iniciarProgreso() {
+  clearInterval(intervalo);
+
+  intervalo = setInterval(async () => {
+    try {
+      const res = await fetch("/progreso");
+      const data = await res.json();
+
+      const porcentaje = (data.procesadas / data.total) * 100 || 0;
+
+      document.getElementById("bar").style.width = porcentaje + "%";
+      document.getElementById("contador").innerText =
+        `${data.procesadas} / ${data.total}`;
+
+      // CONTADORES
+      document.getElementById("online").innerText = data.online || 0;
+      document.getElementById("sinRespuesta").innerText = data.sinRespuesta || 0;
+      document.getElementById("ipVacia").innerText = data.ipVacia || 0;
+      document.getElementById("noEncontrada").innerText = data.noEncontrada || 0;
+
+    } catch (err) {
+      console.error("Error progreso:", err);
+    }
+  }, 500);
+}
+
+function detenerProgreso() {
+  clearInterval(intervalo);
+  document.getElementById("bar").style.width = "100%";
+}
+
+// =============================
+
+async function analizarTexto() {
+  iniciarProgreso();
+
+  const texto = document.getElementById("texto").value;
+
+  const res = await fetch("/analizar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ texto }),
+  });
+
+  const blob = await res.blob();
+  descargar(blob);
+
+  detenerProgreso();
+}
+
+async function analizarTodas() {
+  iniciarProgreso();
+
+  const res = await fetch("/analizar-todas");
+  const blob = await res.blob();
+
+  descargar(blob);
+
+  detenerProgreso();
+}
+
+function descargar(blob) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "resultado.xlsx";
+  a.click();
+}
+</script>
+
+</body>
+</html>

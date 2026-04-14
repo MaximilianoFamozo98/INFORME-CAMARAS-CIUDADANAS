@@ -2,12 +2,28 @@ const XLSX = require("xlsx");
 const ExcelJS = require("exceljs");
 const ping = require("ping");
 const path = require("path");
-const pLimit = require("p-limit").default;
+const pLimit = require("p-limit");
+const fs = require("fs");
+const axios = require("axios");
+
+const outputDir = path.join(process.cwd(), "informes");
+
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir);
+}
 
 const archivoExcel = path.join(
-  __dirname,
-  "12-02-2026) INFORME CAMARAS APAGADAS FEBRERO.xlsx"
+  process.cwd(),
+  "data",
+  "camaras.xlsx"
 );
+
+// =============================
+// CONFIG
+// =============================
+const INTENTOS = 4;
+const TIMEOUT = 1.5;
+const CONCURRENCIA = 5;
 
 // =============================
 // NORMALIZAR
@@ -53,11 +69,90 @@ function parsearPuntoSeguro(nombre) {
 }
 
 // =============================
+// ORDENAR RESULTADOS
+// =============================
+function ordenarResultados(data) {
+  return data.sort((a, b) => {
+    const estadoPrioridad = (estado) => {
+      if (estado === "SIN RESPUESTA" || estado === "ERROR") return 1;
+      if (estado === "INESTABLE") return 2;
+      if (estado.includes("ONLINE")) return 3;
+      return 4;
+    };
+
+    const proveedorPrioridad = (prov) => {
+      if (!prov) return 3;
+
+      const p = prov.toUpperCase();
+
+      if (p.includes("BONOMO")) return 1;
+      if (p.includes("COSEIDI")) return 2;
+
+      return 3;
+    };
+
+    const estadoA = estadoPrioridad(a.ESTADO);
+    const estadoB = estadoPrioridad(b.ESTADO);
+
+    if (estadoA !== estadoB) return estadoA - estadoB;
+
+    const provA = proveedorPrioridad(a.PROVEEDOR);
+    const provB = proveedorPrioridad(b.PROVEEDOR);
+
+    return provA - provB;
+  });
+}
+
+// =============================
+// PING INTELIGENTE
+// =============================
+async function hacerPing(ip) {
+  let exitos = 0;
+  let latencias = [];
+
+  for (let i = 0; i < INTENTOS; i++) {
+    const res = await ping.promise.probe(ip, { timeout: TIMEOUT });
+
+    if (res.alive) {
+      exitos++;
+
+      if (res.time !== "unknown") {
+        latencias.push(Number(res.time));
+      }
+
+      // si ya confirmó estabilidad → corta antes
+      if (exitos >= 3) break;
+    }
+  }
+
+  const latenciaPromedio =
+    latencias.length > 0
+      ? Math.round(latencias.reduce((a, b) => a + b, 0) / latencias.length)
+      : null;
+
+  return { exitos, latenciaPromedio };
+}
+
+// =============================
+// CHECK HTTP
+// =============================
+async function checkHTTP(ip) {
+  try {
+    await axios.get(`http://${ip}`, { timeout: 1500 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// =============================
 // PROCESAR CAMARA
 // =============================
 async function procesarCamara(fila, index, progreso) {
   let ip = fila["[IP]"] ? fila["[IP]"].toString() : "";
   ip = ip.replace(/[, ]/g, ".").trim();
+
+  const conexion = (fila["[Tipo de Conexion]"] || "-").toUpperCase();
 
   if (!ip) {
     progreso.ipVacia++;
@@ -65,43 +160,68 @@ async function procesarCamara(fila, index, progreso) {
       DENOMINACION: fila["[Denominacion]"],
       PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
       UBICACION: fila["[Ubicacion]"] || "-",
+      CONEXION: conexion,
       IP: "",
+      LATENCIA: "-",
       ESTADO: "IP VACIA",
       filaIndex: index + 7,
     };
   }
 
   try {
-    const res = await ping.promise.probe(ip, { timeout: 4 });
+    const { exitos, latenciaPromedio } = await hacerPing(ip);
 
-    if (res.alive) {
-      progreso.online++;
-      return {
-        DENOMINACION: fila["[Denominacion]"],
-        PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
-        UBICACION: fila["[Ubicacion]"] || "-",
-        IP: ip,
-        ESTADO: "ONLINE",
-        filaIndex: index + 7,
-      };
-    } else {
+    let estado = "";
+
+    if (exitos === 0) {
+      await new Promise(r => setTimeout(r, 1000));
+
+      const segundoIntento = await hacerPing(ip);
+
+      if (segundoIntento.exitos > 0) {
+        estado = "INESTABLE";
+        progreso.sinRespuesta++;
+      } else {
+        const httpOk = await checkHTTP(ip);
+
+        if (httpOk) {
+          estado = "ONLINE (HTTP)";
+          progreso.online++;
+        } else {
+          estado = "SIN RESPUESTA";
+          progreso.sinRespuesta++;
+        }
+      }
+
+    } else if (exitos <= 2) {
+      estado = "INESTABLE";
       progreso.sinRespuesta++;
-      return {
-        DENOMINACION: fila["[Denominacion]"],
-        PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
-        UBICACION: fila["[Ubicacion]"] || "-",
-        IP: ip,
-        ESTADO: "SIN RESPUESTA",
-        filaIndex: index + 7,
-      };
+
+    } else {
+      estado = "ONLINE";
+      progreso.online++;
     }
+
+    return {
+      DENOMINACION: fila["[Denominacion]"],
+      PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
+      UBICACION: fila["[Ubicacion]"] || "-",
+      CONEXION: conexion,
+      IP: ip,
+      LATENCIA: latenciaPromedio ? `${latenciaPromedio} ms` : "-",
+      ESTADO: estado,
+      filaIndex: index + 7,
+    };
+
   } catch {
     progreso.sinRespuesta++;
     return {
       DENOMINACION: fila["[Denominacion]"],
       PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
       UBICACION: fila["[Ubicacion]"] || "-",
+      CONEXION: conexion,
       IP: ip,
+      LATENCIA: "-",
       ESTADO: "ERROR",
       filaIndex: index + 7,
     };
@@ -111,21 +231,16 @@ async function procesarCamara(fila, index, progreso) {
 // =============================
 // FILA ROJA
 // =============================
-function esFilaRoja(filaExcel) {
-  let esRoja = false;
+function esFilaRoja(row) {
+  const cell = row.getCell(1); // 👈 SOLO columna 1
 
-  filaExcel.eachCell({ includeEmpty: true }, (cell) => {
-    if (cell.fill?.fgColor?.argb) {
-      const color = cell.fill.fgColor.argb.toUpperCase();
-      const r = parseInt(color.substring(2, 4), 16);
-      const g = parseInt(color.substring(4, 6), 16);
-      const b = parseInt(color.substring(6, 8), 16);
+  if (!cell.fill) return false;
 
-      if (r > 200 && g < 100 && b < 100) esRoja = true;
-    }
-  });
+  const color = cell.fill?.fgColor?.argb;
 
-  return esRoja;
+  console.log("Fila:", row.number, "Color:", color);
+
+  return color === 'FFFF0000';
 }
 
 // =============================
@@ -139,7 +254,9 @@ async function generarExcel(resultado, nombre) {
     { header: "DENOMINACION", key: "DENOMINACION", width: 40 },
     { header: "PROVEEDOR", key: "PROVEEDOR", width: 20 },
     { header: "UBICACION", key: "UBICACION", width: 40 },
+    { header: "CONEXION", key: "CONEXION", width: 20 },
     { header: "IP", key: "IP", width: 18 },
+    { header: "LATENCIA", key: "LATENCIA", width: 15 },
     { header: "ESTADO", key: "ESTADO", width: 20 },
   ];
 
@@ -164,7 +281,7 @@ async function generarExcel(resultado, nombre) {
     }
   });
 
-  const ruta = path.join(__dirname, nombre);
+  const ruta = path.join(outputDir, nombre);
   await wb.xlsx.writeFile(ruta);
   return ruta;
 }
@@ -177,7 +294,7 @@ async function analizarTodasLasCamaras(progreso) {
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
   const data = XLSX.utils.sheet_to_json(sheet, { range: 6 });
 
-  const limit = pLimit(2);
+  const limit = pLimit(CONCURRENCIA);
 
   progreso.total = data.length;
   progreso.procesadas = 0;
@@ -195,7 +312,9 @@ async function analizarTodasLasCamaras(progreso) {
   );
 
   const resultado = await Promise.all(tareas);
-  return generarExcel(resultado, "todas_las_camaras.xlsx");
+  const ordenado = ordenarResultados(resultado);
+
+  return generarExcel(ordenado, "todas_las_camaras.xlsx");
 }
 
 // =============================
@@ -206,7 +325,7 @@ async function analizarCamaras(lista, progreso) {
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
   const data = XLSX.utils.sheet_to_json(sheet, { range: 6 });
 
-  const limit = pLimit(2);
+  const limit = pLimit(CONCURRENCIA);
 
   progreso.total = lista.length;
   progreso.procesadas = 0;
@@ -243,7 +362,9 @@ async function analizarCamaras(lista, progreso) {
         DENOMINACION: nombre,
         PROVEEDOR: "-",
         UBICACION: "-",
+        CONEXION: "-",
         IP: "",
+        LATENCIA: "-",
         ESTADO: "NO ENCONTRADA",
       });
     }
@@ -258,7 +379,9 @@ async function analizarCamaras(lista, progreso) {
   });
 
   const resultado = await Promise.all(tareas);
-  return generarExcel(resultado, "resultado_texto.xlsx");
+  const ordenado = ordenarResultados(resultado);
+
+  return generarExcel(ordenado, "resultado_texto.xlsx");
 }
 
 module.exports = {

@@ -3,6 +3,8 @@ const app = express();
 const path = require("path");
 const fs = require("fs");
 
+const { exec } = require("child_process");
+
 let progreso = {
   total: 0,
   procesadas: 0,
@@ -83,6 +85,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+
+
 app.listen(3000, () => {
-  console.log("http://localhost:3000");
+  const url = "http://localhost:3000";
+  console.log(url);
+
+  setTimeout(() => {
+    exec(`start ${url}`);
+  }, 500);
 });

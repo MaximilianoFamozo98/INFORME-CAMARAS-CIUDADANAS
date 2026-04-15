@@ -229,22 +229,7 @@ async function procesarCamara(fila, index, progreso) {
 }
 
 // =============================
-// FILA ROJA
-// =============================
-function esFilaRoja(row) {
-  const cell = row.getCell(1); // 👈 SOLO columna 1
-
-  if (!cell.fill) return false;
-
-  const color = cell.fill?.fgColor?.argb;
-
-  console.log("Fila:", row.number, "Color:", color);
-
-  return color === 'FFFF0000';
-}
-
-// =============================
-// EXCEL
+// GENERAR EXCEL
 // =============================
 async function generarExcel(resultado, nombre) {
   const wb = new ExcelJS.Workbook();
@@ -260,25 +245,8 @@ async function generarExcel(resultado, nombre) {
     { header: "ESTADO", key: "ESTADO", width: 20 },
   ];
 
-  const wbEstilos = new ExcelJS.Workbook();
-  await wbEstilos.xlsx.readFile(archivoExcel);
-  const sheetEstilos = wbEstilos.getWorksheet("RESUMEN TOTAL");
-
   resultado.forEach((r) => {
-    const row = ws.addRow(r);
-
-    if (r.filaIndex) {
-      const filaExcel = sheetEstilos.getRow(r.filaIndex);
-      if (esFilaRoja(filaExcel)) {
-        row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFFF0000" },
-          };
-        });
-      }
-    }
+    ws.addRow(r); 
   });
 
   const ruta = path.join(outputDir, nombre);

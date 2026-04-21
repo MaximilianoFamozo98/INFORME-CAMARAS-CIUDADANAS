@@ -228,14 +228,9 @@ async function procesarCamara(fila, index, progreso) {
   }
 }
 
-<<<<<<< HEAD
 
 // =============================
 // EXCEL
-=======
-// =============================
-// GENERAR EXCEL
->>>>>>> 0a2ecc0 (saque rojo excel quedo bien)
 // =============================
 async function generarExcel(resultado, nombre) {
   const wb = new ExcelJS.Workbook();
@@ -252,11 +247,7 @@ async function generarExcel(resultado, nombre) {
   ];
 
   resultado.forEach((r) => {
-<<<<<<< HEAD
     ws.addRow(r);
-=======
-    ws.addRow(r); 
->>>>>>> 0a2ecc0 (saque rojo excel quedo bien)
   });
 
   const ruta = path.join(outputDir, nombre);
@@ -292,7 +283,10 @@ async function analizarTodasLasCamaras(progreso) {
   const resultado = await Promise.all(tareas);
   const ordenado = ordenarResultados(resultado);
 
-  return generarExcel(ordenado, "todas_las_camaras.xlsx");
+  return {
+  ruta: await generarExcel(ordenado, "todas_las_camaras.xlsx"),
+  resultado: ordenado
+};
 }
 
 // =============================
@@ -359,7 +353,10 @@ async function analizarCamaras(lista, progreso) {
   const resultado = await Promise.all(tareas);
   const ordenado = ordenarResultados(resultado);
 
-  return generarExcel(ordenado, "resultado_texto.xlsx");
+  return {
+  ruta: await generarExcel(ordenado, "resultado_texto.xlsx"),
+  resultado: ordenado,
+};
 }
 
 module.exports = {

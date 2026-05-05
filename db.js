@@ -1,11 +1,15 @@
-const mongoose = require("mongoose");
+const Database = require("better-sqlite3");
 
-mongoose.connect("mongodb://127.0.0.1:27017/camaras");
+const db = new Database("camaras.db");
 
-mongoose.connection.on("open", () => {
-  console.log("✅ MongoDB conectado LOCAL");
-});
+db.exec(`
+CREATE TABLE IF NOT EXISTS historial (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fecha TEXT NOT NULL,
+  data TEXT NOT NULL
+);
+`);
 
-mongoose.connection.on("error", (err) => {
-  console.log("❌ Error Mongo:", err);
-});
+console.log("✅ SQLite conectado");
+
+module.exports = db;

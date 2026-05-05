@@ -4,9 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const { exec } = require("child_process");
 
-require("./db");
-const Historial = require("./models/Historial");
-
+const db = require("./db");
 const { analizarCamaras, analizarTodasLasCamaras } = require("./index.js");
 
 // =============================
@@ -26,26 +24,43 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // =============================
-// PROGRESO
+// RESET PROGRESO
+// =============================
+function resetProgreso() {
+  progreso = {
+    total: 0,
+    procesadas: 0,
+    online: 0,
+    sinRespuesta: 0,
+    ipVacia: 0,
+    noEncontrada: 0,
+  };
+}
+
+// =============================
+// RUTA PROGRESO
 // =============================
 app.get("/progreso", (req, res) => {
   res.json(progreso);
 });
 
 // =============================
-// RESET
+// GUARDAR HISTORIAL SQLITE
 // =============================
-function resetProgreso() {
-  progreso.total = 0;
-  progreso.procesadas = 0;
-  progreso.online = 0;
-  progreso.sinRespuesta = 0;
-  progreso.ipVacia = 0;
-  progreso.noEncontrada = 0;
+function guardarHistorial(resultado) {
+  db.prepare(`
+    INSERT INTO historial (fecha, data)
+    VALUES (?, ?)
+  `).run(
+    new Date().toISOString(),
+    JSON.stringify(resultado)
+  );
+
+  console.log("✅ Historial guardado en SQLite");
 }
 
 // =============================
-// ANALIZAR TEXTO (NO GUARDA HISTORIAL)
+// ANALIZAR TEXTO
 // =============================
 app.post("/analizar", async (req, res) => {
   try {
@@ -55,38 +70,25 @@ app.post("/analizar", async (req, res) => {
 
     const lista = texto
       .split("\n")
-      .map((x) => x.trim())
+      .map(x => x.trim())
       .filter(Boolean);
 
     const { ruta, resultado } = await analizarCamaras(lista, progreso);
 
-    console.log("📦 Resultado:", resultado?.length);
-    console.log("🧪 Primera:", resultado?.[0]);
+    guardarHistorial(resultado);
 
-    // ✅ GUARDAR EN MONGO (IGUAL QUE ANALIZAR TODAS)
-    await Historial.create({
-      fecha: new Date(),
-      camaras: resultado.map((c) => ({
-        DENOMINACION: c.DENOMINACION,
-        ESTADO: c.ESTADO,
-        PROVEEDOR: c.PROVEEDOR || "-",
-        UBICACION: c.UBICACION || "-",
-        CONEXION: c.CONEXION || "-",
-        IP: c.IP || "-",
-      })),
+    res.download(ruta, () => {
+      fs.unlink(ruta, () => {});
     });
 
-    console.log("✅ Guardado desde analizar texto");
-
-    res.download(ruta, () => fs.unlink(ruta, () => {}));
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al analizar");
   }
 });
 
 // =============================
-// ANALIZAR TODAS (GUARDA HISTORIAL)
+// ANALIZAR TODAS
 // =============================
 app.get("/analizar-todas", async (req, res) => {
   try {
@@ -94,41 +96,32 @@ app.get("/analizar-todas", async (req, res) => {
 
     const { ruta, resultado } = await analizarTodasLasCamaras(progreso);
 
-    console.log("📦 Primera cámara:", resultado[0]);
+    guardarHistorial(resultado);
 
-    // ✅ GUARDAR BIEN EN MONGO
-    await Historial.create({
-      fecha: new Date(),
-      camaras: resultado.map((c) => ({
-        DENOMINACION: c.DENOMINACION,
-        ESTADO: c.ESTADO,
-        PROVEEDOR: c.PROVEEDOR || "-",
-        UBICACION: c.UBICACION || "-",
-        CONEXION: c.CONEXION || "-",
-        IP: c.IP || "-",
-      })),
+    res.download(ruta, () => {
+      fs.unlink(ruta, () => {});
     });
 
-    console.log("✅ Guardado en Mongo OK");
-
-    res.download(ruta, () => fs.unlink(ruta, () => {}));
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error al analizar todas");
   }
 });
 
 // =============================
 // HISTORIAL
 // =============================
-app.get("/historial", async (req, res) => {
+app.get("/historial", (req, res) => {
   try {
-    const historiales = await Historial.find().sort({ fecha: 1 });
+    const rows = db.prepare(`
+      SELECT * FROM historial
+      ORDER BY fecha ASC
+    `).all();
 
     const mapa = {};
     const fechasSet = new Set();
 
-    historiales.forEach((h) => {
+    rows.forEach((h) => {
       const fechaObj = new Date(h.fecha);
 
       const fecha = fechaObj.toLocaleDateString("es-AR", {
@@ -139,46 +132,40 @@ app.get("/historial", async (req, res) => {
 
       fechasSet.add(fecha);
 
-      h.camaras.forEach((cam) => {
-        if (!mapa[cam.DENOMINACION]) {
-  mapa[cam.DENOMINACION] = {
-    info: {
-      proveedor: cam.PROVEEDOR || "",
-      ubicacion: cam.UBICACION || "",
-      conexion: cam.CONEXION || "",
-      ip: cam.IP || "",
-    },
-    estados: {},
-  };
-} else {
-  // 🔥 SI YA EXISTE, ACTUALIZA SI VIENE INFORMACIÓN NUEVA
-  if (cam.PROVEEDOR) {
-    mapa[cam.DENOMINACION].info.proveedor = cam.PROVEEDOR;
-  }
-  if (cam.UBICACION) {
-    mapa[cam.DENOMINACION].info.ubicacion = cam.UBICACION;
-  }
-  if (cam.CONEXION) {
-    mapa[cam.DENOMINACION].info.conexion = cam.CONEXION;
-  }
-  if (cam.IP) {
-    mapa[cam.DENOMINACION].info.ip = cam.IP;
-  }
-}
+      const camaras = JSON.parse(h.data);
 
-        mapa[cam.DENOMINACION].estados[fecha] = cam.ESTADO;
+      camaras.forEach((cam) => {
+        const nombre = cam.DENOMINACION;
+
+        if (!mapa[nombre]) {
+          mapa[nombre] = {
+            info: {
+              proveedor: cam.PROVEEDOR || "",
+              ubicacion: cam.UBICACION || "",
+              conexion: cam.CONEXION || "",
+              ip: cam.IP || "",
+            },
+            estados: {},
+          };
+        }
+
+        mapa[nombre].estados[fecha] = cam.ESTADO;
       });
     });
 
     const fechas = Array.from(fechasSet).sort((a, b) => {
-      const fechaA = new Date(a.split("/").reverse().join("-"));
-      const fechaB = new Date(b.split("/").reverse().join("-"));
-      return fechaA - fechaB;
+      const fa = new Date(a.split("/").reverse().join("-"));
+      const fb = new Date(b.split("/").reverse().join("-"));
+      return fa - fb;
     });
 
-    res.json({ fechas, camaras: mapa });
-  } catch (err) {
-    console.error(err);
+    res.json({
+      fechas,
+      camaras: mapa,
+    });
+
+  } catch (error) {
+    console.error(error);
     res.status(500).send("Error historial");
   }
 });
@@ -191,10 +178,19 @@ app.get("/", (req, res) => {
 });
 
 // =============================
+// MAPA
+// =============================
+app.get("/mapa", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "mapa.html"));
+});
+
+// =============================
 // SERVER
 // =============================
 app.listen(3000, () => {
   const url = "http://localhost:3000";
+
+  console.log("🚀 Servidor corriendo:");
   console.log(url);
 
   setTimeout(() => {

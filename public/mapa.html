@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa PRO 5.0 - Editor de Coordenadas</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+font-family:Segoe UI,Arial,sans-serif;
+background:#0b1220;
+color:white;
+overflow:hidden;
+}
+
+header{
+height:70px;
+background:#111827;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 22px;
+border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+header h1{
+font-size:22px;
+font-weight:800;
+}
+
+header span{
+font-size:14px;
+color:#94a3b8;
+}
+
+#map{
+height:calc(100vh - 70px);
+width:100%;
+}
+
+.panel{
+position:absolute;
+top:85px;
+left:15px;
+z-index:999;
+width:320px;
+background:#111827;
+padding:16px;
+border-radius:16px;
+box-shadow:0 20px 40px rgba(0,0,0,.35);
+}
+
+.panel h3{
+font-size:17px;
+margin-bottom:12px;
+}
+
+.stat{
+display:flex;
+justify-content:space-between;
+padding:7px 0;
+border-bottom:1px solid rgba(255,255,255,.05);
+font-size:14px;
+}
+
+.green{color:#22c55e}
+.red{color:#ef4444}
+.yellow{color:#f59e0b}
+.gray{color:#94a3b8}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#0b1220;
+color:white;
+outline:none;
+}
+
+button{
+width:100%;
+padding:11px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+button:hover{opacity:.92}
+
+.small{
+font-size:12px;
+color:#94a3b8;
+margin-top:8px;
+line-height:1.4;
+}
+
+#coordsList{
+max-height:180px;
+overflow:auto;
+margin-top:10px;
+font-size:13px;
+}
+
+.item{
+padding:7px;
+background:#0b1220;
+border-radius:8px;
+margin-bottom:6px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>📍 MAPA PRO 5.0</h1>
+<span id="hora"></span>
+</header>
+
+<div class="panel">
+
+<h3>Estado General</h3>
+
+<div class="stat"><span>🟢 Online</span><b class="green" id="online">0</b></div>
+<div class="stat"><span>🔴 Caídas</span><b class="red" id="caidas">0</b></div>
+<div class="stat"><span>⚪ Sin Coordenada</span><b class="gray" id="sincoord">0</b></div>
+
+<input id="buscar" placeholder="Buscar cámara..." oninput="filtrar()">
+
+<select id="camaraSelect"></select>
+
+<button onclick="activarModoEdicion()">📌 Asignar coordenada manual</button>
+<button onclick="exportarCoords()">💾 Exportar Base</button>
+<button onclick="cargarMapa()">🔄 Recargar</button>
+
+<div class="small">
+1) Elegí cámara<br>
+2) Tocá "Asignar coordenada"<br>
+3) Hacé click en el mapa
+</div>
+
+<div id="coordsList"></div>
+
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+setInterval(()=>{
+document.getElementById("hora").innerText =
+new Date().toLocaleString("es-AR");
+},1000);
+
+/* =======================
+MAPA
+======================= */
+const map = L.map("map").setView([-34.806,-58.276], 13);
+
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{maxZoom:19}
+).addTo(map);
+
+let markers = [];
+let datosGlobal = null;
+let modoEdicion = false;
+
+/* =======================
+BASE LOCAL DE COORDENADAS
+======================= */
+let baseCoords = JSON.parse(localStorage.getItem("coordsFV") || "{}");
+
+/* =======================
+ICONO
+======================= */
+function icono(color){
+return L.divIcon({
+html:`<div style="
+width:16px;
+height:16px;
+border-radius:50%;
+background:${color};
+border:2px solid white;
+box-shadow:0 0 10px ${color};
+"></div>`,
+className:"",
+iconSize:[16,16]
+});
+}
+
+/* =======================
+UTILS
+======================= */
+function limpiar(){
+markers.forEach(m=>map.removeLayer(m));
+markers=[];
+}
+
+function colorEstado(estado){
+
+if(estado.includes("ONLINE")) return "#22c55e";
+if(estado.includes("INESTABLE")) return "#f59e0b";
+return "#ef4444";
+}
+
+/* =======================
+CARGAR HISTORIAL
+======================= */
+async function cargarMapa(){
+
+limpiar();
+
+online.innerText=0;
+caidas.innerText=0;
+sincoord.innerText=0;
+
+const res = await fetch("/historial");
+const data = await res.json();
+
+datosGlobal = data;
+
+const fechas = data.fechas;
+const ultima = fechas[fechas.length-1];
+
+const select = document.getElementById("camaraSelect");
+select.innerHTML = "";
+
+for(const nombre in data.camaras){
+
+const cam = data.camaras[nombre];
+const info = cam.info || {};
+const estados = cam.estados || {};
+const estado = estados[ultima] || "SIN RESPUESTA";
+
+let option = document.createElement("option");
+option.value = nombre;
+option.textContent = nombre;
+select.appendChild(option);
+
+if(baseCoords[nombre]){
+
+const c = baseCoords[nombre];
+
+const marker = L.marker(
+[c.lat,c.lng],
+{icon:icono(colorEstado(estado))}
+).addTo(map);
+
+marker.nombre = nombre.toUpperCase();
+
+marker.bindPopup(`
+<b>${nombre}</b><br>
+${info.ubicacion || "-"}<br>
+${info.proveedor || "-"}<br>
+${info.ip || "-"}<br>
+Estado: <b>${estado}</b>
+`);
+
+markers.push(marker);
+
+if(estado.includes("ONLINE")) online.innerText++;
+else caidas.innerText++;
+
+}else{
+sincoord.innerText++;
+}
+
+}
+
+renderCoordsList();
+
+}
+
+/* =======================
+BUSCAR
+======================= */
+function filtrar(){
+
+const txt = buscar.value.toUpperCase();
+
+markers.forEach(m=>{
+if(m.nombre.includes(txt)){
+m.addTo(map);
+}else{
+map.removeLayer(m);
+}
+});
+
+}
+
+/* =======================
+MODO EDICION
+======================= */
+function activarModoEdicion(){
+
+modoEdicion = true;
+
+alert("Ahora hacé click en el mapa para guardar coordenada.");
+
+}
+
+/* =======================
+CLICK MAPA
+======================= */
+map.on("click", function(e){
+
+if(!modoEdicion) return;
+
+const cam = camaraSelect.value;
+
+if(!cam){
+alert("Seleccioná una cámara");
+return;
+}
+
+baseCoords[cam] = {
+lat:e.latlng.lat,
+lng:e.latlng.lng
+};
+
+localStorage.setItem(
+"coordsFV",
+JSON.stringify(baseCoords)
+);
+
+modoEdicion = false;
+
+alert("Coordenada guardada para " + cam);
+
+cargarMapa();
+
+});
+
+/* =======================
+EXPORTAR
+======================= */
+function exportarCoords(){
+
+const texto = JSON.stringify(baseCoords,null,2);
+
+const blob = new Blob([texto], {
+type:"application/json"
+});
+
+const a = document.createElement("a");
+a.href = URL.createObjectURL(blob);
+a.download = "coordenadas_fv.json";
+a.click();
+
+}
+
+/* =======================
+LISTA
+======================= */
+function renderCoordsList(){
+
+let html = "";
+
+for(const k in baseCoords){
+
+html += `
+<div class="item">
+<b>${k}</b><br>
+${baseCoords[k].lat.toFixed(5)},
+${baseCoords[k].lng.toFixed(5)}
+</div>
+`;
+
+}
+
+coordsList.innerHTML = html;
+
+}
+
+/* =======================
+INICIO
+======================= */
+cargarMapa();
+
+</script>
+</body>
+</html>

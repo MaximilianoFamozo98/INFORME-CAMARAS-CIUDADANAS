@@ -134,22 +134,27 @@ flex-wrap:wrap;
 margin-top:14px;
 }
 
-button{
+button,a.btn-link{
 padding:12px 18px;
 border:none;
 border-radius:12px;
 cursor:pointer;
 font-weight:700;
 transition:.2s;
+text-decoration:none;
+display:inline-block;
+color:white;
 }
 
-button:hover{
+button:hover,a.btn-link:hover{
 transform:translateY(-2px);
 }
 
-.btn-green{background:#16a34a;color:white;}
-.btn-blue{background:#2563eb;color:white;}
-.btn-gray{background:#334155;color:white;}
+.btn-green{background:#16a34a;}
+.btn-blue{background:#2563eb;}
+.btn-gray{background:#334155;}
+.btn-purple{background:#7c3aed;}
+.btn-orange{background:#ea580c;}
 
 #estado{
 margin-top:15px;
@@ -273,20 +278,9 @@ min-width:320px;
 line-height:1.45;
 }
 
-.proveedor{
-font-weight:800;
-color:white;
-}
-
-.ubi{
-font-size:13px;
-color:#cbd5e1;
-}
-
-.det{
-font-size:13px;
-color:#60a5fa;
-}
+.proveedor{font-weight:800;}
+.ubi{font-size:13px;color:#cbd5e1;}
+.det{font-size:13px;color:#60a5fa;}
 
 .ok{background:#15803d;font-weight:800;}
 .bad{background:#dc2626;font-weight:800;}
@@ -298,6 +292,60 @@ text-align:center;
 padding:25px;
 font-size:13px;
 color:#64748b;
+}
+
+/* BOTON TOP FALLAS */
+#btnTopFallas{
+position:fixed;
+right:22px;
+bottom:24px;
+z-index:9999;
+background:#dc2626;
+padding:14px 18px;
+border-radius:50px;
+font-weight:800;
+box-shadow:0 10px 25px rgba(0,0,0,.35);
+}
+
+/* POPUP */
+#popupFallas{
+position:fixed;
+right:22px;
+bottom:82px;
+width:340px;
+max-height:520px;
+overflow:auto;
+background:#111827;
+border-radius:18px;
+padding:18px;
+z-index:9999;
+box-shadow:0 20px 45px rgba(0,0,0,.45);
+display:none;
+}
+
+.rank-item{
+background:#0b1220;
+padding:12px;
+border-radius:14px;
+margin-bottom:10px;
+font-size:14px;
+}
+
+.rank-num{
+display:inline-block;
+background:#dc2626;
+padding:3px 8px;
+border-radius:30px;
+font-size:12px;
+font-weight:800;
+margin-bottom:6px;
+}
+
+.close-rank{
+float:right;
+cursor:pointer;
+font-size:20px;
+color:#94a3b8;
 }
 </style>
 </head>
@@ -323,25 +371,10 @@ color:#64748b;
 
 <!-- KPIS -->
 <div class="cards">
-<div class="card">
-<div class="title">Online</div>
-<div class="num green" id="online">0</div>
-</div>
-
-<div class="card">
-<div class="title">Caídas</div>
-<div class="num red" id="sinRespuesta">0</div>
-</div>
-
-<div class="card">
-<div class="title">IP Vacía</div>
-<div class="num white" id="ipVacia">0</div>
-</div>
-
-<div class="card">
-<div class="title">No encontrada</div>
-<div class="num orange" id="noEncontrada">0</div>
-</div>
+<div class="card"><div class="title">Online</div><div class="num green" id="online">0</div></div>
+<div class="card"><div class="title">Caídas</div><div class="num red" id="sinRespuesta">0</div></div>
+<div class="card"><div class="title">IP Vacía</div><div class="num white" id="ipVacia">0</div></div>
+<div class="card"><div class="title">No encontrada</div><div class="num orange" id="noEncontrada">0</div></div>
 </div>
 
 <!-- ESCANEO -->
@@ -353,6 +386,9 @@ color:#64748b;
 <button class="btn-green" onclick="analizarTexto()">Analizar Texto</button>
 <button class="btn-blue" onclick="analizarTodas()">Escanear Todas</button>
 <button class="btn-gray" onclick="verHistorial()">Actualizar Historial</button>
+
+<a href="/mapa" class="btn-link btn-purple">📍 Ir al Mapa</a>
+<a href="/admin-coords.html" class="btn-link btn-orange">⚙️ Panel Admin</a>
 </div>
 
 <div id="estado">Esperando acción...</div>
@@ -403,14 +439,24 @@ Mostrando <b id="cantFiltradas">0</b> cámaras
 Sistema Interno · Municipalidad de Florencio Varela
 </footer>
 
+<!-- BOTON TOP FALLAS -->
+<button id="btnTopFallas" onclick="abrirRanking()">🚨 Top Fallas</button>
+
+<!-- POPUP -->
+<div id="popupFallas">
+<div class="close-rank" onclick="cerrarRanking()">✕</div>
+<h3>Ranking de Cámaras con Fallas</h3>
+<br><br>
+<div id="contenidoRanking">Cargando...</div>
+</div>
+
 <script>
 let intervalo;
 let filtroDias=null;
 
 /* reloj */
 setInterval(()=>{
-document.getElementById("hora").innerText=
-new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+hora.innerText=new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
 },1000);
 
 /* progreso */
@@ -445,18 +491,39 @@ a.download="reporte.xlsx";
 a.click();
 }
 
-/* ultimo escaneo */
-function registrarEscaneo(){
-const ahora=new Date();
-ultimoEscaneo.innerText=
-"Último escaneo: "+
-ahora.toLocaleDateString("es-AR")+" "+
-ahora.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+function registrarEscaneo(tipo="Último escaneo"){
+const ahora = new Date();
+
+const texto =
+tipo + ": " +
+ahora.toLocaleDateString("es-AR") + " " +
+ahora.toLocaleTimeString("es-AR",{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+});
+
+document.getElementById("ultimoEscaneo").innerText = texto;
+
+/* guardar en memoria navegador */
+localStorage.setItem("ultimoEscaneoSistema", texto);
 }
 
-/* acciones */
+function cargarUltimoEscaneo(){
+
+const guardado = localStorage.getItem("ultimoEscaneoSistema");
+
+if(guardado){
+document.getElementById("ultimoEscaneo").innerText = guardado;
+}
+
+}
+
 async function analizarTexto(){
+
 estado.innerText="Analizando cámaras...";
+registrarEscaneo("Inicio escaneo");
+
 iniciar();
 
 const texto=document.getElementById("texto").value;
@@ -468,26 +535,34 @@ body:JSON.stringify({texto})
 });
 
 descargar(await res.blob());
+
 detener();
-registrarEscaneo();
+
+registrarEscaneo("Último escaneo");
+
 estado.innerText="Proceso finalizado";
 }
 
 async function analizarTodas(){
+
 estado.innerText="Escaneando cámaras...";
+registrarEscaneo("Inicio escaneo total");
+
 iniciar();
 
 const res=await fetch("/analizar-todas");
 
 descargar(await res.blob());
+
 detener();
-registrarEscaneo();
+
+registrarEscaneo("Último escaneo");
+
 estado.innerText="Escaneo finalizado";
 }
 
 /* historial */
 async function verHistorial(dias=null){
-
 filtroDias=dias;
 
 const res=await fetch("/historial");
@@ -496,23 +571,7 @@ const data=await res.json();
 let fechas=data.fechas;
 let camaras=data.camaras;
 
-if(dias){
-const hoy=new Date();
-
-fechas=fechas.filter(f=>{
-const fecha=new Date(f.split("/").reverse().join("-"));
-return ((hoy-fecha)/(1000*60*60*24))<=dias;
-});
-}
-
-const fc=filtroCamara.value.toUpperCase();
-const fp=filtroProveedor.value.toUpperCase();
-const fu=filtroUbicacion.value.toUpperCase();
-const fco=filtroConexion.value.toUpperCase();
-const fi=filtroIP.value.toUpperCase();
-
 let html="<table><tr><th>Cámara</th><th>Info</th><th>Días Caída</th><th>Días Online</th>";
-
 fechas.forEach(f=>html+=`<th>${f}</th>`);
 html+="</tr>";
 
@@ -524,21 +583,10 @@ Object.entries(camaras).forEach(([nombre,obj])=>{
 const info=obj.info||{};
 const estados=obj.estados||{};
 
-if(
-!nombre.includes(fc) ||
-(fp && !info.proveedor?.toUpperCase().includes(fp)) ||
-(fu && !info.ubicacion?.toUpperCase().includes(fu)) ||
-(fco && !info.conexion?.toUpperCase().includes(fco)) ||
-(fi && !info.ip?.toUpperCase().includes(fi))
-)return;
-
 visibles++;
 
 let prov=info.proveedor||"SIN DATO";
-
-if(!proveedores[prov]){
-proveedores[prov]={online:0,caidas:0,total:0};
-}
+if(!proveedores[prov]) proveedores[prov]={online:0,caidas:0,total:0};
 proveedores[prov].total++;
 
 let diasCaida=0;
@@ -546,42 +594,34 @@ let diasOnline=0;
 
 fechas.forEach(f=>{
 const e=estados[f]||"-";
-if(e=="SIN RESPUESTA")diasCaida++;
-if(e.includes("ONLINE"))diasOnline++;
+if(e=="SIN RESPUESTA") diasCaida++;
+if(e.includes("ONLINE")) diasOnline++;
 });
 
-if(diasOnline>0)proveedores[prov].online++;
-if(diasCaida>0)proveedores[prov].caidas++;
+if(diasOnline>0) proveedores[prov].online++;
+if(diasCaida>0) proveedores[prov].caidas++;
 
-html+=`
-<tr>
+html+=`<tr>
 <td class="cam">${nombre}</td>
-
 <td class="info">
 <div class="proveedor">${info.proveedor||"-"}</div>
 <div class="ubi">${info.ubicacion||"-"}</div>
 <div class="det">${info.conexion||"-"} | ${info.ip||"-"}</div>
 </td>
-
 <td class="bad">${diasCaida}</td>
-<td class="ok">${diasOnline}</td>
-`;
+<td class="ok">${diasOnline}</td>`;
 
 fechas.forEach(f=>{
-
 const e=estados[f]||"-";
 let clase="none";
-
-if(e.includes("ONLINE"))clase="ok";
-else if(e=="SIN RESPUESTA")clase="bad";
-else if(e=="INESTABLE")clase="warn";
+if(e.includes("ONLINE")) clase="ok";
+else if(e=="SIN RESPUESTA") clase="bad";
+else if(e=="INESTABLE") clase="warn";
 
 html+=`<td class="${clase}">${e}</td>`;
-
 });
 
 html+="</tr>";
-
 });
 
 html+="</table>";
@@ -589,7 +629,6 @@ html+="</table>";
 cantFiltradas.innerText=visibles;
 tablaHistorial.innerHTML=html;
 
-/* KPI proveedor */
 let kpi="";
 Object.entries(proveedores).forEach(([prov,v])=>{
 kpi+=`
@@ -598,14 +637,57 @@ kpi+=`
 🟢 Online: ${v.online}<br>
 🔴 Caídas: ${v.caidas}<br>
 📷 Total: ${v.total}
-</div>
-`;
+</div>`;
 });
 
 kpiProveedor.innerHTML=kpi;
 }
 
+/* RANKING */
+function abrirRanking(){
+popupFallas.style.display="block";
+generarRanking();
+}
+
+function cerrarRanking(){
+popupFallas.style.display="none";
+}
+
+async function generarRanking(){
+const res=await fetch("/historial");
+const data=await res.json();
+
+let ranking=[];
+
+Object.entries(data.camaras).forEach(([nombre,obj])=>{
+let fallas=0;
+
+Object.values(obj.estados).forEach(e=>{
+if(e==="SIN RESPUESTA" || e==="INESTABLE") fallas++;
+});
+
+ranking.push({nombre,fallas});
+});
+
+ranking.sort((a,b)=>b.fallas-a.fallas);
+ranking=ranking.slice(0,10);
+
+let html="";
+
+ranking.forEach((cam,i)=>{
+html+=`
+<div class="rank-item">
+<div class="rank-num">#${i+1}</div>
+<b>${cam.nombre}</b><br>
+🔴 ${cam.fallas} fallas
+</div>`;
+});
+
+contenidoRanking.innerHTML=html;
+}
+
 verHistorial();
+cargarUltimoEscaneo();
 </script>
 
 </body>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Coordenadas PRO</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+font-family:Segoe UI,Arial,sans-serif;
+background:#08111f;
+color:#fff;
+height:100vh;
+overflow:hidden;
+}
+
+.wrap{
+display:grid;
+grid-template-columns:420px 1fr;
+height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+background:#111827;
+border-right:1px solid rgba(255,255,255,.05);
+padding:18px;
+overflow:auto;
+}
+
+h1{
+font-size:22px;
+margin-bottom:8px;
+}
+
+.sub{
+color:#94a3b8;
+font-size:13px;
+margin-bottom:18px;
+}
+
+.card{
+background:#0b1220;
+padding:14px;
+border-radius:14px;
+margin-bottom:14px;
+}
+
+label{
+font-size:13px;
+color:#94a3b8;
+display:block;
+margin-bottom:6px;
+}
+
+input{
+width:100%;
+padding:11px;
+border:none;
+border-radius:10px;
+background:#1e293b;
+color:white;
+margin-bottom:12px;
+outline:none;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:700;
+cursor:pointer;
+transition:.2s;
+margin-bottom:10px;
+}
+
+button:hover{transform:translateY(-2px)}
+
+.btn-green{background:#16a34a;color:#fff}
+.btn-blue{background:#2563eb;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+
+.stats{
+font-size:14px;
+line-height:1.7;
+color:#cbd5e1;
+}
+
+.lista{
+max-height:420px;
+overflow:auto;
+}
+
+.item{
+padding:10px;
+border-radius:10px;
+background:#1e293b;
+margin-bottom:8px;
+cursor:pointer;
+transition:.2s;
+font-size:14px;
+}
+
+.item:hover{
+background:#334155;
+}
+
+.small{
+font-size:12px;
+color:#94a3b8;
+margin-top:3px;
+}
+
+/* MAPA */
+#map{
+height:100%;
+width:100%;
+}
+
+.topbar{
+position:absolute;
+top:14px;
+right:14px;
+z-index:9999;
+background:rgba(17,24,39,.92);
+padding:12px 16px;
+border-radius:14px;
+font-size:14px;
+box-shadow:0 10px 25px rgba(0,0,0,.35);
+backdrop-filter:blur(6px);
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- PANEL -->
+<div class="sidebar">
+
+<h1>⚙️ Admin Coordenadas PRO</h1>
+<div class="sub">Centro de Monitoreo · Florencio Varela</div>
+
+<div class="card">
+<label>Buscar cámara</label>
+<input id="buscar" placeholder="BEL 01 / CEN / nombre..." oninput="renderLista()">
+</div>
+
+<div class="card">
+
+<label>Nombre</label>
+<input id="nombre">
+
+<label>Latitud</label>
+<input id="lat">
+
+<label>Longitud</label>
+<input id="lng">
+
+<button class="btn-green" onclick="guardar()">💾 Guardar Coordenada</button>
+<button class="btn-red" onclick="borrar()">🗑️ Eliminar</button>
+
+</div>
+
+<div class="card stats">
+<div>📷 Cargadas: <b id="cant">0</b></div>
+<div>🎯 Click en el mapa para seleccionar ubicación</div>
+<div>🧭 Arrastrá marcador para ajustar</div>
+</div>
+
+<div class="card">
+<div style="margin-bottom:10px;font-weight:700">📋 Cámaras</div>
+<div id="lista" class="lista"></div>
+</div>
+
+</div>
+
+<!-- MAPA -->
+<div style="position:relative">
+<div class="topbar">
+📍 Florencio Varela GIS
+</div>
+<div id="map"></div>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let mapa;
+let marker=null;
+let datos=[];
+
+/* INIT */
+mapa=L.map('map').setView([-34.806,-58.276],13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(mapa);
+
+/* CLICK MAPA */
+mapa.on("click", e=>{
+document.getElementById("lat").value=e.latlng.lat.toFixed(6);
+document.getElementById("lng").value=e.latlng.lng.toFixed(6);
+
+ponerMarker(e.latlng.lat,e.latlng.lng);
+});
+
+/* MARKER */
+function ponerMarker(lat,lng){
+
+if(marker) mapa.removeLayer(marker);
+
+marker=L.marker([lat,lng],{draggable:true}).addTo(mapa);
+
+marker.on("dragend",function(ev){
+const p=ev.target.getLatLng();
+lat.value=p.lat.toFixed(6);
+lng.value=p.lng.toFixed(6);
+});
+}
+
+/* CARGAR */
+async function cargar(){
+
+const res=await fetch("/api/coords");
+datos=await res.json();
+
+cant.innerText=datos.length;
+
+renderLista();
+}
+
+/* LISTA */
+function renderLista(){
+
+const txt=buscar.value.toUpperCase();
+
+let html="";
+
+datos
+.filter(x=>x.nombre.toUpperCase().includes(txt))
+.slice(0,300)
+.forEach(x=>{
+
+html+=`
+<div class="item" onclick='seleccionar(${JSON.stringify(x)})'>
+<b>${x.nombre}</b>
+<div class="small">${x.lat} , ${x.lng}</div>
+</div>
+`;
+
+});
+
+lista.innerHTML=html;
+}
+
+/* SELECCIONAR */
+function seleccionar(x){
+
+nombre.value=x.nombre;
+lat.value=x.lat;
+lng.value=x.lng;
+
+ponerMarker(x.lat,x.lng);
+
+mapa.setView([x.lat,x.lng],17);
+}
+
+/* GUARDAR */
+async function guardar(){
+
+if(!nombre.value.trim()) return alert("Ingresá nombre");
+
+await fetch("/api/coords",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+nombre:nombre.value,
+lat:lat.value,
+lng:lng.value
+})
+});
+
+await cargar();
+
+alert("Guardado OK");
+}
+
+/* BORRAR */
+async function borrar(){
+
+if(!nombre.value) return;
+
+if(!confirm("Eliminar cámara?")) return;
+
+await fetch("/api/coords/"+encodeURIComponent(nombre.value),{
+method:"DELETE"
+});
+
+nombre.value="";
+lat.value="";
+lng.value="";
+
+if(marker) mapa.removeLayer(marker);
+
+await cargar();
+}
+
+cargar();
+</script>
+
+</body>
+</html>

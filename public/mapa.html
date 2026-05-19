@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mapa PRO 5.0 - Editor de Coordenadas</title>
+<title>MAPA PRO 10.2 FULL VISUAL</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -13,109 +15,258 @@
 body{
 font-family:Segoe UI,Arial,sans-serif;
 background:#0b1220;
-color:white;
+color:#fff;
 overflow:hidden;
 }
 
+/* HEADER PREMIUM */
 header{
-height:70px;
-background:#111827;
+height:68px;
+background:linear-gradient(90deg,#071122,#0d1b34);
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:0 22px;
+padding:0 18px;
 border-bottom:1px solid rgba(255,255,255,.06);
+box-shadow:0 8px 22px rgba(0,0,0,.35);
 }
 
 header h1{
-font-size:22px;
-font-weight:800;
+font-size:21px;
+font-weight:900;
+letter-spacing:.4px;
 }
 
 header span{
-font-size:14px;
+font-size:13px;
 color:#94a3b8;
 }
 
+/* MAPA */
 #map{
-height:calc(100vh - 70px);
+height:calc(100vh - 68px);
 width:100%;
 }
 
+/* ZOOM abajo derecha */
+.leaflet-top.leaflet-left{
+display:none;
+}
+
+.leaflet-bottom.leaflet-right{
+bottom:18px;
+right:14px;
+}
+
+.leaflet-control-zoom{
+border:none!important;
+box-shadow:0 10px 24px rgba(0,0,0,.35)!important;
+border-radius:14px!important;
+overflow:hidden;
+}
+
+.leaflet-control-zoom a{
+width:42px!important;
+height:42px!important;
+line-height:42px!important;
+font-size:22px!important;
+background:#111827!important;
+color:#fff!important;
+border:none!important;
+}
+
+/* PANEL */
 .panel{
 position:absolute;
-top:85px;
-left:15px;
+top:78px;
+left:12px;
 z-index:999;
-width:320px;
-background:#111827;
-padding:16px;
-border-radius:16px;
-box-shadow:0 20px 40px rgba(0,0,0,.35);
+width:340px;
+max-width:88vw;
+max-height:calc(100vh - 92px);
+background:rgba(17,24,39,.96);
+backdrop-filter:blur(8px);
+border-radius:18px;
+box-shadow:0 20px 45px rgba(0,0,0,.45);
+overflow:hidden;
+transition:left .28s ease;
 }
 
-.panel h3{
-font-size:17px;
-margin-bottom:12px;
+.panel.closed{
+left:-360px;
 }
 
-.stat{
+/* PANEL HEADER */
+.panel-header{
+height:52px;
 display:flex;
+align-items:center;
 justify-content:space-between;
-padding:7px 0;
-border-bottom:1px solid rgba(255,255,255,.05);
-font-size:14px;
+padding:0 14px;
+background:#0f172a;
+border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.panel-header b{
+font-size:15px;
+}
+
+.toggle-btn{
+width:36px;
+height:36px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:#2563eb;
+color:#fff;
+font-size:18px;
+font-weight:800;
+}
+
+.panel-body{
+padding:14px;
+max-height:calc(100vh - 160px);
+overflow:auto;
+}
+
+/* scrollbar */
+.panel-body::-webkit-scrollbar{
+width:8px;
+}
+.panel-body::-webkit-scrollbar-thumb{
+background:#334155;
+border-radius:10px;
+}
+
+/* TAB */
+.side-tab{
+position:absolute;
+top:78px;
+left:10px;
+z-index:2000;
+width:40px;
+height:58px;
+border-radius:0 14px 14px 0;
+background:#2563eb;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+font-weight:900;
+cursor:pointer;
+box-shadow:0 10px 20px rgba(0,0,0,.35);
+transition:.2s;
+}
+
+.side-tab:hover{
+transform:scale(1.04);
+}
+
+.side-tab.hide{
+opacity:0;
+pointer-events:none;
+}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-bottom:14px;
+}
+
+.card{
+background:#0b1220;
+padding:12px;
+border-radius:14px;
+box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+.card small{
+display:block;
+font-size:12px;
+color:#94a3b8;
+margin-bottom:6px;
+}
+
+.card b{
+font-size:23px;
 }
 
 .green{color:#22c55e}
 .red{color:#ef4444}
-.yellow{color:#f59e0b}
 .gray{color:#94a3b8}
 
-input,select{
+/* FORM */
+input,select,button{
 width:100%;
 padding:10px;
-margin-top:10px;
 border:none;
+outline:none;
 border-radius:10px;
 background:#0b1220;
-color:white;
-outline:none;
+color:#fff;
+margin-bottom:10px;
 }
 
 button{
-width:100%;
-padding:11px;
-margin-top:10px;
-border:none;
-border-radius:10px;
-background:#2563eb;
-color:white;
-font-weight:700;
 cursor:pointer;
+font-weight:700;
+background:#2563eb;
 }
 
-button:hover{opacity:.92}
-
-.small{
-font-size:12px;
-color:#94a3b8;
-margin-top:8px;
-line-height:1.4;
+button:hover{
+opacity:.92;
 }
 
-#coordsList{
-max-height:180px;
-overflow:auto;
-margin-top:10px;
-font-size:13px;
+/* LISTA */
+.list{
+display:flex;
+flex-direction:column;
+gap:8px;
 }
 
 .item{
-padding:7px;
 background:#0b1220;
+padding:11px;
+border-radius:12px;
+cursor:pointer;
+transition:.18s;
+border:1px solid rgba(255,255,255,.03);
+}
+
+.item:hover{
+transform:translateX(4px);
+background:#13203d;
+}
+
+.badge{
+display:inline-block;
+padding:3px 8px;
 border-radius:8px;
-margin-bottom:6px;
+font-size:11px;
+font-weight:700;
+margin-top:6px;
+}
+
+/* POPUP */
+.leaflet-popup-content-wrapper{
+border-radius:14px!important;
+box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+@media(max-width:700px){
+
+header h1{font-size:18px;}
+
+.panel{
+width:88vw;
+}
+
+.side-tab{
+width:38px;
+height:54px;
+}
 }
 </style>
 </head>
@@ -123,69 +274,90 @@ margin-bottom:6px;
 <body>
 
 <header>
-<h1>📍 MAPA PRO 5.0</h1>
+<h1>📍 MAPA PRO 10.2</h1>
 <span id="hora"></span>
 </header>
 
-<div class="panel">
+<div class="side-tab hide" id="tabBtn" onclick="abrirPanel()">☰</div>
 
-<h3>Estado General</h3>
+<div class="panel" id="panel">
 
-<div class="stat"><span>🟢 Online</span><b class="green" id="online">0</b></div>
-<div class="stat"><span>🔴 Caídas</span><b class="red" id="caidas">0</b></div>
-<div class="stat"><span>⚪ Sin Coordenada</span><b class="gray" id="sincoord">0</b></div>
-
-<input id="buscar" placeholder="Buscar cámara..." oninput="filtrar()">
-
-<select id="camaraSelect"></select>
-
-<button onclick="activarModoEdicion()">📌 Asignar coordenada manual</button>
-<button onclick="exportarCoords()">💾 Exportar Base</button>
-<button onclick="cargarMapa()">🔄 Recargar</button>
-
-<div class="small">
-1) Elegí cámara<br>
-2) Tocá "Asignar coordenada"<br>
-3) Hacé click en el mapa
+<div class="panel-header">
+<b>Panel PRO</b>
+<button class="toggle-btn" onclick="cerrarPanel()">✕</button>
 </div>
 
-<div id="coordsList"></div>
+<div class="panel-body">
 
+<div class="grid">
+<div class="card"><small>Total</small><b id="total">0</b></div>
+<div class="card"><small>Online</small><b class="green" id="online">0</b></div>
+<div class="card"><small>Caídas</small><b class="red" id="caidas">0</b></div>
+<div class="card"><small>Sin Coord</small><b class="gray" id="sincoord">0</b></div>
+</div>
+
+<input id="buscar" placeholder="Buscar cámara o calle..." oninput="filtrar()">
+
+<select id="filtroEstado" onchange="filtrar()">
+<option value="TODAS">Todas</option>
+<option value="ONLINE">Online</option>
+<option value="CAIDA">Caídas</option>
+</select>
+
+<button onclick="fullscreenMapa()">🖥 Fullscreen</button>
+<button onclick="cargar()">🔄 Actualizar</button>
+
+<select id="camaraEdit"></select>
+<button onclick="activarEdicion()">📌 Reubicar cámara</button>
+
+<div style="font-size:12px;color:#94a3b8;margin-bottom:12px">
+1) Elegí cámara<br>
+2) Tocá Reubicar<br>
+3) Click en el mapa
+</div>
+
+<div class="list" id="lista"></div>
+
+</div>
 </div>
 
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 <script>
-
 setInterval(()=>{
-document.getElementById("hora").innerText =
-new Date().toLocaleString("es-AR");
+hora.innerText=new Date().toLocaleString("es-AR");
 },1000);
 
-/* =======================
-MAPA
-======================= */
-const map = L.map("map").setView([-34.806,-58.276], 13);
+const map=L.map("map",{zoomControl:false}).setView([-34.806,-58.276],13);
+
+L.control.zoom({position:'bottomright'}).addTo(map);
 
 L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 {maxZoom:19}
 ).addTo(map);
 
-let markers = [];
-let datosGlobal = null;
-let modoEdicion = false;
+let cluster=L.markerClusterGroup();
+map.addLayer(cluster);
 
-/* =======================
-BASE LOCAL DE COORDENADAS
-======================= */
-let baseCoords = JSON.parse(localStorage.getItem("coordsFV") || "{}");
+let cache=[];
+let modoEdicion=false;
 
-/* =======================
-ICONO
-======================= */
+/* PANEL */
+function cerrarPanel(){
+panel.classList.add("closed");
+tabBtn.classList.remove("hide");
+}
+
+function abrirPanel(){
+panel.classList.remove("closed");
+tabBtn.classList.add("hide");
+}
+
+/* ICONO */
 function icono(color){
 return L.divIcon({
 html:`<div style="
@@ -193,7 +365,7 @@ width:16px;
 height:16px;
 border-radius:50%;
 background:${color};
-border:2px solid white;
+border:2px solid #fff;
 box-shadow:0 0 10px ${color};
 "></div>`,
 className:"",
@@ -201,195 +373,531 @@ iconSize:[16,16]
 });
 }
 
-/* =======================
-UTILS
-======================= */
-function limpiar(){
-markers.forEach(m=>map.removeLayer(m));
-markers=[];
-}
-
-function colorEstado(estado){
-
-if(estado.includes("ONLINE")) return "#22c55e";
-if(estado.includes("INESTABLE")) return "#f59e0b";
+function colorEstado(e){
+e=(e||"").toUpperCase();
+if(e.includes("ONLINE")) return "#22c55e";
 return "#ef4444";
 }
 
-/* =======================
-CARGAR HISTORIAL
-======================= */
-async function cargarMapa(){
+function badge(e){
+e=(e||"").toUpperCase();
 
-limpiar();
-
-online.innerText=0;
-caidas.innerText=0;
-sincoord.innerText=0;
-
-const res = await fetch("/historial");
-const data = await res.json();
-
-datosGlobal = data;
-
-const fechas = data.fechas;
-const ultima = fechas[fechas.length-1];
-
-const select = document.getElementById("camaraSelect");
-select.innerHTML = "";
-
-for(const nombre in data.camaras){
-
-const cam = data.camaras[nombre];
-const info = cam.info || {};
-const estados = cam.estados || {};
-const estado = estados[ultima] || "SIN RESPUESTA";
-
-let option = document.createElement("option");
-option.value = nombre;
-option.textContent = nombre;
-select.appendChild(option);
-
-if(baseCoords[nombre]){
-
-const c = baseCoords[nombre];
-
-const marker = L.marker(
-[c.lat,c.lng],
-{icon:icono(colorEstado(estado))}
-).addTo(map);
-
-marker.nombre = nombre.toUpperCase();
-
-marker.bindPopup(`
-<b>${nombre}</b><br>
-${info.ubicacion || "-"}<br>
-${info.proveedor || "-"}<br>
-${info.ip || "-"}<br>
-Estado: <b>${estado}</b>
-`);
-
-markers.push(marker);
-
-if(estado.includes("ONLINE")) online.innerText++;
-else caidas.innerText++;
-
-}else{
-sincoord.innerText++;
+if(e.includes("ONLINE")){
+return `<span class="badge" style="background:#14532d">ONLINE</span>`;
 }
+
+return `<span class="badge" style="background:#7f1d1d">CAÍDA</span>`;
+}
+
+/* =========================
+NORMALIZADOR DEFINITIVO
+========================= */
+
+function normalizarNombre(txt){
+
+if(!txt) return "";
+
+return txt
+.toUpperCase()
+
+// sacar tildes
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+
+// sacar basura
+.replace(/\(.*?\)/g," ")
+.replace(/FIJA\s*\d*/g," ")
+.replace(/DOMO/g," ")
+.replace(/INTERCOMUNICADOR/g," ")
+
+// DJO
+.replace(/^DJ\s*O\s*(\d{1,2})$/,"DJO $1")
+.replace(/^DJ\s*(\d{1,2})$/,"DJO $1")
+.replace(/^DJO\s*(\d{1,2})$/,"DJO $1")
+
+// DORIO
+.replace(/^DORIO\s*(\d)$/,"DORIO 0$1")
+
+// PUNTO SEGURO
+.replace(/PUNTO SEGURO\s*-\s*/g,"PUNTO SEGURO ")
+.replace(/PUNTO SEGURO\s+/g,"PUNTO SEGURO ")
+
+// símbolos
+.replace(/[-_/]/g," ")
+.replace(/\./g," ")
+
+// separar letras pegadas
+.replace(/([A-Z])(\d)/g,"$1 $2")
+.replace(/(\d)([A-Z])/g,"$1 $2")
+
+// agregar 0 delante
+.replace(/\b([A-Z]{2,10})\s(\d)\b/g,"$1 0$2")
+
+// espacios
+.replace(/\s+/g," ")
+.trim();
 
 }
 
-renderCoordsList();
+/* =========================
+CARGAR
+========================= */
 
-}
+async function cargar(){
 
-/* =======================
-BUSCAR
-======================= */
-function filtrar(){
+cluster.clearLayers();
+cache=[];
 
-const txt = buscar.value.toUpperCase();
+const h=await fetch("/historial").then(r=>r.json());
+const c=await fetch("/api/coords").then(r=>r.json());
 
-markers.forEach(m=>{
-if(m.nombre.includes(txt)){
-m.addTo(map);
-}else{
-map.removeLayer(m);
-}
-});
+const mapaCoords={};
 
-}
+/* =========================
+ARMAR MAPA COORDS
+========================= */
 
-/* =======================
-MODO EDICION
-======================= */
-function activarModoEdicion(){
+c.forEach(x=>{
 
-modoEdicion = true;
+const nombreReal =
+x.nombre ||
+x.denominacion ||
+x.DENOMINACION ||
+x.camara ||
+"";
 
-alert("Ahora hacé click en el mapa para guardar coordenada.");
+if(!nombreReal) return;
 
-}
+const clave = normalizarNombre(nombreReal);
 
-/* =======================
-CLICK MAPA
-======================= */
-map.on("click", function(e){
-
-if(!modoEdicion) return;
-
-const cam = camaraSelect.value;
-
-if(!cam){
-alert("Seleccioná una cámara");
-return;
-}
-
-baseCoords[cam] = {
-lat:e.latlng.lat,
-lng:e.latlng.lng
+mapaCoords[clave] = {
+nombre:nombreReal,
+lat:parseFloat(x.lat),
+lng:parseFloat(x.lng)
 };
 
-localStorage.setItem(
-"coordsFV",
-JSON.stringify(baseCoords)
+});
+
+console.log("Coords cargadas:",Object.keys(mapaCoords).length);
+
+const ultima=h.fechas[h.fechas.length-1];
+
+let totalCam=0;
+let onlineCount=0;
+let caidasCount=0;
+let sincoordCount=0;
+
+/* =========================
+RECORRER CAMARAS
+========================= */
+
+for(const nombre in h.camaras){
+
+totalCam++;
+
+const cam=h.camaras[nombre];
+const info=cam.info||{};
+const estado=cam.estados[ultima]||"SIN RESPUESTA";
+
+const clave = normalizarNombre(nombre);
+
+const coord = mapaCoords[clave];
+
+if(!coord){
+
+sincoordCount++;
+
+console.log("SIN COORD:",nombre);
+console.log("NORMALIZADO:",clave);
+
+continue;
+}
+
+if(estado.includes("ONLINE")){
+onlineCount++;
+}else{
+caidasCount++;
+}
+
+/* =========================
+MARKER
+========================= */
+
+const marker=L.marker(
+[coord.lat,coord.lng],
+{
+icon:icono(colorEstado(estado))
+}
 );
 
-modoEdicion = false;
+/* =========================
+HISTORIAL
+========================= */
 
-alert("Coordenada guardada para " + cam);
+const ult7=h.fechas.slice(-7);
 
-cargarMapa();
+let historial="";
+
+ult7.forEach(f=>{
+
+const est=cam.estados[f]||"SIN RESPUESTA";
+
+if(est.includes("ONLINE")){
+historial+="🟢 ";
+}else{
+historial+="🔴 ";
+}
 
 });
 
-/* =======================
-EXPORTAR
-======================= */
-function exportarCoords(){
+/* =========================
+UPTIME
+========================= */
 
-const texto = JSON.stringify(baseCoords,null,2);
+const ult30=h.fechas.slice(-30);
 
-const blob = new Blob([texto], {
-type:"application/json"
+let ok=0;
+
+ult30.forEach(f=>{
+
+const est=cam.estados[f]||"";
+
+if(est.includes("ONLINE")){
+ok++;
+}
+
 });
 
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "coordenadas_fv.json";
-a.click();
+const uptime = ult30.length
+? Math.round((ok/ult30.length)*100)
+: 0;
+
+/* =========================
+CAIDA ACTUAL
+========================= */
+
+let caidaTexto="";
+
+if(!estado.includes("ONLINE")){
+
+let diasCaida=0;
+
+for(let i=h.fechas.length-1;i>=0;i--){
+
+const f=h.fechas[i];
+const e=cam.estados[f]||"";
+
+if(e.includes("ONLINE")) break;
+
+diasCaida++;
 
 }
 
-/* =======================
-LISTA
-======================= */
-function renderCoordsList(){
-
-let html = "";
-
-for(const k in baseCoords){
-
-html += `
-<div class="item">
-<b>${k}</b><br>
-${baseCoords[k].lat.toFixed(5)},
-${baseCoords[k].lng.toFixed(5)}
+caidaTexto=`
+<div style="
+margin-top:8px;
+padding:8px;
+border-radius:10px;
+background:#450a0a;
+color:#fecaca;
+font-weight:700;
+">
+🔴 Caída hace ${diasCaida} día(s)
 </div>
 `;
 
 }
 
-coordsList.innerHTML = html;
+/* =========================
+POPUP
+========================= */
+
+marker.bindPopup(`
+<div style="
+min-width:260px;
+font-family:Segoe UI,Arial,sans-serif;
+color:#111827;
+">
+
+<div style="
+font-size:20px;
+font-weight:900;
+margin-bottom:6px;
+">
+${nombre}
+</div>
+
+<div style="
+margin-bottom:8px;
+font-size:14px;
+color:#374151;
+">
+${info.ubicacion || "-"}
+</div>
+
+<div style="
+padding:8px;
+border-radius:10px;
+background:${estado.includes("ONLINE") ? "#dcfce7" : "#fee2e2"};
+color:${estado.includes("ONLINE") ? "#166534" : "#991b1b"};
+font-weight:800;
+text-align:center;
+margin-bottom:10px;
+">
+${estado.includes("ONLINE") ? "🟢 ONLINE" : "🔴 OFFLINE"}
+</div>
+
+<div style="font-size:13px;line-height:1.6">
+
+<b>IP:</b> ${info.ip || "-"}<br>
+<b>Proveedor:</b> ${info.proveedor || "-"}<br>
+
+</div>
+
+${caidaTexto}
+
+<hr style="margin:10px 0;border:0;border-top:1px solid #e5e7eb">
+
+<div style="
+font-size:13px;
+font-weight:700;
+margin-bottom:5px;
+">
+Últimos 7 días
+</div>
+
+<div style="
+font-size:18px;
+margin-bottom:10px;
+">
+${historial}
+</div>
+
+<div style="
+padding:8px;
+border-radius:10px;
+background:#eff6ff;
+color:#1d4ed8;
+font-weight:800;
+text-align:center;
+">
+📈 Uptime 30 días: ${uptime}%
+</div>
+
+<div style="
+margin-top:10px;
+text-align:center;
+">
+<button
+onclick="map.setView([${coord.lat},${coord.lng}],19)"
+style="
+border:none;
+padding:8px 14px;
+border-radius:10px;
+background:#2563eb;
+color:white;
+font-weight:800;
+cursor:pointer;
+">
+📍 Centrar cámara
+</button>
+</div>
+
+</div>
+`);
+
+cluster.addLayer(marker);
+
+cache.push({
+nombre,
+estado,
+ubicacion:info.ubicacion||"",
+lat:coord.lat,
+lng:coord.lng,
+marker
+});
 
 }
 
-/* =======================
-INICIO
-======================= */
-cargarMapa();
+/* =========================
+STATS
+========================= */
+
+total.innerText=totalCam;
+online.innerText=onlineCount;
+caidas.innerText=caidasCount;
+sincoord.innerText=sincoordCount;
+
+/* =========================
+SELECT EDIT
+========================= */
+
+camaraEdit.innerHTML="";
+
+cache
+.sort((a,b)=>a.nombre.localeCompare(b.nombre))
+.forEach(x=>{
+
+const op=document.createElement("option");
+
+op.value=x.nombre;
+op.textContent=x.nombre;
+
+camaraEdit.appendChild(op);
+
+});
+
+renderLista();
+
+}
+
+/* =========================
+LISTA
+========================= */
+
+function renderLista(txt="",estadoFiltro="TODAS"){
+
+let html="";
+
+cache
+.filter(x=>{
+
+let okTexto=
+x.nombre.toUpperCase().includes(txt) ||
+x.ubicacion.toUpperCase().includes(txt);
+
+let okEstado=true;
+
+if(estadoFiltro==="ONLINE"){
+okEstado=x.estado.includes("ONLINE");
+}
+
+if(estadoFiltro==="CAIDA"){
+okEstado=!x.estado.includes("ONLINE");
+}
+
+return okTexto && okEstado;
+
+})
+.sort((a,b)=>a.nombre.localeCompare(b.nombre))
+.forEach(x=>{
+
+html+=`
+<div class="item" onclick="ir(${x.lat},${x.lng})">
+<b>${x.nombre}</b>
+<div>${x.ubicacion}</div>
+${badge(x.estado)}
+</div>
+`;
+
+});
+
+lista.innerHTML=html;
+
+}
+
+/* =========================
+FILTRO
+========================= */
+
+function filtrar(){
+
+const txt=buscar.value.toUpperCase();
+const est=filtroEstado.value;
+
+cluster.clearLayers();
+
+cache.forEach(x=>{
+
+let okTexto=
+x.nombre.toUpperCase().includes(txt) ||
+x.ubicacion.toUpperCase().includes(txt);
+
+let okEstado=true;
+
+if(est==="ONLINE"){
+okEstado=x.estado.includes("ONLINE");
+}
+
+if(est==="CAIDA"){
+okEstado=!x.estado.includes("ONLINE");
+}
+
+if(okTexto && okEstado){
+cluster.addLayer(x.marker);
+}
+
+});
+
+renderLista(txt,est);
+
+}
+
+/* =========================
+IR
+========================= */
+
+function ir(lat,lng){
+map.setView([lat,lng],18);
+}
+
+/* =========================
+FULLSCREEN
+========================= */
+
+function fullscreenMapa(){
+
+if(document.documentElement.requestFullscreen){
+document.documentElement.requestFullscreen();
+}
+
+}
+
+/* =========================
+EDICION
+========================= */
+
+function activarEdicion(){
+
+modoEdicion=true;
+
+alert("Ahora hacé click en el mapa.");
+
+}
+
+map.on("click",async function(e){
+
+if(!modoEdicion) return;
+
+await fetch("/api/coords",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+nombre:camaraEdit.value,
+lat:e.latlng.lat,
+lng:e.latlng.lng
+})
+});
+
+modoEdicion=false;
+
+alert("Coordenada actualizada");
+
+cargar();
+
+});
+
+/* =========================
+AUTO REFRESH
+========================= */
+
+setInterval(cargar,20000);
+
+cargar();
 
 </script>
+
 </body>
 </html>

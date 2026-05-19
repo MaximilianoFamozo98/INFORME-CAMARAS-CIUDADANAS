@@ -3,7 +3,6 @@ const app = express();
 const path = require("path");
 const fs = require("fs");
 const { exec } = require("child_process");
-
 const db = require("./db");
 const { analizarCamaras, analizarTodasLasCamaras } = require("./index.js");
 
@@ -48,13 +47,12 @@ app.get("/progreso", (req, res) => {
 // GUARDAR HISTORIAL SQLITE
 // =============================
 function guardarHistorial(resultado) {
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO historial (fecha, data)
     VALUES (?, ?)
-  `).run(
-    new Date().toISOString(),
-    JSON.stringify(resultado)
-  );
+  `,
+  ).run(new Date().toISOString(), JSON.stringify(resultado));
 
   console.log("✅ Historial guardado en SQLite");
 }
@@ -70,7 +68,7 @@ app.post("/analizar", async (req, res) => {
 
     const lista = texto
       .split("\n")
-      .map(x => x.trim())
+      .map((x) => x.trim())
       .filter(Boolean);
 
     const { ruta, resultado } = await analizarCamaras(lista, progreso);
@@ -80,7 +78,6 @@ app.post("/analizar", async (req, res) => {
     res.download(ruta, () => {
       fs.unlink(ruta, () => {});
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al analizar");
@@ -101,7 +98,6 @@ app.get("/analizar-todas", async (req, res) => {
     res.download(ruta, () => {
       fs.unlink(ruta, () => {});
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).send("Error al analizar todas");
@@ -113,10 +109,14 @@ app.get("/analizar-todas", async (req, res) => {
 // =============================
 app.get("/historial", (req, res) => {
   try {
-    const rows = db.prepare(`
+    const rows = db
+      .prepare(
+        `
       SELECT * FROM historial
       ORDER BY fecha ASC
-    `).all();
+    `,
+      )
+      .all();
 
     const mapa = {};
     const fechasSet = new Set();
@@ -135,7 +135,32 @@ app.get("/historial", (req, res) => {
       const camaras = JSON.parse(h.data);
 
       camaras.forEach((cam) => {
-        const nombre = cam.DENOMINACION;
+        let nombre = cam.DENOMINACION.toUpperCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\./g, "")
+          .replace(/[-_/]/g, " ")
+          .replace(/\(.*?\)/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        // ALT01 => ALT 01
+        nombre = nombre.replace(/^([A-Z]{2,6})(\d{1,2})$/, "$1 $2");
+
+        // DJ 06 => DJO 06
+        nombre = nombre.replace(/^DJ\s*(\d{1,2})$/, "DJO $1");
+
+        // DORIO1 / DORI1 / DORI 1 => DORIO 01
+        nombre = nombre.replace(/^DORI?O?\s*(\d{1,2})$/, "DORIO $1");
+
+        // completar cero
+        nombre = nombre.replace(/\b([A-Z]{2,6})\s(\d)\b/, "$1 0$2");
+
+        // Punto Seguro
+        nombre = nombre.replace(
+          /^PUNTO SEGURO.*SAN FRANCISCO.*$/,
+          "PUNTO SEGURO SAN FRANCISCO",
+        );
 
         if (!mapa[nombre]) {
           mapa[nombre] = {
@@ -163,7 +188,6 @@ app.get("/historial", (req, res) => {
       fechas,
       camaras: mapa,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).send("Error historial");
@@ -182,6 +206,75 @@ app.get("/", (req, res) => {
 // =============================
 app.get("/mapa", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "mapa.html"));
+});
+
+// =====================
+// COORDENADAS
+// =====================
+
+// traer todas
+// =====================
+// TRAER COORDENADAS
+// =====================
+app.get("/api/coords", (req, res) => {
+  try {
+    const rows = db
+      .prepare(
+        `
+SELECT
+TRIM(UPPER(nombre)) as nombre,
+lat,
+lng
+FROM coordenadas
+ORDER BY nombre
+`,
+      )
+      .all();
+
+    res.json(rows);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: true });
+  }
+});
+
+// guardar / editar
+app.post("/api/coords", (req, res) => {
+  try {
+    const { nombre, lat, lng } = req.body;
+
+    db.prepare(
+      `
+      INSERT INTO coordenadas(nombre,lat,lng)
+      VALUES(?,?,?)
+      ON CONFLICT(nombre)
+      DO UPDATE SET
+      lat=?,
+      lng=?
+    `,
+    ).run(nombre, lat, lng, lat, lng);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: true });
+  }
+});
+
+app.delete("/api/coords/:nombre", (req, res) => {
+  try {
+    db.prepare(
+      `
+    DELETE FROM coordenadas
+    WHERE nombre = ?
+  `,
+    ).run(req.params.nombre);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: true });
+  }
 });
 
 // =============================

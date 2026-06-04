@@ -44,12 +44,41 @@ function normalizarTexto(txt) {
 }
 
 // =============================
-function extraerCodigo(txt) {
-  if (!txt) return null;
-  const match = txt.toUpperCase().match(/[A-Z]{2,3}\s?\d{1,3}/);
-  return match ? match[0].replace(/\s/g, "") : null;
+function extraerCodigo(txt){
+
+txt = normalizarNombre(txt);
+
+// ===== ALIASES =====
+
+// DORI -> DORIO
+txt = txt.replace(/^DORI\s/, "DORIO ");
+
+// CAR 03 F1 -> CAR 03
+txt = txt.replace(/^(CAR\s\d{2}).*/, "$1");
+
+// CEN 88 PLAZA CENTRAL -> CEN 88
+txt = txt.replace(/^(CEN\s\d{2}).*/, "$1");
+
+// DJO O6
+txt = txt.replace(/^DJO\sO\s(\d)$/,"DJO 0$1");
+
+// buscar codigo principal
+const partes = txt.split(" ");
+
+if(partes.length >= 2){
+
+const prefijo = partes[0];
+const numero = partes[1];
+
+if(/^\d+$/.test(numero)){
+return `${prefijo} ${numero.padStart(2,"0")}`;
 }
 
+}
+
+return txt;
+
+}
 // =============================
 function parsearPuntoSeguro(nombre) {
   const limpio = normalizarTexto(nombre);
@@ -359,7 +388,23 @@ async function analizarCamaras(lista, progreso) {
 };
 }
 
+
+async function obtenerTodasLasCamarasExcel() {
+
+  const workbook = XLSX.readFile(archivoExcel);
+
+  const sheet = workbook.Sheets["RESUMEN TOTAL"];
+
+  const data = XLSX.utils.sheet_to_json(sheet, {
+    range: 6
+  });
+
+  return data;
+
+}
+
 module.exports = {
   analizarCamaras,
   analizarTodasLasCamaras,
+  obtenerTodasLasCamarasExcel, 
 };

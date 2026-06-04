@@ -308,7 +308,14 @@ height:54px;
 <button onclick="cargar()">🔄 Actualizar</button>
 
 <select id="camaraEdit"></select>
-<button onclick="activarEdicion()">📌 Reubicar cámara</button>
+
+<button onclick="activarEdicion()">
+📌 Reubicar cámara
+</button>
+
+<button onclick="eliminarCoord()">
+🗑 Eliminar coordenada
+</button>
 
 <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">
 1) Elegí cámara<br>
@@ -395,58 +402,92 @@ NORMALIZADOR DEFINITIVO
 
 function normalizarNombre(txt){
 
-if(!txt) return "";
+txt = (txt || "").toUpperCase();
 
-return txt
-.toUpperCase()
-
-// sacar tildes
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-
-// sacar basura
+txt = txt
+txt = txt
+.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
 .replace(/\(.*?\)/g," ")
-.replace(/FIJA\s*\d*/g," ")
-.replace(/DOMO/g," ")
-.replace(/INTERCOMUNICADOR/g," ")
-
-// DJO
-.replace(/^DJ\s*O\s*(\d{1,2})$/,"DJO $1")
-.replace(/^DJ\s*(\d{1,2})$/,"DJO $1")
-.replace(/^DJO\s*(\d{1,2})$/,"DJO $1")
-
-// DORIO
-.replace(/^DORIO\s*(\d)$/,"DORIO 0$1")
-
-// PUNTO SEGURO
-.replace(/PUNTO SEGURO\s*-\s*/g,"PUNTO SEGURO ")
-.replace(/PUNTO SEGURO\s+/g,"PUNTO SEGURO ")
-
-// símbolos
-.replace(/[-_/]/g," ")
-.replace(/\./g," ")
-
-// separar letras pegadas
 .replace(/([A-Z])(\d)/g,"$1 $2")
 .replace(/(\d)([A-Z])/g,"$1 $2")
-
-// agregar 0 delante
-.replace(/\b([A-Z]{2,10})\s(\d)\b/g,"$1 0$2")
-
-// espacios
+.replace(/[-_/]/g," ")
+.replace(/\./g," ")
 .replace(/\s+/g," ")
 .trim();
+
+// ===== CASOS ESPECIALES =====
+
+// DJ O6 -> DJO 06
+txt = txt.replace(/^DJ\s*O\s*(\d)$/,"DJO 0$1");
+txt = txt.replace(/^DJO\s*O\s*(\d)$/,"DJO 0$1");
+txt = txt.replace(/^DJ\s*(\d)$/,"DJO 0$1");
+txt = txt.replace(/^DJO\s*(\d)$/,"DJO 0$1");
+
+// DORI -> DORIO
+txt = txt.replace(/^DORI\s+(\d{1,2})$/,"DORIO $1");
+
+// completar ceros
+txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g,"$1 0$2");
+
+return txt.trim();
 
 }
 
 /* =========================
 CARGAR
 ========================= */
+function extraerCodigo(txt){
+
+txt = normalizarNombre(txt);
+
+// =========================
+// CASOS ESPECIALES
+// =========================
+
+// CAR 03 F1 => CAR 03
+txt = txt.replace(/\sF\d$/,"");
+
+// DORIO => DORI
+txt = txt.replace(/^DORIO\s(\d{2})$/,"DORI $1");
+
+// PUNTO SEGURO
+
+
+// =========================
+// SEPARAR LETRAS Y NUMEROS
+// CEN90 => CEN 90
+// MON05 => MON 05
+// =========================
+
+txt = txt.replace(/^([A-Z]{2,10})(\d{2,3})$/,"$1 $2");
+
+// =========================
+// KM08 UPA 03
+// devolver KM 08
+// =========================
+
+const km = txt.match(/^KM\s?(\d{2})/);
+
+if(km){
+return `KM ${km[1]}`;
+}
+
+// =========================
+// CODIGO PRINCIPAL
+// =========================
+
+const m = txt.match(/[A-Z]{2,10}\s\d{2,3}/);
+
+return m ? m[0] : txt;
+
+}
 
 async function cargar(){
 
 cluster.clearLayers();
 cache=[];
+window.debugSinCoord = [];
+  window.debugCoordVacia = [];
 
 const h=await fetch("/historial").then(r=>r.json());
 const c=await fetch("/api/coords").then(r=>r.json());
@@ -456,7 +497,7 @@ const mapaCoords={};
 /* =========================
 ARMAR MAPA COORDS
 ========================= */
-
+window.debugClaves = {};
 c.forEach(x=>{
 
 const nombreReal =
@@ -468,17 +509,55 @@ x.camara ||
 
 if(!nombreReal) return;
 
-const clave = normalizarNombre(nombreReal);
+const clave = extraerCodigo(nombreReal);
+
+if (!window.debugClaves[clave]) {
+  window.debugClaves[clave] = new Set();
+}
+
+window.debugClaves[clave].add(nombreReal);
+// ============================
+
+console.log("COORD:", nombreReal, "=>", clave);
+
+console.log("GUARDANDO:", clave, x.lat, x.lng);
+
+const lat = parseFloat(x.lat);
+const lng = parseFloat(x.lng);
+
+// si ya existe una buena, NO la pises con 0,0
+if(
+mapaCoords[clave] &&
+mapaCoords[clave].lat !== 0 &&
+mapaCoords[clave].lng !== 0 &&
+(lat === 0 || lng === 0)
+){
+return;
+}
 
 mapaCoords[clave] = {
 nombre:nombreReal,
-lat:parseFloat(x.lat),
-lng:parseFloat(x.lng)
+lat,
+lng
 };
 
 });
 
 console.log("Coords cargadas:",Object.keys(mapaCoords).length);
+
+Object.entries(window.debugClaves)
+.forEach(([clave,valores])=>{
+
+  const arr = [...valores];
+
+  if(arr.length > 1){
+
+    console.log("COLISION:", clave);
+    console.log(arr);
+
+  }
+
+});
 
 const ultima=h.fechas[h.fechas.length-1];
 
@@ -499,7 +578,7 @@ const cam=h.camaras[nombre];
 const info=cam.info||{};
 const estado=cam.estados[ultima]||"SIN RESPUESTA";
 
-const clave = normalizarNombre(nombre);
+const clave = extraerCodigo(nombre);
 
 const coord = mapaCoords[clave];
 
@@ -509,9 +588,30 @@ sincoordCount++;
 
 console.log("SIN COORD:",nombre);
 console.log("NORMALIZADO:",clave);
+window.debugSinCoord = window.debugSinCoord || [];
+
+window.debugSinCoord.push({
+  nombre,
+  clave
+});
 
 continue;
+
 }
+
+// coordenada vacía
+if(coord.lat == 0 || coord.lng == 0){
+
+sincoordCount++;
+
+console.log("COORD VACIA:", nombre);
+window.debugCoordVacia = window.debugCoordVacia || [];
+
+window.debugCoordVacia.push(nombre);
+continue;
+}
+
+
 
 if(estado.includes("ONLINE")){
 onlineCount++;
@@ -889,11 +989,49 @@ cargar();
 
 });
 
+async function eliminarCoord(){
+
+const nombre = camaraEdit.value;
+
+if(!nombre){
+alert("Seleccioná una cámara");
+return;
+}
+
+const ok = confirm(
+"¿Eliminar coordenada de:\n\n" + nombre + " ?"
+);
+
+if(!ok) return;
+
+try{
+
+await fetch(
+"/api/coords/" + encodeURIComponent(nombre),
+{
+method:"DELETE"
+}
+);
+
+alert("✅ Coordenada eliminada");
+
+cargar();
+
+}catch(err){
+
+console.log(err);
+
+alert("Error eliminando coordenada");
+
+}
+
+}
+
 /* =========================
 AUTO REFRESH
 ========================= */
 
-setInterval(cargar,20000);
+//setInterval(cargar,20000);
 
 cargar();
 

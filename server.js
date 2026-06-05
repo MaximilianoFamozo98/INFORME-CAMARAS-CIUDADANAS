@@ -145,10 +145,18 @@ app.get("/historial", (req, res) => {
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
           .replace(/\./g, "")
-          .replace(/[-_/]/g, " ")
-          .replace(/\(.*?\)/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
+          .replace(/[-_/]/g, " ");
+
+        // conservar DOMO y FIJA en puntos seguros
+        if (nombre.includes("PUNTO SEGURO")) {
+          nombre = nombre
+            .replace(/\(DOMO\)/g, " DOMO ")
+            .replace(/\(FIJA\)/g, " FIJA ");
+        } else {
+          nombre = nombre.replace(/\(.*?\)/g, " ");
+        }
+
+        nombre = nombre.replace(/\s+/g, " ").trim();
 
         // ALT01 => ALT 01
         nombre = nombre.replace(/^([A-Z]{2,6})(\d{1,2})$/, "$1 $2");
@@ -806,10 +814,12 @@ app.get("/debug-total-historial", (req, res) => {
 app.get("/debug-cantidad-historial", (req, res) => {
   try {
     const rows = db
-      .prepare(`
+      .prepare(
+        `
         SELECT * FROM historial
         ORDER BY fecha ASC
-      `)
+      `,
+      )
       .all();
 
     const originales = new Set();
@@ -869,61 +879,63 @@ app.get("/debug-cantidad-historial", (req, res) => {
 });
 
 app.get("/debug-coords-vacias", (req, res) => {
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT *
     FROM coordenadas
     WHERE lat = 0 OR lng = 0
     ORDER BY nombre
-  `).all();
+  `,
+    )
+    .all();
 
   res.json({
     total: rows.length,
-    rows
+    rows,
   });
 });
 
 app.get("/debug-historial-conflictos", (req, res) => {
-
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT data
     FROM historial
     ORDER BY fecha DESC
     LIMIT 1
-  `).get();
+  `,
+    )
+    .get();
 
   const cams = JSON.parse(rows.data);
 
   const grupos = {};
 
-  cams.forEach(cam => {
-
-    const normalizado = normalizarNombre(
-      cam.DENOMINACION
-    );
+  cams.forEach((cam) => {
+    const normalizado = normalizarNombre(cam.DENOMINACION);
 
     if (!grupos[normalizado]) {
       grupos[normalizado] = [];
     }
 
     grupos[normalizado].push(cam.DENOMINACION);
-
   });
 
   const conflictos = {};
 
-  Object.entries(grupos).forEach(([k,v]) => {
-
+  Object.entries(grupos).forEach(([k, v]) => {
     const unicos = [...new Set(v)];
 
-    if(unicos.length > 1){
+    if (unicos.length > 1) {
       conflictos[k] = unicos;
     }
-
   });
 
   res.json(conflictos);
-
 });
+
+
 // =============================
 // SERVER
 // =============================

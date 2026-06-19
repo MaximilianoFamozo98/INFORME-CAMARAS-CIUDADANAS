@@ -407,6 +407,8 @@ txt = (txt || "").toUpperCase();
 txt = txt
 txt = txt
 .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+.replace(/\(DOMO\)/gi," DOMO ")
+.replace(/\(FIJA\)/gi," FIJA ")
 .replace(/\(.*?\)/g," ")
 .replace(/([A-Z])(\d)/g,"$1 $2")
 .replace(/(\d)([A-Z])/g,"$1 $2")
@@ -487,12 +489,14 @@ async function cargar(){
 cluster.clearLayers();
 cache=[];
 window.debugSinCoord = [];
-  window.debugCoordVacia = [];
+window.debugCoordVacia = [];
+
 
 const h=await fetch("/historial").then(r=>r.json());
 const c=await fetch("/api/coords").then(r=>r.json());
 
 const mapaCoords={};
+window.mapaCoords = mapaCoords;
 
 /* =========================
 ARMAR MAPA COORDS
@@ -535,7 +539,12 @@ mapaCoords[clave].lng !== 0 &&
 return;
 }
 
-mapaCoords[clave] = {
+if (mapaCoords[clave]) {
+  console.log("🚨 COORD DUPLICADA:", clave);
+  console.log("EXISTE:", mapaCoords[clave]);
+  console.log("NUEVA :", nombreReal);
+}
+mapaCoords[clave] = {  
 nombre:nombreReal,
 lat,
 lng
@@ -560,6 +569,7 @@ Object.entries(window.debugClaves)
 });
 
 const ultima=h.fechas[h.fechas.length-1];
+window.camarasHistorial = Object.keys(h.camaras);
 
 let totalCam=0;
 let onlineCount=0;
@@ -582,6 +592,14 @@ const clave = extraerCodigo(nombre);
 
 const coord = mapaCoords[clave];
 
+if (
+  nombre.includes("AGUSTIN") ||
+  clave.includes("AGUSTIN")
+){
+  console.log("BUSCANDO:", nombre);
+  console.log("CLAVE:", clave);
+  console.log("ENCONTRADA:", mapaCoords[clave]);
+}
 if(!coord){
 
 sincoordCount++;
@@ -822,6 +840,10 @@ marker
 /* =========================
 STATS
 ========================= */
+window.camarasMapa = cache.map(x => x.nombre);
+window.totalMapa = cache.length;
+
+console.log("TOTAL MAPA:", cache.length);
 
 total.innerText=totalCam;
 online.innerText=onlineCount;

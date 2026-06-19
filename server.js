@@ -114,9 +114,6 @@ app.get("/analizar-todas", async (req, res) => {
 // HISTORIAL
 // =============================
 app.get("/historial", (req, res) => {
-  console.log("🔥 HISTORIAL EJECUTADO");
-  console.log("IP:", req.ip);
-  console.log("URL:", req.originalUrl);
   try {
     const rows = db
       .prepare(
@@ -173,11 +170,7 @@ app.get("/historial", (req, res) => {
         // completar cero
         nombre = nombre.replace(/\b([A-Z]{2,6})\s(\d)\b/, "$1 0$2");
 
-        // Punto Seguro
-        nombre = nombre.replace(
-          /^PUNTO SEGURO.*SAN FRANCISCO.*$/,
-          "PUNTO SEGURO SAN FRANCISCO",
-        );
+        
 
         if (!mapa[nombre]) {
           // =========================
@@ -195,15 +188,8 @@ app.get("/historial", (req, res) => {
             .get(nombre);
 
           if (!existeCoord) {
-            db.prepare(
-              `
-      INSERT INTO coordenadas(nombre,lat,lng)
-      VALUES(?,?,?)
-    `,
-            ).run(nombre, 0, 0);
-
-            console.log("📍 Nueva coord creada:", nombre);
-          }
+  console.log("⚠️ Cámara sin coordenadas:", nombre);
+}
           if (mapa[nombre]) {
             console.log("COLISION HISTORIAL:", nombre);
           }
@@ -356,89 +342,88 @@ function normalizarNombre(txt) {
   txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g, "$1 0$2");
 
   return txt.trim();
-
 }
-              //DEBUGSS//
+//DEBUGSS//
 
-app.get("/debug-coords-detalle", (req, res) => {
-  const total = db.prepare(`
-    SELECT COUNT(*) total
-    FROM coordenadas
-  `).get().total;
+app.get("/debug-diferencia-mapa", async (req, res) => {
+  try {
 
-  const cero = db.prepare(`
-    SELECT COUNT(*) total
-    FROM coordenadas
-    WHERE lat = 0 OR lng = 0
-  `).get().total;
+    const coords = db.prepare(`
+      SELECT TRIM(UPPER(nombre)) as nombre
+      FROM coordenadas
+      WHERE lat <> 0
+      AND lng <> 0
+    `).all();
 
-  const validas = db.prepare(`
-    SELECT COUNT(*) total
-    FROM coordenadas
-    WHERE lat <> 0
-    AND lng <> 0
-  `).get().total;
+    const historial = db.prepare(`
+      SELECT data
+      FROM historial
+      ORDER BY id DESC
+      LIMIT 1
+    `).get();
+
+    const camaras = JSON.parse(historial.data);
+
+    const nombresHistorial = new Set(
+      camaras.map(c =>
+        normalizarNombre(c.DENOMINACION)
+      )
+    );
+
+    const sobrantes = coords.filter(c =>
+      !nombresHistorial.has(
+        normalizarNombre(c.nombre)
+      )
+    );
+
+    res.json({
+      totalCoords: coords.length,
+      totalHistorial: nombresHistorial.size,
+      sobrantes: sobrantes.length,
+      lista: sobrantes
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+app.get("/debug-faltantes-reales", async (req,res)=>{
+
+  const historial = cargarHistorial();
+  const coords = await getCoords();
+
+  const codigosHistorial = new Set();
+
+  Object.keys(historial.camaras).forEach(nombre=>{
+    codigosHistorial.add(extraerCodigo(nombre));
+  });
+
+  const codigosCoords = new Set();
+
+  coords.forEach(c=>{
+    codigosCoords.add(
+      extraerCodigo(c.nombre)
+    );
+  });
+
+  const faltanEnMapa = [];
+
+  codigosCoords.forEach(codigo=>{
+
+    if(!codigosHistorial.has(codigo)){
+      faltanEnMapa.push(codigo);
+    }
+
+  });
 
   res.json({
-    total,
-    cero,
-    validas
+    totalCoords: codigosCoords.size,
+    totalHistorial: codigosHistorial.size,
+    faltanEnMapa
   });
+
 });
-
-app.get("/debug-coords-validas", (req, res) => {
-  const rows = db
-    .prepare(
-      `
-    SELECT *
-    FROM coordenadas
-    WHERE lat != 0
-    AND lng != 0
-  `,
-    )
-    .all();
-
-  res.json({
-    total: rows.length,
-  });
-});
-
-app.get("/debug-coords-vacias", (req, res) => {
-  const rows = db.prepare(`
-    SELECT *
-    FROM coordenadas
-    WHERE lat = 0 OR lng = 0
-    ORDER BY nombre
-  `).all();
-
-  res.json({
-    total: rows.length,
-    rows
-  });
-});
-app.get("/debug-coords", (req, res) => {
-  const rows = db.prepare(`
-    SELECT nombre
-    FROM coordenadas
-    ORDER BY nombre
-  `).all();
-
-  res.json(rows);
-});
-
-app.get("/debug-borrar-vacias", (req, res) => {
-  const result = db.prepare(`
-    DELETE FROM coordenadas
-    WHERE lat = 0
-       OR lng = 0
-  `).run();
-
-  res.json({
-    eliminadas: result.changes
-  });
-});
-
-
 // =============================
 // SERVER
 // =============================

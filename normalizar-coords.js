@@ -1,47 +1,11 @@
 const db = require("./db");
+const { normalizarNombre } = require("./normalizar");
 
 /* =========================
 NORMALIZADOR
 ========================= */
 
-function normalizarNombre(txt){
 
-if(!txt) return "";
-
-return txt
-.toUpperCase()
-
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-
-.replace(/\(.*?\)/g," ")
-.replace(/FIJA\s*\d*/g," ")
-.replace(/DOMO/g," ")
-.replace(/INTERCOMUNICADOR/g," ")
-
-// DJO
-.replace(/^DJ\s*O?\s*(\d{1,2})$/,"DJO $1")
-.replace(/^DJO\s*O?\s*(\d{1,2})$/,"DJO $1")
-
-// corregir O6
-.replace(/\bO(\d)\b/g,"0$1")
-
-// símbolos
-.replace(/[-_/]/g," ")
-.replace(/\./g," ")
-
-// separar letras/numeros
-.replace(/([A-Z])(\d)/g,"$1 $2")
-.replace(/(\d)([A-Z])/g,"$1 $2")
-
-// cero adelante
-.replace(/\b([A-Z]{2,10})\s(\d)\b/g,"$1 0$2")
-
-// espacios
-.replace(/\s+/g," ")
-.trim();
-
-}
 
 /* =========================
 NORMALIZAR SQLITE

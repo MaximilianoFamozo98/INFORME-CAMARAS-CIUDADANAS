@@ -9,6 +9,7 @@ const {
   analizarTodasLasCamaras,
   obtenerTodasLasCamarasExcel,
 } = require("./index.js");
+const { normalizarNombre } = require("./normalizar");
 
 console.log("SERVER MODIFICADO OK");
 
@@ -141,37 +142,7 @@ app.get("/historial", (req, res) => {
       const camaras = JSON.parse(h.data);
 
       camaras.forEach((cam) => {
-        let nombre = cam.DENOMINACION.toUpperCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/\./g, "")
-          .replace(/[-_/]/g, " ");
-
-        // conservar DOMO y FIJA en puntos seguros
-        if (nombre.includes("PUNTO SEGURO")) {
-          nombre = nombre
-            .replace(/\(DOMO\)/g, " DOMO ")
-            .replace(/\(FIJA\)/g, " FIJA ");
-        } else {
-          nombre = nombre.replace(/\(.*?\)/g, " ");
-        }
-
-        nombre = nombre.replace(/\s+/g, " ").trim();
-
-        // ALT01 => ALT 01
-        nombre = nombre.replace(/^([A-Z]{2,6})(\d{1,2})$/, "$1 $2");
-
-        // DJ 06 => DJO 06
-        nombre = nombre.replace(/^DJ\s*(\d{1,2})$/, "DJO $1");
-
-        // DORIO1 / DORI1 / DORI 1 => DORIO 01
-        nombre = nombre.replace(/^DORI?O?\s*(\d{1,2})$/, "DORIO $1");
-
-        // completar cero
-        nombre = nombre.replace(/\b([A-Z]{2,6})\s(\d)\b/, "$1 0$2");
-
-        
-
+        let nombre = normalizarNombre(cam.DENOMINACION);
         if (!mapa[nombre]) {
           // =========================
           // CREAR COORD VACIA SI NO EXISTE
@@ -188,8 +159,8 @@ app.get("/historial", (req, res) => {
             .get(nombre);
 
           if (!existeCoord) {
-  console.log("⚠️ Cámara sin coordenadas:", nombre);
-}
+            console.log("⚠️ Cámara sin coordenadas:", nombre);
+          }
           if (mapa[nombre]) {
             console.log("COLISION HISTORIAL:", nombre);
           }
@@ -314,37 +285,7 @@ app.delete("/api/coords/:nombre", (req, res) => {
   }
 });
 
-function normalizarNombre(txt) {
-  txt = String(txt || "").toUpperCase();
-
-  txt = txt
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\(.*?\)/g, " ")
-    .replace(/FIJA\s*\d*/g, " ")
-    .replace(/DOMO/g, " ")
-    .replace(/INTERCOMUNICADOR/g, " ")
-    .replace(/[-_/]/g, " ")
-    .replace(/\./g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // DJ O6 -> DJO 06
-  txt = txt.replace(/^DJ\s*O\s*(\d)$/, "DJO 0$1");
-  txt = txt.replace(/^DJO\s*O\s*(\d)$/, "DJO 0$1");
-  txt = txt.replace(/^DJ\s*(\d)$/, "DJO 0$1");
-  txt = txt.replace(/^DJO\s*(\d)$/, "DJO 0$1");
-
-  // DORI -> DORIO
-  txt = txt.replace(/^DORI\s+(\d{1,2})$/, "DORIO $1");
-
-  // completar ceros
-  txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g, "$1 0$2");
-
-  return txt.trim();
-}
 //DEBUGSS//
-
 
 // =============================
 // SERVER

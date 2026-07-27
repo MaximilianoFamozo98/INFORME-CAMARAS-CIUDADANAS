@@ -578,10 +578,22 @@ html+="</tr>";
 let visibles=0;
 let proveedores={};
 
+const qCamara=(filtroCamara.value||"").toUpperCase().trim();
+const qProveedor=(filtroProveedor.value||"").toUpperCase().trim();
+const qUbicacion=(filtroUbicacion.value||"").toUpperCase().trim();
+const qConexion=(filtroConexion.value||"").toUpperCase().trim();
+const qIP=(filtroIP.value||"").toUpperCase().trim();
+
 Object.entries(camaras).forEach(([nombre,obj])=>{
 
 const info=obj.info||{};
 const estados=obj.estados||{};
+
+if(qCamara && !nombre.toUpperCase().includes(qCamara)) return;
+if(qProveedor && !(info.proveedor||"").toUpperCase().includes(qProveedor)) return;
+if(qUbicacion && !(info.ubicacion||"").toUpperCase().includes(qUbicacion)) return;
+if(qConexion && !(info.conexion||"").toUpperCase().includes(qConexion)) return;
+if(qIP && !(info.ip||"").toUpperCase().includes(qIP)) return;
 
 visibles++;
 

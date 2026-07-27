@@ -5,8 +5,8 @@ const path = require("path");
 const pLimit = require("p-limit");
 const fs = require("fs");
 const axios = require("axios");
-
 const outputDir = path.join(process.cwd(), "informes");
+const { extraerCodigo, normalizarTexto } = require("./normalizar");
 
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
@@ -25,60 +25,7 @@ const INTENTOS = 4;
 const TIMEOUT = 1.5;
 const CONCURRENCIA = 5;
 
-// =============================
-// NORMALIZAR
-// =============================
-function normalizarTexto(txt) {
-  if (!txt) return "";
 
-  return txt
-    .toString()
-    .toUpperCase()
-    .replace(/^\d+\)\s*/, "")
-    .replace(/PUNTO SEGURO/g, "")
-    .replace(/INGENIERO/g, "ING")
-    .replace(/ING\./g, "ING")
-    .replace(/[-().]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-// =============================
-function extraerCodigo(txt){
-
-txt = normalizarNombre(txt);
-
-// ===== ALIASES =====
-
-// DORI -> DORIO
-txt = txt.replace(/^DORI\s/, "DORIO ");
-
-// CAR 03 F1 -> CAR 03
-txt = txt.replace(/^(CAR\s\d{2}).*/, "$1");
-
-// CEN 88 PLAZA CENTRAL -> CEN 88
-txt = txt.replace(/^(CEN\s\d{2}).*/, "$1");
-
-// DJO O6
-txt = txt.replace(/^DJO\sO\s(\d)$/,"DJO 0$1");
-
-// buscar codigo principal
-const partes = txt.split(" ");
-
-if(partes.length >= 2){
-
-const prefijo = partes[0];
-const numero = partes[1];
-
-if(/^\d+$/.test(numero)){
-return `${prefijo} ${numero.padStart(2,"0")}`;
-}
-
-}
-
-return txt;
-
-}
 // =============================
 function parsearPuntoSeguro(nombre) {
   const limpio = normalizarTexto(nombre);

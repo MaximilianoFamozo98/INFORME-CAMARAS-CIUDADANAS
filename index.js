@@ -25,6 +25,9 @@ const INTENTOS = 4;
 const TIMEOUT = 1.5;
 const CONCURRENCIA = 5;
 
+// SOLO PARA DESARROLLO
+const MODO_DESARROLLO = true;
+
 
 // =============================
 function parsearPuntoSeguro(nombre) {
@@ -143,6 +146,38 @@ async function procesarCamara(fila, index, progreso) {
       
     };
   }
+
+  // =============================
+  // MODO DESARROLLO
+  // =============================
+ if (MODO_DESARROLLO) {
+
+    const nombre = fila["[Denominacion]"] || "";
+
+    // Usa el nombre de la cámara para generar siempre el mismo resultado
+    const numero =
+        nombre.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+
+    const online = (numero % 100) < 80;
+
+    if (online) {
+        progreso.online++;
+    } else {
+        progreso.sinRespuesta++;
+    }
+console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
+    return {
+        DENOMINACION: nombre,
+        PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
+        UBICACION: fila["[Ubicacion]"] || "-",
+        CONEXION: conexion,
+        IP: ip,
+        LATENCIA: "-",
+        ESTADO: online ? "ONLINE" : "SIN RESPUESTA",
+    };
+}
+
+
 
   try {
     const { exitos, latenciaPromedio } = await hacerPing(ip);

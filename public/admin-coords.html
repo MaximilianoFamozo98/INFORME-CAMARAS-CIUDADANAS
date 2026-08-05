@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Admin Coordenadas PRO</title>
+<title>Admin Coordenadas</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -144,12 +144,51 @@ backdrop-filter:blur(6px);
 <!-- PANEL -->
 <div class="sidebar">
 
-<h1>⚙️ Admin Coordenadas PRO</h1>
+<h1>⚙️ Admin Coordenadas</h1>
 <div class="sub">Centro de Monitoreo · Florencio Varela</div>
 
 <div class="card">
 <label>Buscar cámara</label>
 <input id="buscar" placeholder="BEL 01 / CEN / nombre..." oninput="renderLista()">
+</div>
+
+
+<div class="card stats">
+
+<div>📷 Cámaras: <b id="cantTotal">0</b></div>
+
+<div style="margin-top:6px">
+🟢 Con coordenadas:
+<b id="cantCon">0</b>
+</div>
+
+<div
+id="btnPendientes"
+style="
+margin-top:8px;
+padding:8px;
+border-radius:8px;
+background:#1e293b;
+cursor:pointer;
+font-weight:bold;
+color:#facc15;
+text-align:center;"
+onclick="mostrarPendientes()">
+
+🟡 Ver pendientes (<span id="cantPend">0</span>)
+
+</div>
+
+<hr style="margin:12px 0;border-color:#334155">
+
+<div>🎯 Click en el mapa para seleccionar ubicación</div>
+<div>🧭 Arrastrá marcador para ajustar</div>
+
+</div>
+
+<div class="card">
+<div style="margin-bottom:10px;font-weight:700">📋 Cámaras</div>
+<div id="lista" class="lista"></div>
 </div>
 
 <div class="card">
@@ -168,18 +207,10 @@ backdrop-filter:blur(6px);
 
 </div>
 
-<div class="card stats">
-<div>📷 Cargadas: <b id="cant">0</b></div>
-<div>🎯 Click en el mapa para seleccionar ubicación</div>
-<div>🧭 Arrastrá marcador para ajustar</div>
 </div>
 
-<div class="card">
-<div style="margin-bottom:10px;font-weight:700">📋 Cámaras</div>
-<div id="lista" class="lista"></div>
-</div>
 
-</div>
+
 
 <!-- MAPA -->
 <div style="position:relative">
@@ -194,9 +225,11 @@ backdrop-filter:blur(6px);
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+
 let mapa;
 let marker=null;
 let datos=[];
+let soloPendientes = false;
 
 /* INIT */
 mapa=L.map('map').setView([-34.806,-58.276],13);
@@ -233,11 +266,33 @@ async function cargar(){
 const res=await fetch("/api/coords");
 datos=await res.json();
 
-cant.innerText=datos.length;
+cantTotal.innerText = datos.length;
+
+cantCon.innerText =
+    datos.filter(x => x.lat != null && x.lng != null).length;
+
+cantPend.innerText =
+    datos.filter(x => x.lat == null || x.lng == null).length;
+
+
 
 renderLista();
-}
 
+
+}
+function mostrarPendientes(){
+
+    soloPendientes = !soloPendientes;
+
+    btnPendientes.innerHTML = soloPendientes
+        ? "📋 Ver todas (" + datos.length + ")"
+        : "🟡 Ver pendientes (<span id='cantPend'>" +
+          datos.filter(x=>x.lat==null || x.lng==null).length +
+          "</span>)";
+
+    renderLista();
+
+}
 /* LISTA */
 function renderLista(){
 
@@ -246,14 +301,47 @@ const txt=buscar.value.toUpperCase();
 let html="";
 
 datos
-.filter(x=>x.nombre.toUpperCase().includes(txt))
+.sort((a,b)=>{
+
+    const pa = (a.lat == null || a.lng == null);
+    const pb = (b.lat == null || b.lng == null);
+
+    if(pa && !pb) return -1;
+    if(!pa && pb) return 1;
+
+    return a.nombre.localeCompare(b.nombre);
+
+})
+.filter(x => {
+
+    if (!x.nombre.toUpperCase().includes(txt))
+        return false;
+
+    if (soloPendientes)
+        return x.lat == null || x.lng == null;
+
+    return true;
+
+})
 .slice(0,300)
 .forEach(x=>{
 
 html+=`
-<div class="item" onclick='seleccionar(${JSON.stringify(x)})'>
+<div class="item"
+style="${
+    (x.lat == null || x.lng == null)
+        ? 'border-left:5px solid #facc15;background:#2b2411'
+        : 'border-left:5px solid #16a34a'
+}"
+onclick='seleccionar(${JSON.stringify(x)})'>
 <b>${x.nombre}</b>
-<div class="small">${x.lat} , ${x.lng}</div>
+<div class="small">
+${
+    (x.lat != null && x.lng != null)
+        ? `${x.lat} , ${x.lng}`
+        : "🟡 Sin coordenadas"
+}
+</div>
 </div>
 `;
 
@@ -266,12 +354,23 @@ lista.innerHTML=html;
 function seleccionar(x){
 
 nombre.value=x.nombre;
-lat.value=x.lat;
-lng.value=x.lng;
+lat.value=x.lat ?? "";
+lng.value=x.lng ?? "";
 
-ponerMarker(x.lat,x.lng);
+if(x.lat != null && x.lng != null){
 
-mapa.setView([x.lat,x.lng],17);
+    ponerMarker(x.lat,x.lng);
+    mapa.setView([x.lat,x.lng],17);
+
+}else{
+
+    if(marker){
+        mapa.removeLayer(marker);
+        marker=null;
+    }
+
+}
+
 }
 
 /* GUARDAR */

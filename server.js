@@ -11,8 +11,6 @@ const {
 } = require("./index.js");
 const { normalizarNombre } = require("./normalizar");
 
-console.log("SERVER MODIFICADO OK");
-
 // =============================
 // PROGRESO
 // =============================
@@ -65,6 +63,97 @@ function guardarHistorial(resultado) {
 }
 
 // =============================
+// SINCRONIZAR COORDENADAS
+// =============================
+
+async function sincronizarCoordenadas() {
+  console.log("");
+  console.log("================================");
+  console.log("🔄 Sincronizando coordenadas...");
+  console.log("================================");
+
+  // Leer Excel (fuente de verdad)
+  const excel = await obtenerTodasLasCamarasExcel();
+
+  const nombresExcel = new Set(
+    excel.map((c) => normalizarNombre(c["[Denominacion]"])),
+  );
+
+  // Leer SQLite
+  const coordenadas = db
+    .prepare(
+      `
+    SELECT nombre
+    FROM coordenadas
+  `,
+    )
+    .all();
+
+  const nombresDB = new Set(coordenadas.map((c) => normalizarNombre(c.nombre)));
+
+  // =============================
+  // AGREGAR NUEVAS
+  // =============================
+  const insertar = db.prepare(`
+  INSERT INTO coordenadas(nombre, lat, lng)
+  VALUES (?, NULL, NULL)
+`);
+
+  let agregadas = 0;
+
+  for (const nombre of nombresExcel) {
+    if (!nombresDB.has(nombre)) {
+      insertar.run(nombre);
+
+      console.log("➕ Agregada:", nombre);
+
+      agregadas++;
+    }
+  }
+
+  // =============================
+  // ELIMINAR LAS QUE YA NO EXISTEN
+  // =============================
+  const eliminar = db.prepare(`
+  DELETE FROM coordenadas
+  WHERE UPPER(TRIM(nombre)) = ?
+`);
+
+  let eliminadas = 0;
+
+  for (const nombre of nombresDB) {
+    if (!nombresExcel.has(nombre)) {
+      eliminar.run(nombre);
+
+      console.log("➖ Eliminada:", nombre);
+
+      eliminadas++;
+    }
+  }
+
+  const totalFinal = db
+    .prepare(
+      `
+  SELECT COUNT(*) AS total
+  FROM coordenadas
+`,
+    )
+    .get().total;
+
+  console.log("");
+  console.log("================================");
+  console.log("✅ Sincronización completada");
+  console.log("================================");
+  console.log(`Excel............... ${nombresExcel.size}`);
+  console.log(`Base antes.......... ${nombresDB.size}`);
+  console.log(`➕ Agregadas......... ${agregadas}`);
+  console.log(`➖ Eliminadas........ ${eliminadas}`);
+  console.log(`Base final.......... ${totalFinal}`);
+  console.log("================================");
+  console.log("");
+}
+
+// =============================
 // ANALIZAR TEXTO
 // =============================
 app.post("/analizar", async (req, res) => {
@@ -81,6 +170,7 @@ app.post("/analizar", async (req, res) => {
     const { ruta, resultado } = await analizarCamaras(lista, progreso);
 
     guardarHistorial(resultado);
+    await sincronizarCoordenadas();
 
     res.download(ruta, () => {
       fs.unlink(ruta, () => {});
@@ -101,6 +191,7 @@ app.get("/analizar-todas", async (req, res) => {
     const { ruta, resultado } = await analizarTodasLasCamaras(progreso);
 
     guardarHistorial(resultado);
+    await sincronizarCoordenadas();
 
     res.download(ruta, () => {
       fs.unlink(ruta, () => {});
@@ -114,7 +205,7 @@ app.get("/analizar-todas", async (req, res) => {
 // =============================
 // HISTORIAL
 // =============================
-app.get("/historial", (req, res) => {
+app.get("/historial", async (req, res) => {
   try {
     const rows = db
       .prepare(
@@ -127,6 +218,12 @@ app.get("/historial", (req, res) => {
 
     const mapa = {};
     const fechasSet = new Set();
+
+    const excel = await obtenerTodasLasCamarasExcel();
+
+    const nombresExcel = new Set(
+      excel.map((x) => normalizarNombre(x["[Denominacion]"])),
+    );
 
     rows.forEach((h) => {
       const fechaObj = new Date(h.fecha);
@@ -143,6 +240,9 @@ app.get("/historial", (req, res) => {
 
       camaras.forEach((cam) => {
         let nombre = normalizarNombre(cam.DENOMINACION);
+        if (!nombresExcel.has(nombre)) {
+          return;
+        }
         if (!mapa[nombre]) {
           // =========================
           // CREAR COORD VACIA SI NO EXISTE
@@ -186,6 +286,7 @@ app.get("/historial", (req, res) => {
       return fa - fb;
     });
 
+    
     res.json({
       fechas,
       camaras: mapa,
@@ -210,12 +311,6 @@ app.get("/mapa", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "mapa.html"));
 });
 
-// =====================
-// COORDENADAS
-// =====================
-
-// traer todas
-// =====================
 // TRAER COORDENADAS
 // =====================
 app.get("/api/coords", (req, res) => {
@@ -286,6 +381,58 @@ app.delete("/api/coords/:nombre", (req, res) => {
 });
 
 //DEBUGSS//
+app.get("/debug", (req, res) => {
+  const historial = db
+    .prepare(
+      `
+    SELECT COUNT(*) AS total
+    FROM historial
+  `,
+    )
+    .get();
+
+  const coords = db
+    .prepare(
+      `
+    SELECT COUNT(*) AS total
+    FROM coordenadas
+  `,
+    )
+    .get();
+
+  res.json({
+    historial,
+    coords,
+  });
+});
+app.get("/debug-diferencias", async (req, res) => {
+  const excel = await obtenerTodasLasCamarasExcel();
+
+  const excelSet = new Set(
+    excel.map((x) => normalizarNombre(x["[Denominacion]"])),
+  );
+
+  const coords = db
+    .prepare(
+      `
+    SELECT nombre
+    FROM coordenadas
+  `,
+    )
+    .all();
+
+  const coordsSet = new Set(coords.map((x) => normalizarNombre(x.nombre)));
+
+  const soloExcel = [...excelSet].filter((x) => !coordsSet.has(x));
+  const soloCoords = [...coordsSet].filter((x) => !excelSet.has(x));
+
+  res.json({
+    excel: excelSet.size,
+    coords: coordsSet.size,
+    soloExcel,
+    soloCoords,
+  });
+});
 
 // =============================
 // SERVER

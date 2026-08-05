@@ -584,7 +584,14 @@ const qUbicacion=(filtroUbicacion.value||"").toUpperCase().trim();
 const qConexion=(filtroConexion.value||"").toUpperCase().trim();
 const qIP=(filtroIP.value||"").toUpperCase().trim();
 
-Object.entries(camaras).forEach(([nombre,obj])=>{
+Object.entries(camaras)
+.sort((a, b) =>
+    a[0].localeCompare(b[0], "es", {
+        numeric: true,
+        sensitivity: "base"
+    })
+)
+.forEach(([nombre, obj]) => {
 
 const info=obj.info||{};
 const estados=obj.estados||{};
@@ -601,17 +608,27 @@ let prov=info.proveedor||"SIN DATO";
 if(!proveedores[prov]) proveedores[prov]={online:0,caidas:0,total:0};
 proveedores[prov].total++;
 
-let diasCaida=0;
-let diasOnline=0;
+// Estado actual de la cámara (última fecha registrada)
+const ultimoEstado = estados[fechas[fechas.length - 1]] || "";
 
-fechas.forEach(f=>{
-const e=estados[f]||"-";
-if(e=="SIN RESPUESTA") diasCaida++;
-if(e.includes("ONLINE")) diasOnline++;
+if (ultimoEstado.includes("ONLINE")) {
+    proveedores[prov].online++;
+} else {
+    proveedores[prov].caidas++;
+}
+
+let diasCaida = 0;
+let diasOnline = 0;
+
+fechas.forEach(f => {
+    const e = estados[f] || "-";
+
+    if (e === "SIN RESPUESTA")
+        diasCaida++;
+
+    if (e.includes("ONLINE"))
+        diasOnline++;
 });
-
-if(diasOnline>0) proveedores[prov].online++;
-if(diasCaida>0) proveedores[prov].caidas++;
 
 html+=`<tr>
 <td class="cam">${nombre}</td>
@@ -641,15 +658,56 @@ html+="</table>";
 cantFiltradas.innerText=visibles;
 tablaHistorial.innerHTML=html;
 
-let kpi="";
-Object.entries(proveedores).forEach(([prov,v])=>{
-kpi+=`
-<div class="kpi-box">
-<b>${prov}</b><br>
-🟢 Online: ${v.online}<br>
-🔴 Caídas: ${v.caidas}<br>
-📷 Total: ${v.total}
-</div>`;
+let kpi = "";
+
+Object.entries(proveedores).forEach(([prov, v]) => {
+
+    const porcOnline = v.total
+        ? ((v.online / v.total) * 100).toFixed(1)
+        : 0;
+
+    const porcCaidas = v.total
+        ? ((v.caidas / v.total) * 100).toFixed(1)
+        : 0;
+
+    kpi += `
+    <div class="kpi-box">
+
+        <div style="
+            font-size:18px;
+            font-weight:800;
+            margin-bottom:12px;
+        ">
+            ${prov}
+        </div>
+
+        <div style="margin-bottom:6px">
+            🟢 <b>Online:</b>
+            ${v.online}
+            <span style="color:#22c55e">
+                (${porcOnline}%)
+            </span>
+        </div>
+
+        <div style="margin-bottom:6px">
+            🔴 <b>Caídas:</b>
+            ${v.caidas}
+            <span style="color:#ef4444">
+                (${porcCaidas}%)
+            </span>
+        </div>
+
+        <hr style="
+            border:0;
+            border-top:1px solid #334155;
+            margin:10px 0;
+        ">
+
+        <div>
+            📷 <b>Total:</b> ${v.total}
+        </div>
+
+    </div>`;
 });
 
 kpiProveedor.innerHTML=kpi;

@@ -25,5 +25,17 @@ CREATE TABLE IF NOT EXISTS coordenadas (
     lng REAL
 )
 `).run();
+/* =========================
+TABLA COORDENADAS
+     MAPA
+========================= */
+db.prepare(`
+CREATE TABLE IF NOT EXISTS estado_actual (
+    nombre TEXT PRIMARY KEY,
+    estado TEXT,
+    latencia TEXT,
+    fecha TEXT
+)
+`).run();
 
 module.exports = db;

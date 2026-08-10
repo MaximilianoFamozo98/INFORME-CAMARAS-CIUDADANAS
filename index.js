@@ -12,11 +12,7 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
 
-const archivoExcel = path.join(
-  process.cwd(),
-  "data",
-  "camaras.xlsx"
-);
+const archivoExcel = path.join(process.cwd(), "data", "camaras.xlsx");
 
 // =============================
 // CONFIG
@@ -26,8 +22,7 @@ const TIMEOUT = 1.5;
 const CONCURRENCIA = 5;
 
 // SOLO PARA DESARROLLO
-const MODO_DESARROLLO = true;
-
+const MODO_DESARROLLO = false;
 
 // =============================
 function parsearPuntoSeguro(nombre) {
@@ -143,41 +138,40 @@ async function procesarCamara(fila, index, progreso) {
       IP: "",
       LATENCIA: "-",
       ESTADO: "IP VACIA",
-      
     };
   }
 
   // =============================
   // MODO DESARROLLO
   // =============================
- if (MODO_DESARROLLO) {
-
+  if (MODO_DESARROLLO) {
+    console.log("******** MODO DESARROLLO ACTIVADO ********");
     const nombre = fila["[Denominacion]"] || "";
 
     // Usa el nombre de la cámara para generar siempre el mismo resultado
-    const numero =
-        nombre.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    const numero = nombre.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 
-    const online = (numero % 100) < 80;
+    const ciclo = Math.floor(Date.now() / 30000); // cambia cada 30 segundos
+    const online = (numero + ciclo) % 100 < 20;
+
+    console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
 
     if (online) {
-        progreso.online++;
+      progreso.online++;
     } else {
-        progreso.sinRespuesta++;
+      progreso.sinRespuesta++;
     }
-console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
+    console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
     return {
-        DENOMINACION: nombre,
-        PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
-        UBICACION: fila["[Ubicacion]"] || "-",
-        CONEXION: conexion,
-        IP: ip,
-        LATENCIA: "-",
-        ESTADO: online ? "ONLINE" : "SIN RESPUESTA",
+      DENOMINACION: nombre,
+      PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
+      UBICACION: fila["[Ubicacion]"] || "-",
+      CONEXION: conexion,
+      IP: ip,
+      LATENCIA: "-",
+      ESTADO: online ? "ONLINE" : "SIN RESPUESTA",
     };
-}
-
-
+  }
 
   try {
     const { exitos, latenciaPromedio } = await hacerPing(ip);
@@ -185,7 +179,7 @@ console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
     let estado = "";
 
     if (exitos === 0) {
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
 
       const segundoIntento = await hacerPing(ip);
 
@@ -203,11 +197,9 @@ console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
           progreso.sinRespuesta++;
         }
       }
-
     } else if (exitos <= 2) {
       estado = "INESTABLE";
       progreso.sinRespuesta++;
-
     } else {
       estado = "ONLINE";
       progreso.online++;
@@ -221,9 +213,7 @@ console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
       IP: ip,
       LATENCIA: latenciaPromedio ? `${latenciaPromedio} ms` : "-",
       ESTADO: estado,
-      
     };
-
   } catch {
     progreso.sinRespuesta++;
     return {
@@ -234,11 +224,9 @@ console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
       IP: ip,
       LATENCIA: "-",
       ESTADO: "ERROR",
-      
     };
   }
 }
-
 
 // =============================
 // EXCEL
@@ -288,16 +276,16 @@ async function analizarTodasLasCamaras(progreso) {
       const res = await procesarCamara(fila, i, progreso);
       progreso.procesadas++;
       return res;
-    })
+    }),
   );
 
   const resultado = await Promise.all(tareas);
   const ordenado = ordenarResultados(resultado);
 
   return {
-  ruta: await generarExcel(ordenado, "todas_las_camaras.xlsx"),
-  resultado: ordenado
-};
+    ruta: await generarExcel(ordenado, "todas_las_camaras.xlsx"),
+    resultado: ordenado,
+  };
 }
 
 // =============================
@@ -365,28 +353,25 @@ async function analizarCamaras(lista, progreso) {
   const ordenado = ordenarResultados(resultado);
 
   return {
-  ruta: await generarExcel(ordenado, "resultado_texto.xlsx"),
-  resultado: ordenado,
-};
+    ruta: await generarExcel(ordenado, "resultado_texto.xlsx"),
+    resultado: ordenado,
+  };
 }
 
-
 async function obtenerTodasLasCamarasExcel() {
-
   const workbook = XLSX.readFile(archivoExcel);
 
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
 
   const data = XLSX.utils.sheet_to_json(sheet, {
-    range: 6
+    range: 6,
   });
 
   return data;
-
 }
 
 module.exports = {
   analizarCamaras,
   analizarTodasLasCamaras,
-  obtenerTodasLasCamarasExcel, 
+  obtenerTodasLasCamarasExcel,
 };

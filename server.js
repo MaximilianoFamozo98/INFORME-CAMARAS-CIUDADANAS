@@ -61,6 +61,82 @@ function guardarHistorial(resultado) {
 
   console.log("✅ Historial guardado en SQLite");
 }
+// =============================
+// GUARDAR HISTORIAL SQLITE SOLO MAPA
+// =============================
+async function guardarEstadoActual(resultado) {
+  db.prepare(
+    `
+        DELETE FROM estado_actual
+    `,
+  ).run();
+
+  const insertar = db.prepare(`
+        INSERT INTO estado_actual
+        (nombre, estado, latencia, fecha)
+        VALUES (?, ?, ?, ?)
+    `);
+
+  const ahora = new Date().toISOString();
+
+
+  console.log("Primeras 10 cámaras a guardar:");
+console.table(
+  resultado.slice(0, 10).map(c => ({
+    nombre: c.DENOMINACION,
+    estado: c.ESTADO
+  }))
+);
+
+  resultado.forEach((cam) => {
+    insertar.run(
+      normalizarNombre(cam.DENOMINACION),
+      cam.ESTADO,
+      cam.LATENCIA,
+      ahora,
+    );
+  });
+
+  console.log("✅ Estado actual actualizado");
+}
+
+let escaneoEnCurso = false;
+
+async function autoEscaneo() {
+
+  if (escaneoEnCurso) {
+    console.log("⚠️ Ya hay un autoescaneo en curso");
+    return;
+  }
+
+  escaneoEnCurso = true;
+
+  try {
+
+    console.log("");
+    console.log("================================");
+    console.log("⏰ Autoescaneo iniciado");
+    console.log("================================");
+
+    resetProgreso();
+
+    const { resultado } =
+      await analizarTodasLasCamaras(progreso);
+
+    await guardarEstadoActual(resultado);
+
+    console.log("✅ Autoescaneo finalizado");
+
+  } catch (err) {
+
+    console.error("❌ Error autoescaneo:", err);
+
+  } finally {
+
+    escaneoEnCurso = false;
+
+  }
+}
 
 // =============================
 // SINCRONIZAR COORDENADAS
@@ -169,7 +245,10 @@ app.post("/analizar", async (req, res) => {
 
     const { ruta, resultado } = await analizarCamaras(lista, progreso);
 
+    await guardarEstadoActual(resultado);
+
     guardarHistorial(resultado);
+
     await sincronizarCoordenadas();
 
     res.download(ruta, () => {
@@ -190,7 +269,10 @@ app.get("/analizar-todas", async (req, res) => {
 
     const { ruta, resultado } = await analizarTodasLasCamaras(progreso);
 
+    await guardarEstadoActual(resultado);
+
     guardarHistorial(resultado);
+
     await sincronizarCoordenadas();
 
     res.download(ruta, () => {
@@ -286,7 +368,6 @@ app.get("/historial", async (req, res) => {
       return fa - fb;
     });
 
-    
     res.json({
       fechas,
       camaras: mapa,
@@ -294,6 +375,31 @@ app.get("/historial", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error historial");
+  }
+});
+
+// =============================
+// ESTADO ACTUAL
+// =============================
+app.get("/estado-actual", (req, res) => {
+  try {
+    const rows = db
+      .prepare(
+        `
+      SELECT *
+      FROM estado_actual
+      ORDER BY nombre
+    `,
+      )
+      .all();
+
+    res.json(rows);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      error: true,
+    });
   }
 });
 
@@ -433,6 +539,20 @@ app.get("/debug-diferencias", async (req, res) => {
     soloCoords,
   });
 });
+
+// ========
+// AUTOESCANEO CADA 10 MINUTOS
+// ==========
+setInterval(
+  () => {
+    autoEscaneo();
+  },
+  10 * 60 * 1000,
+);
+// Ejecutar uno al iniciar
+setTimeout(() => {
+  autoEscaneo();
+}, 5000);
 
 // =============================
 // SERVER

@@ -1,429 +1,408 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MAP</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-
-body{
-font-family:Segoe UI,Arial,sans-serif;
-background:#0b1220;
-color:#fff;
-overflow:hidden;
-}
-
-/* HEADER PREMIUM */
-header{
-height:68px;
-background:linear-gradient(90deg,#071122,#0d1b34);
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 18px;
-border-bottom:1px solid rgba(255,255,255,.06);
-box-shadow:0 8px 22px rgba(0,0,0,.35);
-}
-
-header h1{
-font-size:21px;
-font-weight:900;
-letter-spacing:.4px;
-}
-
-header span{
-font-size:13px;
-color:#94a3b8;
-}
-
-/* MAPA */
-#map{
-height:calc(100vh - 68px);
-width:100%;
-}
-
-/* ZOOM abajo derecha */
-.leaflet-top.leaflet-left{
-display:none;
-}
-
-.leaflet-bottom.leaflet-right{
-bottom:18px;
-right:14px;
-}
-
-.leaflet-control-zoom{
-border:none!important;
-box-shadow:0 10px 24px rgba(0,0,0,.35)!important;
-border-radius:14px!important;
-overflow:hidden;
-}
-
-.leaflet-control-zoom a{
-width:42px!important;
-height:42px!important;
-line-height:42px!important;
-font-size:22px!important;
-background:#111827!important;
-color:#fff!important;
-border:none!important;
-}
-
-/* PANEL */
-.panel{
-position:absolute;
-top:78px;
-left:12px;
-z-index:999;
-width:340px;
-max-width:88vw;
-max-height:calc(100vh - 92px);
-background:rgba(17,24,39,.96);
-backdrop-filter:blur(8px);
-border-radius:18px;
-box-shadow:0 20px 45px rgba(0,0,0,.45);
-overflow:hidden;
-transition:left .28s ease;
-}
-
-.panel.closed{
-left:-360px;
-}
-
-/* PANEL HEADER */
-.panel-header{
-height:52px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 14px;
-background:#0f172a;
-border-bottom:1px solid rgba(255,255,255,.06);
-}
-
-.panel-header b{
-font-size:15px;
-}
-
-.toggle-btn{
-width:36px;
-height:36px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-background:#2563eb;
-color:#fff;
-font-size:18px;
-font-weight:800;
-}
-
-.panel-body{
-padding:14px;
-max-height:calc(100vh - 160px);
-overflow:auto;
-}
-
-/* scrollbar */
-.panel-body::-webkit-scrollbar{
-width:8px;
-}
-.panel-body::-webkit-scrollbar-thumb{
-background:#334155;
-border-radius:10px;
-}
-
-/* TAB */
-.side-tab{
-position:absolute;
-top:78px;
-left:10px;
-z-index:2000;
-width:40px;
-height:58px;
-border-radius:0 14px 14px 0;
-background:#2563eb;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
-font-weight:900;
-cursor:pointer;
-box-shadow:0 10px 20px rgba(0,0,0,.35);
-transition:.2s;
-}
-
-.side-tab:hover{
-transform:scale(1.04);
-}
-
-.side-tab.hide{
-opacity:0;
-pointer-events:none;
-}
-
-/* GRID */
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-bottom:14px;
-}
-
-.card{
-background:#0b1220;
-padding:12px;
-border-radius:14px;
-box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
-}
-
-.card small{
-display:block;
-font-size:12px;
-color:#94a3b8;
-margin-bottom:6px;
-}
-
-.card b{
-font-size:23px;
-}
-
-.green{color:#22c55e}
-.red{color:#ef4444}
-.gray{color:#94a3b8}
-
-/* FORM */
-input,select,button{
-width:100%;
-padding:10px;
-border:none;
-outline:none;
-border-radius:10px;
-background:#0b1220;
-color:#fff;
-margin-bottom:10px;
-}
-
-button{
-cursor:pointer;
-font-weight:700;
-background:#2563eb;
-}
-
-button:hover{
-opacity:.92;
-}
-
-/* LISTA */
-.list{
-display:flex;
-flex-direction:column;
-gap:8px;
-}
-
-.item{
-background:#0b1220;
-padding:11px;
-border-radius:12px;
-cursor:pointer;
-transition:.18s;
-border:1px solid rgba(255,255,255,.03);
-}
-
-.item:hover{
-transform:translateX(4px);
-background:#13203d;
-}
-
-.badge{
-display:inline-block;
-padding:3px 8px;
-border-radius:8px;
-font-size:11px;
-font-weight:700;
-margin-top:6px;
-}
-
-/* POPUP */
-.leaflet-popup-content-wrapper{
-border-radius:14px!important;
-box-shadow:0 15px 35px rgba(0,0,0,.35);
-}
-
-@media(max-width:700px){
-
-header h1{font-size:18px;}
-
-.panel{
-width:88vw;
-}
-
-.side-tab{
-width:38px;
-height:54px;
-}
-}
-@keyframes pulse{
-
-0%{
-transform:scale(1);
-box-shadow:0 0 5px #ef4444;
-}
-
-50%{
-transform:scale(1.35);
-box-shadow:0 0 14px #ef4444;
-}
-
-100%{
-transform:scale(1);
-box-shadow:0 0 5px #ef4444;
-}
-
-}
-</style>
-</head>
-
-<body>
-
-<header>
-<h1>📍 MAPA</h1>
-<span id="hora"></span>
-</header>
-
-<div class="side-tab hide" id="tabBtn" onclick="abrirPanel()">☰</div>
-
-<div class="panel" id="panel">
-
-<div class="panel-header">
-<b>Panel</b>
-<button class="toggle-btn" onclick="cerrarPanel()">✕</button>
-</div>
-
-<div class="panel-body">
-
-<div class="grid">
-<div class="card"><small>Total</small><b id="total">0</b></div>
-<div class="card"><small>Online</small><b class="green" id="online">0</b></div>
-<div class="card"><small>Caídas</small><b class="red" id="caidas">0</b></div>
-<div class="card"><small>Sin Coord</small><b class="gray" id="sincoord">0</b></div>
-</div>
-
-<input id="buscar" placeholder="Buscar cámara o calle..." oninput="filtrar()">
-
-<select id="filtroEstado" onchange="filtrar()">
-<option value="TODAS">Todas</option>
-<option value="ONLINE">Online</option>
-<option value="CAIDA">Caídas</option>
-</select>
-
-<button onclick="fullscreenMapa()">🖥 Fullscreen</button>
-<button onclick="cargar()">🔄 Actualizar</button>
-
-<select id="camaraEdit"></select>
-
-<button onclick="activarEdicion()">
-📌 Reubicar cámara
-</button>
-
-<button onclick="eliminarCoord()">
-🗑 Eliminar coordenada
-</button>
-
-<div style="font-size:12px;color:#94a3b8;margin-bottom:12px">
-1) Elegí cámara<br>
-2) Tocá Reubicar<br>
-3) Click en el mapa
-</div>
-
-<div class="list" id="lista"></div>
-
-</div>
-</div>
-
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-
-<script>
-setInterval(()=>{
-hora.innerText=new Date().toLocaleString("es-AR");
-},1000);
-
-const map=L.map("map",{zoomControl:false}).setView([-34.806,-58.276],12);
-
-L.control.zoom({position:'bottomright'}).addTo(map);
-
-L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{maxZoom:19}
-).addTo(map);
-
-let markers = L.layerGroup({
-
-iconCreateFunction: function(cluster){
-
-const hijos = cluster.getAllChildMarkers();
-
-const hayCaida = hijos.some(m => m.estado !== "ONLINE");
-
-const color = hayCaida ? "#ef4444" : "#22c55e";
-
-return L.divIcon({
-
-html:`
-<div style="
-background:${color};
-width:44px;
-height:44px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
-font-weight:900;
-font-size:16px;
-border:3px solid white;
-box-shadow:0 0 18px ${color};
-">
-${hijos.length}
-</div>
-`,
-
-className:"",
-iconSize:[44,44]
-
-});
-
-}
-
-});
-map.addLayer(markers);
-
-let cache=[];
-let modoEdicion=false;
-
-/* PANEL */
-function cerrarPanel(){
-panel.classList.add("closed");
-tabBtn.classList.remove("hide");
-}
-
-function abrirPanel(){
-panel.classList.remove("closed");
-tabBtn.classList.add("hide");
-}
-
-/* ICONO */
-function icono(color){
-return L.divIcon({
-html:`
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MAP</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          Segoe UI,
+          Arial,
+          sans-serif;
+        background: #0b1220;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      /* HEADER PREMIUM */
+      header {
+        height: 68px;
+        background: linear-gradient(90deg, #071122, #0d1b34);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      header h1 {
+        font-size: 21px;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+      }
+
+      header span {
+        font-size: 13px;
+        color: #94a3b8;
+      }
+
+      /* MAPA */
+      #map {
+        height: calc(100vh - 68px);
+        width: 100%;
+      }
+
+      /* ZOOM abajo derecha */
+      .leaflet-top.leaflet-left {
+        display: none;
+      }
+
+      .leaflet-bottom.leaflet-right {
+        bottom: 18px;
+        right: 14px;
+      }
+
+      .leaflet-control-zoom {
+        border: none !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+        border-radius: 14px !important;
+        overflow: hidden;
+      }
+
+      .leaflet-control-zoom a {
+        width: 42px !important;
+        height: 42px !important;
+        line-height: 42px !important;
+        font-size: 22px !important;
+        background: #111827 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+
+      /* PANEL */
+      .panel {
+        position: absolute;
+        top: 78px;
+        left: 12px;
+        z-index: 999;
+        width: 340px;
+        max-width: 88vw;
+        max-height: calc(100vh - 92px);
+        background: rgba(17, 24, 39, 0.96);
+        backdrop-filter: blur(8px);
+        border-radius: 18px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+        transition: left 0.28s ease;
+      }
+
+      .panel.closed {
+        left: -360px;
+      }
+
+      /* PANEL HEADER */
+      .panel-header {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        background: #0f172a;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .panel-header b {
+        font-size: 15px;
+      }
+
+      .toggle-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: #2563eb;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .panel-body {
+        padding: 14px;
+        max-height: calc(100vh - 160px);
+        overflow: auto;
+      }
+
+      /* scrollbar */
+      .panel-body::-webkit-scrollbar {
+        width: 8px;
+      }
+      .panel-body::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 10px;
+      }
+
+      /* TAB */
+      .side-tab {
+        position: absolute;
+        top: 78px;
+        left: 10px;
+        z-index: 2000;
+        width: 40px;
+        height: 58px;
+        border-radius: 0 14px 14px 0;
+        background: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+        transition: 0.2s;
+      }
+
+      .side-tab:hover {
+        transform: scale(1.04);
+      }
+
+      .side-tab.hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* GRID */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card {
+        background: #0b1220;
+        padding: 12px;
+        border-radius: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+
+      .card small {
+        display: block;
+        font-size: 12px;
+        color: #94a3b8;
+        margin-bottom: 6px;
+      }
+
+      .card b {
+        font-size: 23px;
+      }
+
+      .green {
+        color: #22c55e;
+      }
+      .red {
+        color: #ef4444;
+      }
+      .gray {
+        color: #94a3b8;
+      }
+
+      /* FORM */
+      input,
+      select,
+      button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        outline: none;
+        border-radius: 10px;
+        background: #0b1220;
+        color: #fff;
+        margin-bottom: 10px;
+      }
+
+      button {
+        cursor: pointer;
+        font-weight: 700;
+        background: #2563eb;
+      }
+
+      button:hover {
+        opacity: 0.92;
+      }
+
+      /* LISTA */
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .item {
+        background: #0b1220;
+        padding: 11px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.18s;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .item:hover {
+        transform: translateX(4px);
+        background: #13203d;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      /* POPUP */
+      .leaflet-popup-content-wrapper {
+        border-radius: 14px !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+      }
+
+      @media (max-width: 700px) {
+        header h1 {
+          font-size: 18px;
+        }
+
+        .panel {
+          width: 88vw;
+        }
+
+        .side-tab {
+          width: 38px;
+          height: 54px;
+        }
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 5px #ef4444;
+        }
+
+        50% {
+          transform: scale(1.35);
+          box-shadow: 0 0 14px #ef4444;
+        }
+
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 5px #ef4444;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>📍 MAPA</h1>
+      <span id="hora"></span>
+    </header>
+
+    <div class="side-tab hide" id="tabBtn" onclick="abrirPanel()">☰</div>
+
+    <div class="panel" id="panel">
+      <div class="panel-header">
+        <b>Panel</b>
+        <button class="toggle-btn" onclick="cerrarPanel()">✕</button>
+      </div>
+
+      <div class="panel-body">
+        <div class="grid">
+          <div class="card"><small>Total</small><b id="total">0</b></div>
+          <div class="card">
+            <small>Online</small><b class="green" id="online">0</b>
+          </div>
+          <div class="card">
+            <small>Caídas</small><b class="red" id="caidas">0</b>
+          </div>
+          <div class="card">
+            <small>Sin Coord</small><b class="gray" id="sincoord">0</b>
+          </div>
+        </div>
+
+        <input
+          id="buscar"
+          placeholder="Buscar cámara o calle..."
+          oninput="filtrar()"
+        />
+
+        <select id="filtroEstado" onchange="filtrar()">
+          <option value="TODAS">Todas</option>
+          <option value="ONLINE">Online</option>
+          <option value="CAIDA">Caídas</option>
+        </select>
+
+        <button onclick="fullscreenMapa()">🖥 Fullscreen</button>
+        <button onclick="cargar()">🔄 Actualizar</button>
+
+        <select id="camaraEdit"></select>
+
+        <button onclick="activarEdicion()">📌 Reubicar cámara</button>
+
+        <button onclick="eliminarCoord()">🗑 Eliminar coordenada</button>
+
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px">
+          1) Elegí cámara<br />
+          2) Tocá Reubicar<br />
+          3) Click en el mapa
+        </div>
+
+        <div class="list" id="lista"></div>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+      const markersPorNombre = {};
+      const datosPorNombre = {};
+
+      const map = L.map("map", { zoomControl: false }).setView(
+        [-34.806, -58.276],
+        12,
+      );
+
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
+      let markers = L.layerGroup();
+      map.addLayer(markers);
+
+      let cache = [];
+      let modoEdicion = false;
+      setInterval(() => {
+        hora.innerText = new Date().toLocaleString("es-AR");
+      }, 1000);
+
+      /* PANEL */
+      function cerrarPanel() {
+        panel.classList.add("closed");
+        tabBtn.classList.remove("hide");
+      }
+
+      function abrirPanel() {
+        panel.classList.remove("closed");
+        tabBtn.classList.add("hide");
+      }
+
+      /* ICONO */
+      function icono(color) {
+        return L.divIcon({
+          html: `
 <div style="
 width:14px;
 height:14px;
@@ -433,358 +412,118 @@ border:2px solid white;
 ">
 </div>
 `,
-className:"",
-iconSize:[14,14]
-});
-}
+          className: "",
+          iconSize: [14, 14],
+        });
+      }
 
-function colorEstado(e){
-e=(e||"").toUpperCase();
-if(e.includes("ONLINE")) return "#22c55e";
-return "#ef4444";
-}
+      function colorEstado(e) {
+        e = (e || "").toUpperCase();
+        if (e.includes("ONLINE")) return "#22c55e";
+        return "#ef4444";
+      }
 
-function badge(e){
-e=(e||"").toUpperCase();
+      function badge(e) {
+        e = (e || "").toUpperCase();
 
-if(e.includes("ONLINE")){
-return `<span class="badge" style="background:#14532d">ONLINE</span>`;
-}
+        if (e.includes("ONLINE")) {
+          return `<span class="badge" style="background:#14532d">ONLINE</span>`;
+        }
 
-return `<span class="badge" style="background:#7f1d1d">CAÍDA</span>`;
-}
+        return `<span class="badge" style="background:#7f1d1d">CAÍDA</span>`;
+      }
 
-/* =========================
+      /* =========================
 NORMALIZADOR DEFINITIVO
 ========================= */
 
-function normalizarNombre(txt){
+      function normalizarNombre(txt) {
+        txt = (txt || "").toUpperCase();
 
-txt = (txt || "").toUpperCase();
+        txt = txt;
+        txt = txt
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\(DOMO\)/gi, " DOMO ")
+          .replace(/\(FIJA\)/gi, " FIJA ")
+          .replace(/\(.*?\)/g, " ")
+          .replace(/([A-Z])(\d)/g, "$1 $2")
+          .replace(/(\d)([A-Z])/g, "$1 $2")
+          .replace(/[-_/]/g, " ")
+          .replace(/\./g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
 
-txt = txt
-txt = txt
-.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-.replace(/\(DOMO\)/gi," DOMO ")
-.replace(/\(FIJA\)/gi," FIJA ")
-.replace(/\(.*?\)/g," ")
-.replace(/([A-Z])(\d)/g,"$1 $2")
-.replace(/(\d)([A-Z])/g,"$1 $2")
-.replace(/[-_/]/g," ")
-.replace(/\./g," ")
-.replace(/\s+/g," ")
-.trim();
+        // ===== CASOS ESPECIALES =====
 
-// ===== CASOS ESPECIALES =====
+        // DJ O6 -> DJO 06
+        txt = txt.replace(/^DJ\s*O\s*(\d)$/, "DJO 0$1");
+        txt = txt.replace(/^DJO\s*O\s*(\d)$/, "DJO 0$1");
+        txt = txt.replace(/^DJ\s*(\d)$/, "DJO 0$1");
+        txt = txt.replace(/^DJO\s*(\d)$/, "DJO 0$1");
 
-// DJ O6 -> DJO 06
-txt = txt.replace(/^DJ\s*O\s*(\d)$/,"DJO 0$1");
-txt = txt.replace(/^DJO\s*O\s*(\d)$/,"DJO 0$1");
-txt = txt.replace(/^DJ\s*(\d)$/,"DJO 0$1");
-txt = txt.replace(/^DJO\s*(\d)$/,"DJO 0$1");
+        // DORI -> DORIO
+        txt = txt.replace(/^DORI\s+(\d{1,2})$/, "DORIO $1");
 
-// DORI -> DORIO
-txt = txt.replace(/^DORI\s+(\d{1,2})$/,"DORIO $1");
+        // completar ceros
+        txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g, "$1 0$2");
 
-// completar ceros
-txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g,"$1 0$2");
+        return txt.trim();
+      }
 
-return txt.trim();
-
-}
-
-/* =========================
-CARGAR
+      /* =========================
+POPUP (reutilizable para poder
+reconstruirlo cuando cambia el estado)
 ========================= */
-function extraerCodigo(txt){
+      function construirPopup(nombre, estado, coord, cam, info) {
+        const h = window.historialData;
 
-txt = normalizarNombre(txt);
+        /* HISTORIAL últimos 7 días */
+        const ult7 = h.fechas.slice(-7);
 
-// =========================
-// CASOS ESPECIALES
-// =========================
+        let historial = "";
 
-// CAR 03 F1 => CAR 03
-txt = txt.replace(/\sF\d$/,"");
+        ult7.forEach((f) => {
+          const est = cam.estados[f] || "SIN RESPUESTA";
 
-// DORIO => DORI
-txt = txt.replace(/^DORIO\s(\d{2})$/,"DORI $1");
+          if (est.includes("ONLINE")) {
+            historial += "🟢 ";
+          } else {
+            historial += "🔴 ";
+          }
+        });
 
-// PUNTO SEGURO
+        /* UPTIME 30 días */
+        const ult30 = h.fechas.slice(-30);
 
+        let ok = 0;
 
-// =========================
-// SEPARAR LETRAS Y NUMEROS
-// CEN90 => CEN 90
-// MON05 => MON 05
-// =========================
+        ult30.forEach((f) => {
+          const est = cam.estados[f] || "";
 
-txt = txt.replace(/^([A-Z]{2,10})(\d{2,3})$/,"$1 $2");
+          if (est.includes("ONLINE")) {
+            ok++;
+          }
+        });
 
-// =========================
-// KM08 UPA 03
-// devolver KM 08
-// =========================
+        const uptime = ult30.length ? Math.round((ok / ult30.length) * 100) : 0;
 
-const km = txt.match(/^KM\s?(\d{2})/);
+        /* CAÍDA ACTUAL */
+        let caidaTexto = "";
 
-if(km){
-return `KM ${km[1]}`;
-}
+        if (!estado.includes("ONLINE")) {
+          let diasCaida = 0;
 
-// =========================
-// CODIGO PRINCIPAL
-// =========================
+          for (let i = h.fechas.length - 1; i >= 0; i--) {
+            const f = h.fechas[i];
+            const e = cam.estados[f] || "";
 
-const m = txt.match(/[A-Z]{2,10}\s\d{2,3}/);
+            if (e.includes("ONLINE")) break;
 
-return m ? m[0] : txt;
+            diasCaida++;
+          }
 
-}
-
-async function cargar(){
-
-try{
-
-markers.clearLayers();
-cache=[];
-window.debugSinCoord = [];
-window.debugCoordVacia = [];
-
-
-const h=await fetch("/historial").then(r=>r.json());
-const c=await fetch("/api/coords").then(r=>r.json());
-
-const mapaCoords={};
-window.mapaCoords = mapaCoords;
-
-/* =========================
-ARMAR MAPA COORDS
-========================= */
-window.debugClaves = {};
-c.forEach(x=>{
-
-const nombreReal =
-x.nombre ||
-x.denominacion ||
-x.DENOMINACION ||
-x.camara ||
-"";
-
-if(!nombreReal) return;
-
-const clave = extraerCodigo(nombreReal);
-
-if (!window.debugClaves[clave]) {
-  window.debugClaves[clave] = new Set();
-}
-
-window.debugClaves[clave].add(nombreReal);
-// ============================
-
-console.log("COORD:", nombreReal, "=>", clave);
-
-console.log("GUARDANDO:", clave, x.lat, x.lng);
-
-const lat = parseFloat(x.lat);
-const lng = parseFloat(x.lng);
-
-if (isNaN(lat) || isNaN(lng)) {
-    console.log("❌ Coordenada inválida:", x);
-    return;
-}
-
-// si ya existe una buena, NO la pises con 0,0
-if(
-mapaCoords[clave] &&
-mapaCoords[clave].lat !== 0 &&
-mapaCoords[clave].lng !== 0 &&
-(lat === 0 || lng === 0)
-){
-return;
-}
-
-if (mapaCoords[clave]) {
-  console.log("🚨 COORD DUPLICADA:", clave);
-  console.log("EXISTE:", mapaCoords[clave]);
-  console.log("NUEVA :", nombreReal);
-}
-mapaCoords[clave] = {  
-nombre:nombreReal,
-lat,
-lng
-};
-
-});
-
-console.log("Coords cargadas:",Object.keys(mapaCoords).length);
-
-Object.entries(window.debugClaves)
-.forEach(([clave,valores])=>{
-
-  const arr = [...valores];
-
-  if(arr.length > 1){
-
-    console.log("COLISION:", clave);
-    console.log(arr);
-
-  }
-
-});
-
-if(!h.fechas.length){
-    return;
-}
-
-const ultima = h.fechas.at(-1);
-window.camarasHistorial = Object.keys(h.camaras);
-
-let totalCam=0;
-let onlineCount=0;
-let caidasCount=0;
-let sincoordCount=0;
-
-/* =========================
-RECORRER CAMARAS
-========================= */
-
-for(const nombre in h.camaras){
-
-totalCam++;
-
-const cam=h.camaras[nombre];
-const info=cam.info||{};
-const estado=cam.estados[ultima]||"SIN RESPUESTA";
-
-const clave = extraerCodigo(nombre);
-
-const coord = mapaCoords[clave];
-
-if (
-  nombre.includes("AGUSTIN") ||
-  clave.includes("AGUSTIN")
-){
-  console.log("BUSCANDO:", nombre);
-  console.log("CLAVE:", clave);
-  console.log("ENCONTRADA:", mapaCoords[clave]);
-}
-if(!coord){
-
-sincoordCount++;
-
-console.log("SIN COORD:",nombre);
-console.log("NORMALIZADO:",clave);
-window.debugSinCoord = window.debugSinCoord || [];
-
-window.debugSinCoord.push({
-  nombre,
-  clave
-});
-
-continue;
-
-}
-
-// coordenada vacía
-if(coord.lat == 0 || coord.lng == 0){
-
-sincoordCount++;
-
-console.log("COORD VACIA:", nombre);
-window.debugCoordVacia = window.debugCoordVacia || [];
-
-window.debugCoordVacia.push(nombre);
-continue;
-}
-
-
-
-if(estado.includes("ONLINE")){
-onlineCount++;
-}else{
-caidasCount++;
-}
-
-/* =========================
-MARKER
-========================= */
-
-const marker = L.marker(
-[coord.lat,coord.lng],
-{
-icon:icono(colorEstado(estado))
-}
-);
-
-// ← AGREGÁ ESTO
-marker.estado = estado;
-marker.nombre = nombre;
-
-/* =========================
-HISTORIAL
-========================= */
-
-const ult7=h.fechas.slice(-7);
-
-let historial="";
-
-ult7.forEach(f=>{
-
-const est=cam.estados[f]||"SIN RESPUESTA";
-
-if(est.includes("ONLINE")){
-historial+="🟢 ";
-}else{
-historial+="🔴 ";
-}
-
-});
-
-/* =========================
-UPTIME
-========================= */
-
-const ult30=h.fechas.slice(-30);
-
-let ok=0;
-
-ult30.forEach(f=>{
-
-const est=cam.estados[f]||"";
-
-if(est.includes("ONLINE")){
-ok++;
-}
-
-});
-
-const uptime = ult30.length
-? Math.round((ok/ult30.length)*100)
-: 0;
-
-/* =========================
-CAIDA ACTUAL
-========================= */
-
-let caidaTexto="";
-
-if(!estado.includes("ONLINE")){
-
-let diasCaida=0;
-
-for(let i=h.fechas.length-1;i>=0;i--){
-
-const f=h.fechas[i];
-const e=cam.estados[f]||"";
-
-if(e.includes("ONLINE")) break;
-
-diasCaida++;
-
-}
-
-caidaTexto=`
+          caidaTexto = `
 <div style="
 margin-top:8px;
 padding:8px;
@@ -796,14 +535,9 @@ font-weight:700;
 🔴 Caída hace ${diasCaida} día(s)
 </div>
 `;
+        }
 
-}
-
-/* =========================
-POPUP
-========================= */
-
-marker.bindPopup(`
+        return `
 <div style="
 min-width:260px;
 font-family:Segoe UI,Arial,sans-serif;
@@ -895,252 +629,526 @@ cursor:pointer;
 </div>
 
 </div>
-`);
+`;
+      }
 
-markers.addLayer(marker);
+      /* =========================
+CARGAR
+========================= */
+      function extraerCodigo(txt) {
+        txt = normalizarNombre(txt);
 
-cache.push({
-nombre,
-estado,
-ubicacion:info.ubicacion||"",
-lat:coord.lat,
-lng:coord.lng,
-marker
-});
+        // =========================
+        // CASOS ESPECIALES
+        // =========================
 
-}
+        // CAR 03 F1 => CAR 03
+        txt = txt.replace(/\sF\d$/, "");
 
-/* =========================
+        // DORIO => DORI
+        txt = txt.replace(/^DORIO\s(\d{2})$/, "DORI $1");
+
+        // PUNTO SEGURO
+
+        // =========================
+        // SEPARAR LETRAS Y NUMEROS
+        // CEN90 => CEN 90
+        // MON05 => MON 05
+        // =========================
+
+        txt = txt.replace(/^([A-Z]{2,10})(\d{2,3})$/, "$1 $2");
+
+        // =========================
+        // KM08 UPA 03
+        // devolver KM 08
+        // =========================
+
+        const km = txt.match(/^KM\s?(\d{2})/);
+
+        if (km) {
+          return `KM ${km[1]}`;
+        }
+
+        // =========================
+        // CODIGO PRINCIPAL
+        // =========================
+
+        const m = txt.match(/[A-Z]{2,10}\s\d{2,3}/);
+
+        return m ? m[0] : txt;
+      }
+
+      async function cargar() {
+        try {
+          markers.clearLayers();
+          cache = [];
+
+          Object.keys(markersPorNombre).forEach(
+            (key) => delete markersPorNombre[key],
+          );
+
+          Object.keys(datosPorNombre).forEach(
+            (key) => delete datosPorNombre[key],
+          );
+
+          window.debugSinCoord = [];
+          window.debugCoordVacia = [];
+
+          const h = await fetch("/historial").then((r) => r.json());
+          window.historialData = h;
+
+          const estadoActual = await fetch("/estado-actual").then((r) =>
+            r.json(),
+          );
+
+          const c = await fetch("/api/coords").then((r) => r.json());
+
+          const mapaEstado = {};
+
+          estadoActual.forEach((cam) => {
+            mapaEstado[cam.nombre] = cam;
+          });
+
+          const mapaCoords = {};
+          window.mapaCoords = mapaCoords;
+
+          /* =========================
+ARMAR MAPA COORDS
+========================= */
+          window.debugClaves = {};
+          c.forEach((x) => {
+            const nombreReal =
+              x.nombre || x.denominacion || x.DENOMINACION || x.camara || "";
+
+            if (!nombreReal) return;
+
+            const clave = extraerCodigo(nombreReal);
+
+            if (!window.debugClaves[clave]) {
+              window.debugClaves[clave] = new Set();
+            }
+
+            window.debugClaves[clave].add(nombreReal);
+            // ============================
+
+            console.log("COORD:", nombreReal, "=>", clave);
+
+            console.log("GUARDANDO:", clave, x.lat, x.lng);
+
+            const lat = parseFloat(x.lat);
+            const lng = parseFloat(x.lng);
+
+            if (isNaN(lat) || isNaN(lng)) {
+              console.log("❌ Coordenada inválida:", x);
+              return;
+            }
+
+            // si ya existe una buena, NO la pises con 0,0
+            if (
+              mapaCoords[clave] &&
+              mapaCoords[clave].lat !== 0 &&
+              mapaCoords[clave].lng !== 0 &&
+              (lat === 0 || lng === 0)
+            ) {
+              return;
+            }
+
+            if (mapaCoords[clave]) {
+              console.log("🚨 COORD DUPLICADA:", clave);
+              console.log("EXISTE:", mapaCoords[clave]);
+              console.log("NUEVA :", nombreReal);
+            }
+            mapaCoords[clave] = {
+              nombre: nombreReal,
+              lat,
+              lng,
+            };
+          });
+
+          console.log("Coords cargadas:", Object.keys(mapaCoords).length);
+
+          Object.entries(window.debugClaves).forEach(([clave, valores]) => {
+            const arr = [...valores];
+
+            if (arr.length > 1) {
+              console.log("COLISION:", clave);
+              console.log(arr);
+            }
+          });
+
+          if (!h.fechas.length) {
+            return;
+          }
+
+          //const ultima = h.fechas.at(-1);
+          window.camarasHistorial = Object.keys(h.camaras);
+
+          let totalCam = 0;
+          let onlineCount = 0;
+          let caidasCount = 0;
+          let sincoordCount = 0;
+
+          /* =========================
+RECORRER CAMARAS
+========================= */
+
+          for (const nombre in h.camaras) {
+            totalCam++;
+
+            const cam = h.camaras[nombre];
+            const info = cam.info || {};
+            const estado = mapaEstado[nombre]?.estado || "SIN RESPUESTA";
+
+            const clave = extraerCodigo(nombre);
+
+            const coord = mapaCoords[clave];
+
+            if (nombre.includes("AGUSTIN") || clave.includes("AGUSTIN")) {
+              console.log("BUSCANDO:", nombre);
+              console.log("CLAVE:", clave);
+              console.log("ENCONTRADA:", mapaCoords[clave]);
+            }
+            if (!coord) {
+              sincoordCount++;
+
+              console.log("SIN COORD:", nombre);
+              console.log("NORMALIZADO:", clave);
+              window.debugSinCoord = window.debugSinCoord || [];
+
+              window.debugSinCoord.push({
+                nombre,
+                clave,
+              });
+
+              continue;
+            }
+
+            // coordenada vacía
+            if (coord.lat == 0 || coord.lng == 0) {
+              sincoordCount++;
+
+              console.log("COORD VACIA:", nombre);
+              window.debugCoordVacia = window.debugCoordVacia || [];
+
+              window.debugCoordVacia.push(nombre);
+              continue;
+            }
+
+            if (estado.includes("ONLINE")) {
+              onlineCount++;
+            } else {
+              caidasCount++;
+            }
+
+            /* =========================
+MARKER
+========================= */
+
+            const marker = L.marker([coord.lat, coord.lng], {
+              icon: icono(colorEstado(estado)),
+            });
+
+            markersPorNombre[nombre] = marker;
+
+            marker.estado = estado;
+            marker.nombre = nombre;
+
+            datosPorNombre[nombre] = { cam, info, coord };
+
+            marker.bindPopup(construirPopup(nombre, estado, coord, cam, info));
+
+            markers.addLayer(marker);
+
+            cache.push({
+              nombre,
+              estado,
+              ubicacion: info.ubicacion || "",
+              lat: coord.lat,
+              lng: coord.lng,
+              marker,
+            });
+          }
+
+          /* =========================
 STATS
 ========================= */
-window.camarasMapa = cache.map(x => x.nombre);
-window.totalMapa = cache.length;
+          window.camarasMapa = cache.map((x) => x.nombre);
+          window.totalMapa = cache.length;
 
-console.log("TOTAL MAPA:", cache.length);
+          console.log("TOTAL MAPA:", cache.length);
 
-total.innerText=totalCam;
-online.innerText=onlineCount;
-caidas.innerText=caidasCount;
-sincoord.innerText=sincoordCount;
+          total.innerText = totalCam;
+          online.innerText = onlineCount;
+          caidas.innerText = caidasCount;
+          sincoord.innerText = sincoordCount;
 
-/* =========================
+          /* =========================
 SELECT EDIT
 ========================= */
 
-camaraEdit.innerHTML="";
+          camaraEdit.innerHTML = "";
 
-cache
-.sort((a,b)=>a.nombre.localeCompare(b.nombre))
-.forEach(x=>{
+          cache
+            .sort((a, b) => a.nombre.localeCompare(b.nombre))
+            .forEach((x) => {
+              const op = document.createElement("option");
 
-const op=document.createElement("option");
+              op.value = x.nombre;
+              op.textContent = x.nombre;
 
-op.value=x.nombre;
-op.textContent=x.nombre;
+              camaraEdit.appendChild(op);
+            });
 
-camaraEdit.appendChild(op);
+          renderLista();
+        } catch (err) {
+          console.error(err);
 
-});
+          alert(err.message);
+        }
+      }
 
-renderLista();
+      function actualizarPanel() {
+        let onlineCount = 0;
+        let caidasCount = 0;
 
-}catch(err){
+        cache.forEach((cam) => {
+          if (cam.estado.includes("ONLINE")) {
+            onlineCount++;
+          } else {
+            caidasCount++;
+          }
+        });
 
-console.error(err);
+        online.innerText = onlineCount;
+        caidas.innerText = caidasCount;
+      }
+      /* =========================
+Actualizar estado
+========================= */
 
-alert(err.message);
+      async function actualizarEstados() {
+        try {
+          console.log("AUTO", new Date().toLocaleTimeString());
+          console.log("========== ACTUALIZANDO ==========");
 
-}
+          const estadoActual = await fetch("/estado-actual").then((r) =>
+            r.json(),
+          );
 
-}
+          console.log("Estado actual recibido:", estadoActual.length);
 
+          const mapaEstado = {};
 
+          estadoActual.forEach((cam) => {
+            mapaEstado[cam.nombre] = cam.estado;
+          });
 
-/* =========================
+          console.log(
+            "Markers cargados:",
+            Object.keys(markersPorNombre).length,
+          );
+
+          let cambios = 0;
+
+          for (const nombre in markersPorNombre) {
+            const marker = markersPorNombre[nombre];
+            const nuevoEstado = mapaEstado[nombre] || "SIN RESPUESTA";
+
+            if (marker.estado !== nuevoEstado) {
+              cambios++;
+
+              console.log(nombre, "actualizada");
+
+              marker.estado = nuevoEstado;
+
+              marker.setIcon(icono(colorEstado(nuevoEstado)));
+
+              const datos = datosPorNombre[nombre];
+
+              if (datos) {
+                marker.setPopupContent(
+                  construirPopup(
+                    nombre,
+                    nuevoEstado,
+                    datos.coord,
+                    datos.cam,
+                    datos.info,
+                  ),
+                );
+              }
+
+              const camCache = cache.find((c) => c.nombre === nombre);
+
+              if (camCache) {
+                camCache.estado = nuevoEstado;
+              }
+            }
+          }
+
+          console.log("Cambios encontrados:", cambios);
+
+          if (cambios > 0) {
+            actualizarPanel();
+
+            filtrar();
+          }
+        } catch (err) {
+          console.error("Error actualizando estados:", err);
+        }
+      }
+      /* =========================
 LISTA
 ========================= */
 
-function renderLista(txt="",estadoFiltro="TODAS"){
+      function renderLista(txt = "", estadoFiltro = "TODAS") {
+        let html = "";
 
-let html="";
+        cache
+          .filter((x) => {
+            let okTexto =
+              x.nombre.toUpperCase().includes(txt) ||
+              x.ubicacion.toUpperCase().includes(txt);
 
-cache
-.filter(x=>{
+            let okEstado = true;
 
-let okTexto=
-x.nombre.toUpperCase().includes(txt) ||
-x.ubicacion.toUpperCase().includes(txt);
+            if (estadoFiltro === "ONLINE") {
+              okEstado = x.estado.includes("ONLINE");
+            }
 
-let okEstado=true;
+            if (estadoFiltro === "CAIDA") {
+              okEstado = !x.estado.includes("ONLINE");
+            }
 
-if(estadoFiltro==="ONLINE"){
-okEstado=x.estado.includes("ONLINE");
-}
-
-if(estadoFiltro==="CAIDA"){
-okEstado=!x.estado.includes("ONLINE");
-}
-
-return okTexto && okEstado;
-
-})
-.sort((a,b)=>a.nombre.localeCompare(b.nombre))
-.forEach(x=>{
-
-html+=`
+            return okTexto && okEstado;
+          })
+          .sort((a, b) => a.nombre.localeCompare(b.nombre))
+          .forEach((x) => {
+            html += `
 <div class="item" onclick="ir(${x.lat},${x.lng})">
 <b>${x.nombre}</b>
 <div>${x.ubicacion}</div>
 ${badge(x.estado)}
 </div>
 `;
+          });
 
-});
+        lista.innerHTML = html;
+      }
 
-lista.innerHTML=html;
-
-}
-
-/* =========================
+      /* =========================
 FILTRO
 ========================= */
 
-function filtrar(){
+      function filtrar() {
+        const txt = buscar.value.toUpperCase();
+        const est = filtroEstado.value;
 
-const txt=buscar.value.toUpperCase();
-const est=filtroEstado.value;
+        markers.clearLayers();
 
-markers.clearLayers();
+        cache.forEach((x) => {
+          let okTexto =
+            x.nombre.toUpperCase().includes(txt) ||
+            x.ubicacion.toUpperCase().includes(txt);
 
-cache.forEach(x=>{
+          let okEstado = true;
 
-let okTexto=
-x.nombre.toUpperCase().includes(txt) ||
-x.ubicacion.toUpperCase().includes(txt);
+          if (est === "ONLINE") {
+            okEstado = x.estado.includes("ONLINE");
+          }
 
-let okEstado=true;
+          if (est === "CAIDA") {
+            okEstado = !x.estado.includes("ONLINE");
+          }
 
-if(est==="ONLINE"){
-okEstado=x.estado.includes("ONLINE");
-}
+          if (okTexto && okEstado) {
+            markers.addLayer(x.marker);
+          }
+        });
 
-if(est==="CAIDA"){
-okEstado=!x.estado.includes("ONLINE");
-}
+        renderLista(txt, est);
+      }
 
-if(okTexto && okEstado){
-markers.addLayer(x.marker);
-}
-
-});
-
-renderLista(txt,est);
-
-}
-
-/* =========================
+      /* =========================
 IR
 ========================= */
 
-function ir(lat,lng){
-map.setView([lat,lng],18);
-}
+      function ir(lat, lng) {
+        map.setView([lat, lng], 18);
+      }
 
-/* =========================
+      /* =========================
 FULLSCREEN
 ========================= */
 
-function fullscreenMapa(){
+      function fullscreenMapa() {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
+      }
 
-if(document.documentElement.requestFullscreen){
-document.documentElement.requestFullscreen();
-}
-
-}
-
-/* =========================
+      /* =========================
 EDICION
 ========================= */
 
-function activarEdicion(){
+      function activarEdicion() {
+        modoEdicion = true;
 
-modoEdicion=true;
+        alert("Ahora hacé click en el mapa.");
+      }
 
-alert("Ahora hacé click en el mapa.");
+      map.on("click", async function (e) {
+        if (!modoEdicion) return;
 
-}
+        await fetch("/api/coords", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nombre: camaraEdit.value,
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+          }),
+        });
 
-map.on("click",async function(e){
+        modoEdicion = false;
 
-if(!modoEdicion) return;
+        alert("Coordenada actualizada");
 
-await fetch("/api/coords",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-nombre:camaraEdit.value,
-lat:e.latlng.lat,
-lng:e.latlng.lng
-})
-});
+        cargar();
+      });
 
-modoEdicion=false;
+      async function eliminarCoord() {
+        const nombre = camaraEdit.value;
 
-alert("Coordenada actualizada");
+        if (!nombre) {
+          alert("Seleccioná una cámara");
+          return;
+        }
 
-cargar();
+        const ok = confirm("¿Eliminar coordenada de:\n\n" + nombre + " ?");
 
-});
+        if (!ok) return;
 
-async function eliminarCoord(){
+        try {
+          await fetch("/api/coords/" + encodeURIComponent(nombre), {
+            method: "DELETE",
+          });
 
-const nombre = camaraEdit.value;
+          alert("✅ Coordenada eliminada");
 
-if(!nombre){
-alert("Seleccioná una cámara");
-return;
-}
+          cargar();
+        } catch (err) {
+          console.log(err);
 
-const ok = confirm(
-"¿Eliminar coordenada de:\n\n" + nombre + " ?"
-);
+          alert("Error eliminando coordenada");
+        }
+      }
 
-if(!ok) return;
+      cargar();
 
-try{
-
-await fetch(
-"/api/coords/" + encodeURIComponent(nombre),
-{
-method:"DELETE"
-}
-);
-
-alert("✅ Coordenada eliminada");
-
-cargar();
-
-}catch(err){
-
-console.log(err);
-
-alert("Error eliminando coordenada");
-
-}
-
-}
-
-/* =========================
-AUTO REFRESH
-========================= */
-
-//setInterval(cargar,20000);
-
-cargar();
-
-</script>
-
-</body>
+      console.log("Iniciando auto refresh...");
+      setInterval(actualizarEstados, 10000);
+    </script>
+  </body>
 </html>

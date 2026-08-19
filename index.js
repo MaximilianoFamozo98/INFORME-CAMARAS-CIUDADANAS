@@ -154,14 +154,12 @@ async function procesarCamara(fila, index, progreso) {
     const ciclo = Math.floor(Date.now() / 30000); // cambia cada 30 segundos
     const online = (numero + ciclo) % 100 < 20;
 
-    console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
-
     if (online) {
       progreso.online++;
     } else {
       progreso.sinRespuesta++;
     }
-    console.log(nombre, online ? "ONLINE" : "SIN RESPUESTA");
+    
     return {
       DENOMINACION: nombre,
       PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
@@ -306,9 +304,13 @@ async function analizarCamaras(lista, progreso) {
   progreso.noEncontrada = 0;
 
   const tareas = lista.map((nombre) => {
+
+    
     let fila = null;
 
     const codigo = extraerCodigo(nombre);
+
+   
 
     if (codigo) {
       fila = data.find((r) => {
@@ -316,6 +318,7 @@ async function analizarCamaras(lista, progreso) {
         return codExcel === codigo;
       });
     }
+    console.log("FILA ENCONTRADA:", fila ? fila["[Denominacion]"] : "NO ENCONTRADA");
 
     if (!fila && nombre.toUpperCase().includes("PUNTO SEGURO")) {
       const { base, tipo } = parsearPuntoSeguro(nombre);

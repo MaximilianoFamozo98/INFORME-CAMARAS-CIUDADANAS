@@ -79,15 +79,6 @@ async function guardarEstadoActual(resultado) {
 
   const ahora = new Date().toISOString();
 
-
-  console.log("Primeras 10 cámaras a guardar:");
-console.table(
-  resultado.slice(0, 10).map(c => ({
-    nombre: c.DENOMINACION,
-    estado: c.ESTADO
-  }))
-);
-
   resultado.forEach((cam) => {
     insertar.run(
       normalizarNombre(cam.DENOMINACION),
@@ -239,9 +230,14 @@ app.post("/analizar", async (req, res) => {
     const texto = req.body.texto;
 
     const lista = texto
-      .split("\n")
-      .map((x) => x.trim())
-      .filter(Boolean);
+  .split("\n")
+  .map((x) =>
+    x
+      .trim()
+      .replace(/^\d+\s*[\)\.\-]\s*/, "")
+  )
+  .filter(Boolean);
+      
 
     const { ruta, resultado } = await analizarCamaras(lista, progreso);
 
@@ -549,10 +545,7 @@ setInterval(
   },
   10 * 60 * 1000,
 );
-// Ejecutar uno al iniciar
-setTimeout(() => {
-  autoEscaneo();
-}, 5000);
+
 
 // =============================
 // SERVER

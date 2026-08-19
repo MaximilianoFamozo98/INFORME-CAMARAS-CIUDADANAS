@@ -731,9 +731,9 @@ ARMAR MAPA COORDS
             window.debugClaves[clave].add(nombreReal);
             // ============================
 
-            console.log("COORD:", nombreReal, "=>", clave);
+            
 
-            console.log("GUARDANDO:", clave, x.lat, x.lng);
+            
 
             const lat = parseFloat(x.lat);
             const lng = parseFloat(x.lng);
@@ -765,7 +765,7 @@ ARMAR MAPA COORDS
             };
           });
 
-          console.log("Coords cargadas:", Object.keys(mapaCoords).length);
+          
 
           Object.entries(window.debugClaves).forEach(([clave, valores]) => {
             const arr = [...valores];
@@ -928,8 +928,6 @@ Actualizar estado
 
       async function actualizarEstados() {
         try {
-          console.log("AUTO", new Date().toLocaleTimeString());
-          console.log("========== ACTUALIZANDO ==========");
 
           const estadoActual = await fetch("/estado-actual").then((r) =>
             r.json(),
@@ -957,7 +955,7 @@ Actualizar estado
             if (marker.estado !== nuevoEstado) {
               cambios++;
 
-              console.log(nombre, "actualizada");
+              
 
               marker.estado = nuevoEstado;
 
@@ -985,7 +983,6 @@ Actualizar estado
             }
           }
 
-          console.log("Cambios encontrados:", cambios);
 
           if (cambios > 0) {
             actualizarPanel();

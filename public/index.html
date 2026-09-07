@@ -1,676 +1,797 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Centro de Monitoreo - Florencio Varela</title>
-
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-font-family:Segoe UI,Arial,sans-serif;
-background:#060d18;
-color:#fff;
-}
-
-/* HEADER */
-header{
-background:linear-gradient(90deg,#0f172a,#111827);
-padding:20px 28px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid rgba(255,255,255,.05);
-box-shadow:0 10px 25px rgba(0,0,0,.25);
-}
-
-.brand{
-display:flex;
-align-items:center;
-gap:14px;
-}
-
-.brand img{
-height:48px;
-border-radius:10px;
-}
-
-.brand h1{
-font-size:21px;
-font-weight:800;
-}
-
-.brand p{
-font-size:13px;
-color:#94a3b8;
-margin-top:2px;
-}
-
-.header-right{
-text-align:right;
-}
-
-#hora{
-font-size:26px;
-font-weight:800;
-color:#22c55e;
-}
-
-#ultimoEscaneo{
-font-size:13px;
-color:#94a3b8;
-margin-top:3px;
-}
-
-/* MAIN */
-.container{
-max-width:1800px;
-margin:auto;
-padding:24px;
-}
-
-/* KPIS */
-.cards{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:14px;
-margin-bottom:22px;
-}
-
-.card{
-background:#111827;
-border:1px solid rgba(255,255,255,.03);
-padding:18px;
-border-radius:18px;
-box-shadow:0 12px 25px rgba(0,0,0,.25);
-}
-
-.card .title{
-font-size:14px;
-color:#94a3b8;
-margin-bottom:10px;
-}
-
-.card .num{
-font-size:34px;
-font-weight:800;
-}
-
-.green{color:#22c55e}
-.red{color:#ef4444}
-.orange{color:#f59e0b}
-.white{color:#f8fafc}
-
-/* PANEL */
-.panel{
-background:#111827;
-padding:22px;
-border-radius:18px;
-margin-bottom:22px;
-box-shadow:0 10px 25px rgba(0,0,0,.25);
-}
-
-textarea{
-width:100%;
-height:130px;
-resize:none;
-padding:14px;
-border:none;
-border-radius:14px;
-background:#0b1220;
-color:white;
-outline:none;
-}
-
-.buttons{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-top:14px;
-}
-
-button,a.btn-link{
-padding:12px 18px;
-border:none;
-border-radius:12px;
-cursor:pointer;
-font-weight:700;
-transition:.2s;
-text-decoration:none;
-display:inline-block;
-color:white;
-}
-
-button:hover,a.btn-link:hover{
-transform:translateY(-2px);
-}
-
-.btn-green{background:#16a34a;}
-.btn-blue{background:#2563eb;}
-.btn-gray{background:#334155;}
-.btn-purple{background:#7c3aed;}
-.btn-orange{background:#ea580c;}
-
-#estado{
-margin-top:15px;
-font-weight:700;
-color:#cbd5e1;
-}
-
-.progress{
-height:22px;
-background:#0b1220;
-border-radius:30px;
-overflow:hidden;
-margin-top:15px;
-}
-
-#bar{
-height:100%;
-width:0%;
-background:linear-gradient(90deg,#22c55e,#84cc16);
-transition:.3s;
-}
-
-.rowinfo{
-display:flex;
-justify-content:space-between;
-margin-top:10px;
-font-size:14px;
-color:#94a3b8;
-}
-
-/* FILTROS */
-.filters{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:10px;
-margin-bottom:14px;
-}
-
-.filters input{
-padding:10px;
-border:none;
-border-radius:10px;
-background:#0b1220;
-color:white;
-outline:none;
-}
-
-.days{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:15px;
-}
-
-/* KPI PROVEEDOR */
-#kpiProveedor{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-gap:12px;
-margin-bottom:18px;
-}
-
-.kpi-box{
-background:#0b1220;
-padding:14px;
-border-radius:14px;
-font-size:14px;
-line-height:1.6;
-}
-
-/* TABLA */
-.table-wrap{
-overflow:auto;
-max-height:720px;
-border-radius:16px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-min-width:1500px;
-}
-
-th{
-position:sticky;
-top:0;
-background:#1e293b;
-padding:12px;
-font-size:14px;
-z-index:5;
-}
-
-td{
-padding:10px;
-font-size:14px;
-border-bottom:1px solid rgba(255,255,255,.04);
-text-align:center;
-}
-
-tr:nth-child(even){
-background:#0f172a;
-}
-
-tr:hover{
-background:#172033;
-}
-
-.cam{
-position:sticky;
-left:0;
-background:#111827;
-z-index:4;
-text-align:left;
-font-weight:800;
-min-width:180px;
-}
-
-.info{
-text-align:left;
-min-width:320px;
-line-height:1.45;
-}
-
-.proveedor{font-weight:800;}
-.ubi{font-size:13px;color:#cbd5e1;}
-.det{font-size:13px;color:#60a5fa;}
-
-.ok{background:#15803d;font-weight:800;}
-.bad{background:#dc2626;font-weight:800;}
-.warn{background:#d97706;font-weight:800;}
-.none{background:#475569;}
-
-footer{
-text-align:center;
-padding:25px;
-font-size:13px;
-color:#64748b;
-}
-
-/* BOTON TOP FALLAS */
-#btnTopFallas{
-position:fixed;
-right:22px;
-bottom:24px;
-z-index:9999;
-background:#dc2626;
-padding:14px 18px;
-border-radius:50px;
-font-weight:800;
-box-shadow:0 10px 25px rgba(0,0,0,.35);
-}
-
-/* POPUP */
-#popupFallas{
-position:fixed;
-right:22px;
-bottom:82px;
-width:340px;
-max-height:520px;
-overflow:auto;
-background:#111827;
-border-radius:18px;
-padding:18px;
-z-index:9999;
-box-shadow:0 20px 45px rgba(0,0,0,.45);
-display:none;
-}
-
-.rank-item{
-background:#0b1220;
-padding:12px;
-border-radius:14px;
-margin-bottom:10px;
-font-size:14px;
-}
-
-.rank-num{
-display:inline-block;
-background:#dc2626;
-padding:3px 8px;
-border-radius:30px;
-font-size:12px;
-font-weight:800;
-margin-bottom:6px;
-}
-
-.close-rank{
-float:right;
-cursor:pointer;
-font-size:20px;
-color:#94a3b8;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-<div class="brand">
-<img src="./florenciovarela.png">
-<div>
-<h1>Municipalidad de Florencio Varela</h1>
-<p>Centro de Monitoreo Urbano</p>
-</div>
-</div>
-
-<div class="header-right">
-<div id="hora"></div>
-<div id="ultimoEscaneo">Último escaneo: nunca</div>
-</div>
-</header>
-
-<div class="container">
-
-<!-- KPIS -->
-<div class="cards">
-<div class="card"><div class="title">Online</div><div class="num green" id="online">0</div></div>
-<div class="card"><div class="title">Caídas</div><div class="num red" id="sinRespuesta">0</div></div>
-<div class="card"><div class="title">IP Vacía</div><div class="num white" id="ipVacia">0</div></div>
-<div class="card"><div class="title">No encontrada</div><div class="num orange" id="noEncontrada">0</div></div>
-</div>
-
-<!-- ESCANEO -->
-<div class="panel">
-
-<textarea id="texto" placeholder="Pegá cámaras acá..."></textarea>
-
-<div class="buttons">
-<button class="btn-green" onclick="analizarTexto()">Analizar Texto</button>
-<button class="btn-blue" onclick="analizarTodas()">Escanear Todas</button>
-<button class="btn-gray" onclick="verHistorial()">Actualizar Historial</button>
-
-<a href="/mapa" class="btn-link btn-purple">📍 Ir al Mapa</a>
-<a href="/admin-coords.html" class="btn-link btn-orange">⚙️ Panel Admin</a>
-</div>
-
-<div id="estado">Esperando acción...</div>
-
-<div class="progress">
-<div id="bar"></div>
-</div>
-
-<div class="rowinfo">
-<span id="contador">0 / 0</span>
-<span id="porcentaje">0%</span>
-</div>
-
-</div>
-
-<!-- HISTORIAL -->
-<div class="panel">
-
-<div class="filters">
-<input id="filtroCamara" placeholder="Buscar cámara..." oninput="verHistorial(filtroDias)">
-<input id="filtroProveedor" placeholder="Proveedor..." oninput="verHistorial(filtroDias)">
-<input id="filtroUbicacion" placeholder="Ubicación..." oninput="verHistorial(filtroDias)">
-<input id="filtroConexion" placeholder="Conexión..." oninput="verHistorial(filtroDias)">
-<input id="filtroIP" placeholder="IP..." oninput="verHistorial(filtroDias)">
-</div>
-
-<div class="days">
-<button class="btn-gray" onclick="verHistorial(7)">7 días</button>
-<button class="btn-gray" onclick="verHistorial(30)">30 días</button>
-<button class="btn-blue" onclick="verHistorial()">Todo</button>
-</div>
-
-<div id="kpiProveedor"></div>
-
-<div style="margin-bottom:14px;color:#94a3b8">
-Mostrando <b id="cantFiltradas">0</b> cámaras
-</div>
-
-<div class="table-wrap">
-<div id="tablaHistorial"></div>
-</div>
-
-</div>
-
-</div>
-
-<footer>
-Sistema Interno · Municipalidad de Florencio Varela
-</footer>
-
-<!-- BOTON TOP FALLAS -->
-<button id="btnTopFallas" onclick="abrirRanking()">🚨 Top Fallas</button>
-
-<!-- POPUP -->
-<div id="popupFallas">
-<div class="close-rank" onclick="cerrarRanking()">✕</div>
-<h3>Ranking de Cámaras con Fallas</h3>
-<br><br>
-<div id="contenidoRanking">Cargando...</div>
-</div>
-
-<script>
-let intervalo;
-let filtroDias=null;
-
-/* reloj */
-setInterval(()=>{
-hora.innerText=new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
-},1000);
-
-/* progreso */
-function iniciar(){
-clearInterval(intervalo);
-
-intervalo=setInterval(async()=>{
-const res=await fetch("/progreso");
-const d=await res.json();
-
-let p=d.total?(d.procesadas/d.total)*100:0;
-
-bar.style.width=p+"%";
-contador.innerText=`${d.procesadas} / ${d.total}`;
-porcentaje.innerText=p.toFixed(0)+"%";
-
-online.innerText=d.online||0;
-sinRespuesta.innerText=d.sinRespuesta||0;
-ipVacia.innerText=d.ipVacia||0;
-noEncontrada.innerText=d.noEncontrada||0;
-
-},500);
-}
-
-function detener(){clearInterval(intervalo)}
-
-function descargar(blob){
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");
-a.href=url;
-a.download="reporte.xlsx";
-a.click();
-}
-
-function registrarEscaneo(tipo="Último escaneo"){
-const ahora = new Date();
-
-const texto =
-tipo + ": " +
-ahora.toLocaleDateString("es-AR") + " " +
-ahora.toLocaleTimeString("es-AR",{
-hour:"2-digit",
-minute:"2-digit",
-second:"2-digit"
-});
-
-document.getElementById("ultimoEscaneo").innerText = texto;
-
-/* guardar en memoria navegador */
-localStorage.setItem("ultimoEscaneoSistema", texto);
-}
-
-function cargarUltimoEscaneo(){
-
-const guardado = localStorage.getItem("ultimoEscaneoSistema");
-
-if(guardado){
-document.getElementById("ultimoEscaneo").innerText = guardado;
-}
-
-}
-
-async function analizarTexto(){
-
-estado.innerText="Analizando cámaras...";
-registrarEscaneo("Inicio escaneo");
-
-iniciar();
-
-const texto=document.getElementById("texto").value;
-
-const res=await fetch("/analizar",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({texto})
-});
-
-descargar(await res.blob());
-
-detener();
-
-registrarEscaneo("Último escaneo");
-
-estado.innerText="Proceso finalizado";
-}
-
-async function analizarTodas(){
-
-estado.innerText="Escaneando cámaras...";
-registrarEscaneo("Inicio escaneo total");
-
-iniciar();
-
-const res=await fetch("/analizar-todas");
-
-descargar(await res.blob());
-
-detener();
-
-registrarEscaneo("Último escaneo");
-
-estado.innerText="Escaneo finalizado";
-}
-
-/* historial */
-async function verHistorial(dias=null){
-filtroDias=dias;
-
-const res=await fetch("/historial");
-const data=await res.json();
-
-let fechas=data.fechas;
-let camaras=data.camaras;
-
-let html="<table><tr><th>Cámara</th><th>Info</th><th>Días Caída</th><th>Días Online</th>";
-fechas.forEach(f=>html+=`<th>${f}</th>`);
-html+="</tr>";
-
-let visibles=0;
-let proveedores={};
-
-const qCamara=(filtroCamara.value||"").toUpperCase().trim();
-const qProveedor=(filtroProveedor.value||"").toUpperCase().trim();
-const qUbicacion=(filtroUbicacion.value||"").toUpperCase().trim();
-const qConexion=(filtroConexion.value||"").toUpperCase().trim();
-const qIP=(filtroIP.value||"").toUpperCase().trim();
-
-Object.entries(camaras)
-.sort((a, b) =>
-    a[0].localeCompare(b[0], "es", {
-        numeric: true,
-        sensitivity: "base"
-    })
-)
-.forEach(([nombre, obj]) => {
-
-const info=obj.info||{};
-const estados=obj.estados||{};
-
-if(qCamara && !nombre.toUpperCase().includes(qCamara)) return;
-if(qProveedor && !(info.proveedor||"").toUpperCase().includes(qProveedor)) return;
-if(qUbicacion && !(info.ubicacion||"").toUpperCase().includes(qUbicacion)) return;
-if(qConexion && !(info.conexion||"").toUpperCase().includes(qConexion)) return;
-if(qIP && !(info.ip||"").toUpperCase().includes(qIP)) return;
-
-visibles++;
-
-let prov=info.proveedor||"SIN DATO";
-if(!proveedores[prov]) proveedores[prov]={online:0,caidas:0,total:0};
-proveedores[prov].total++;
-
-// Estado actual de la cámara (última fecha registrada)
-const ultimoEstado = estados[fechas[fechas.length - 1]] || "";
-
-if (ultimoEstado.includes("ONLINE")) {
-    proveedores[prov].online++;
-} else {
-    proveedores[prov].caidas++;
-}
-
-let diasCaida = 0;
-let diasOnline = 0;
-
-fechas.forEach(f => {
-    const e = estados[f] || "-";
-
-    if (e === "SIN RESPUESTA")
-        diasCaida++;
-
-    if (e.includes("ONLINE"))
-        diasOnline++;
-});
-
-html+=`<tr>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Centro de Monitoreo - Florencio Varela</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          Segoe UI,
+          Arial,
+          sans-serif;
+        background: #060d18;
+        color: #fff;
+      }
+
+      /* HEADER */
+      header {
+        background: linear-gradient(90deg, #0f172a, #111827);
+        padding: 20px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand img {
+        height: 48px;
+        border-radius: 10px;
+      }
+
+      .brand h1 {
+        font-size: 21px;
+        font-weight: 800;
+      }
+
+      .brand p {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+
+      .header-right {
+        text-align: right;
+      }
+
+      #hora {
+        font-size: 26px;
+        font-weight: 800;
+        color: #22c55e;
+      }
+
+      #ultimoEscaneo {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 3px;
+      }
+
+      /* MAIN */
+      .container {
+        max-width: 1800px;
+        margin: auto;
+        padding: 24px;
+      }
+
+      /* KPIS */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .card {
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        padding: 18px;
+        border-radius: 18px;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      .card .title {
+        font-size: 14px;
+        color: #94a3b8;
+        margin-bottom: 10px;
+      }
+
+      .card .num {
+        font-size: 34px;
+        font-weight: 800;
+      }
+
+      .green {
+        color: #22c55e;
+      }
+      .red {
+        color: #ef4444;
+      }
+      .orange {
+        color: #f59e0b;
+      }
+      .white {
+        color: #f8fafc;
+      }
+
+      /* PANEL */
+      .panel {
+        background: #111827;
+        padding: 22px;
+        border-radius: 18px;
+        margin-bottom: 22px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      textarea {
+        width: 100%;
+        height: 130px;
+        resize: none;
+        padding: 14px;
+        border: none;
+        border-radius: 14px;
+        background: #0b1220;
+        color: white;
+        outline: none;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      button,
+      a.btn-link {
+        padding: 12px 18px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        color: white;
+      }
+
+      button:hover,
+      a.btn-link:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-green {
+        background: #16a34a;
+      }
+      .btn-blue {
+        background: #2563eb;
+      }
+      .btn-gray {
+        background: #334155;
+      }
+      .btn-purple {
+        background: #7c3aed;
+      }
+      .btn-orange {
+        background: #ea580c;
+      }
+
+      #estado {
+        margin-top: 15px;
+        font-weight: 700;
+        color: #cbd5e1;
+      }
+
+      .progress {
+        height: 22px;
+        background: #0b1220;
+        border-radius: 30px;
+        overflow: hidden;
+        margin-top: 15px;
+      }
+
+      #bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #84cc16);
+        transition: 0.3s;
+      }
+
+      .rowinfo {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 14px;
+        color: #94a3b8;
+      }
+
+      /* FILTROS */
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .filters input {
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        background: #0b1220;
+        color: white;
+        outline: none;
+      }
+
+      .days {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+      }
+
+      /* KPI PROVEEDOR */
+      #kpiProveedor {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .kpi-box {
+        background: #0b1220;
+        padding: 14px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      /* TABLA */
+      .table-wrap {
+        overflow: auto;
+        max-height: 720px;
+        border-radius: 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1500px;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        background: #1e293b;
+        padding: 12px;
+        font-size: 14px;
+        z-index: 5;
+      }
+
+      td {
+        padding: 10px;
+        font-size: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        text-align: center;
+      }
+
+      tr:nth-child(even) {
+        background: #0f172a;
+      }
+
+      tr:hover {
+        background: #172033;
+      }
+
+      .cam {
+        position: sticky;
+        left: 0;
+        background: #111827;
+        z-index: 4;
+        text-align: left;
+        font-weight: 800;
+        min-width: 180px;
+      }
+
+      .info {
+        text-align: left;
+        min-width: 320px;
+        line-height: 1.45;
+      }
+
+      .proveedor {
+        font-weight: 800;
+      }
+      .ubi {
+        font-size: 13px;
+        color: #cbd5e1;
+      }
+      .det {
+        font-size: 13px;
+        color: #60a5fa;
+      }
+
+      .ok {
+        background: #15803d;
+        font-weight: 800;
+      }
+      .bad {
+        background: #dc2626;
+        font-weight: 800;
+      }
+      .warn {
+        background: #d97706;
+        font-weight: 800;
+      }
+      .none {
+        background: #475569;
+      }
+
+      footer {
+        text-align: center;
+        padding: 25px;
+        font-size: 13px;
+        color: #64748b;
+      }
+
+      /* BOTON TOP FALLAS */
+      #btnTopFallas {
+        position: fixed;
+        right: 22px;
+        bottom: 24px;
+        z-index: 9999;
+        background: #dc2626;
+        padding: 14px 18px;
+        border-radius: 50px;
+        font-weight: 800;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      }
+
+      /* POPUP */
+      #popupFallas {
+        position: fixed;
+        right: 22px;
+        bottom: 82px;
+        width: 340px;
+        max-height: 520px;
+        overflow: auto;
+        background: #111827;
+        border-radius: 18px;
+        padding: 18px;
+        z-index: 9999;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+        display: none;
+      }
+
+      .rank-item {
+        background: #0b1220;
+        padding: 12px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .rank-num {
+        display: inline-block;
+        background: #dc2626;
+        padding: 3px 8px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      .close-rank {
+        float: right;
+        cursor: pointer;
+        font-size: 20px;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="brand">
+        <img src="./florenciovarela.png" />
+        <div>
+          <h1>Municipalidad de Florencio Varela</h1>
+          <p>Centro de Monitoreo Urbano</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div id="hora"></div>
+        <div id="ultimoEscaneo">Último escaneo: nunca</div>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- KPIS -->
+      <div class="cards">
+        <div class="card">
+          <div class="title">Online</div>
+          <div class="num green" id="online">0</div>
+        </div>
+        <div class="card">
+          <div class="title">Caídas</div>
+          <div class="num red" id="sinRespuesta">0</div>
+        </div>
+        <div class="card">
+          <div class="title">IP Vacía</div>
+          <div class="num white" id="ipVacia">0</div>
+        </div>
+        <div class="card">
+          <div class="title">No encontrada</div>
+          <div class="num orange" id="noEncontrada">0</div>
+        </div>
+      </div>
+
+      <!-- ESCANEO -->
+      <div class="panel">
+        <textarea id="texto" placeholder="Pegá cámaras acá..."></textarea>
+
+        <div class="buttons">
+          <button class="btn-green" onclick="analizarTexto()">
+            Analizar Texto
+          </button>
+          <button class="btn-blue" id="btnAnalizarTodas" onclick="analizarTodas()">
+            Analizar todas
+          </button>
+          <button class="btn-gray" onclick="verHistorial()">
+            Actualizar Historial
+          </button>
+
+          <a href="/mapa" class="btn-link btn-purple"> 📍 Ir al Mapa </a>
+        </div>
+        <div
+          id="estadoEscaneo"
+          style="
+            display: none;
+            margin-top: 15px;
+            background: #0b1220;
+            padding: 14px;
+            border-radius: 12px;
+          "
+        >
+          <div id="textoEscaneo" style="font-weight: 700; margin-bottom: 8px">
+            🔄 Autoescaneo en curso...
+          </div>
+
+          <div
+            style="
+              width: 100%;
+              height: 14px;
+              background: #1e293b;
+              border-radius: 999px;
+              overflow: hidden;
+            "
+          >
+            <div
+              id="barraEscaneo"
+              style="
+                width: 0%;
+                height: 100%;
+                background: #2563eb;
+                transition: width 0.3s;
+              "
+            ></div>
+          </div>
+
+          <div
+            id="detalleEscaneo"
+            style="margin-top: 8px; font-size: 13px; color: #94a3b8"
+          ></div>
+        </div>
+
+        <div id="estado">Esperando acción...</div>
+
+        <div class="progress">
+          <div id="bar"></div>
+        </div>
+
+        <div class="rowinfo">
+          <span id="contador">0 / 0</span>
+          <span id="porcentaje">0%</span>
+        </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div class="panel">
+        <div class="filters">
+          <input
+            id="filtroCamara"
+            placeholder="Buscar cámara..."
+            oninput="verHistorial(filtroDias)"
+          />
+          <input
+            id="filtroProveedor"
+            placeholder="Proveedor..."
+            oninput="verHistorial(filtroDias)"
+          />
+          <input
+            id="filtroUbicacion"
+            placeholder="Ubicación..."
+            oninput="verHistorial(filtroDias)"
+          />
+          <input
+            id="filtroConexion"
+            placeholder="Conexión..."
+            oninput="verHistorial(filtroDias)"
+          />
+          <input
+            id="filtroIP"
+            placeholder="IP..."
+            oninput="verHistorial(filtroDias)"
+          />
+        </div>
+
+        <div class="days">
+          <button class="btn-gray" onclick="verHistorial(7)">7 días</button>
+          <button class="btn-gray" onclick="verHistorial(30)">30 días</button>
+          <button class="btn-blue" onclick="verHistorial()">Todo</button>
+        </div>
+
+        <div id="kpiProveedor"></div>
+
+        <div style="margin-bottom: 14px; color: #94a3b8">
+          Mostrando <b id="cantFiltradas">0</b> cámaras
+        </div>
+
+        <div class="table-wrap">
+          <div id="tablaHistorial"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>Sistema Interno · Municipalidad de Florencio Varela</footer>
+
+    <!-- BOTON TOP FALLAS -->
+    <button id="btnTopFallas" onclick="abrirRanking()">🚨 Top Fallas</button>
+
+    <!-- POPUP -->
+    <div id="popupFallas">
+      <div class="close-rank" onclick="cerrarRanking()">✕</div>
+      <h3>Ranking de Cámaras con Fallas</h3>
+      <br /><br />
+      <div id="contenidoRanking">Cargando...</div>
+    </div>
+
+    <script>
+      let intervalo;
+      let filtroDias = null;
+
+      /* reloj */
+      setInterval(() => {
+        hora.innerText = new Date().toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }, 1000);
+
+      /* progreso */
+      function iniciar() {
+        clearInterval(intervalo);
+
+        intervalo = setInterval(async () => {
+          const res = await fetch("/progreso");
+          const d = await res.json();
+
+          let p = d.total ? (d.procesadas / d.total) * 100 : 0;
+
+          bar.style.width = p + "%";
+          contador.innerText = `${d.procesadas} / ${d.total}`;
+          porcentaje.innerText = p.toFixed(0) + "%";
+
+          online.innerText = d.online || 0;
+          sinRespuesta.innerText = d.sinRespuesta || 0;
+          ipVacia.innerText = d.ipVacia || 0;
+          noEncontrada.innerText = d.noEncontrada || 0;
+        }, 500);
+      }
+
+      function detener() {
+        clearInterval(intervalo);
+      }
+
+      function descargar(blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "reporte.xlsx";
+        a.click();
+      }
+
+      function registrarEscaneo(tipo = "Último escaneo") {
+        const ahora = new Date();
+
+        const texto =
+          tipo +
+          ": " +
+          ahora.toLocaleDateString("es-AR") +
+          " " +
+          ahora.toLocaleTimeString("es-AR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+
+        document.getElementById("ultimoEscaneo").innerText = texto;
+
+        /* guardar en memoria navegador */
+        localStorage.setItem("ultimoEscaneoSistema", texto);
+      }
+
+      function cargarUltimoEscaneo() {
+        const guardado = localStorage.getItem("ultimoEscaneoSistema");
+
+        if (guardado) {
+          document.getElementById("ultimoEscaneo").innerText = guardado;
+        }
+      }
+
+      async function analizarTexto() {
+        estado.innerText = "Analizando cámaras...";
+        registrarEscaneo("Inicio escaneo");
+
+        iniciar();
+
+        const texto = document.getElementById("texto").value;
+
+        const res = await fetch("/analizar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto }),
+        });
+
+        descargar(await res.blob());
+
+        detener();
+
+        registrarEscaneo("Último escaneo");
+
+        estado.innerText = "Proceso finalizado";
+      }
+
+      async function analizarTodas() {
+        estado.innerText = "Escaneando cámaras...";
+        registrarEscaneo("Inicio escaneo total");
+
+        iniciar();
+
+        const res = await fetch("/analizar-todas");
+
+        descargar(await res.blob());
+
+        detener();
+
+        registrarEscaneo("Último escaneo");
+
+        estado.innerText = "Escaneo finalizado";
+      }
+
+      /* historial */
+      async function verHistorial(dias = null) {
+        filtroDias = dias;
+
+        const res = await fetch("/historial");
+        const data = await res.json();
+
+        let fechas = data.fechas;
+        let camaras = data.camaras;
+
+        let html =
+          "<table><tr><th>Cámara</th><th>Info</th><th>Días Caída</th><th>Días Online</th>";
+        fechas.forEach((f) => (html += `<th>${f}</th>`));
+        html += "</tr>";
+
+        let visibles = 0;
+        let proveedores = {};
+
+        const qCamara = (filtroCamara.value || "").toUpperCase().trim();
+        const qProveedor = (filtroProveedor.value || "").toUpperCase().trim();
+        const qUbicacion = (filtroUbicacion.value || "").toUpperCase().trim();
+        const qConexion = (filtroConexion.value || "").toUpperCase().trim();
+        const qIP = (filtroIP.value || "").toUpperCase().trim();
+
+        Object.entries(camaras)
+          .sort((a, b) =>
+            a[0].localeCompare(b[0], "es", {
+              numeric: true,
+              sensitivity: "base",
+            }),
+          )
+          .forEach(([nombre, obj]) => {
+            const info = obj.info || {};
+            const estados = obj.estados || {};
+
+            if (qCamara && !nombre.toUpperCase().includes(qCamara)) return;
+            if (
+              qProveedor &&
+              !(info.proveedor || "").toUpperCase().includes(qProveedor)
+            )
+              return;
+            if (
+              qUbicacion &&
+              !(info.ubicacion || "").toUpperCase().includes(qUbicacion)
+            )
+              return;
+            if (
+              qConexion &&
+              !(info.conexion || "").toUpperCase().includes(qConexion)
+            )
+              return;
+            if (qIP && !(info.ip || "").toUpperCase().includes(qIP)) return;
+
+            visibles++;
+
+            let prov = info.proveedor || "SIN DATO";
+            if (!proveedores[prov])
+              proveedores[prov] = { online: 0, caidas: 0, total: 0 };
+            proveedores[prov].total++;
+
+            // Estado actual de la cámara (última fecha registrada)
+            const ultimoEstado = estados[fechas[fechas.length - 1]] || "";
+
+            if (ultimoEstado.includes("ONLINE")) {
+              proveedores[prov].online++;
+            } else {
+              proveedores[prov].caidas++;
+            }
+
+            let diasCaida = 0;
+            let diasOnline = 0;
+
+            fechas.forEach((f) => {
+              const e = estados[f] || "-";
+
+              if (e === "SIN RESPUESTA") diasCaida++;
+
+              if (e.includes("ONLINE")) diasOnline++;
+            });
+
+            html += `<tr>
 <td class="cam">${nombre}</td>
 <td class="info">
-<div class="proveedor">${info.proveedor||"-"}</div>
-<div class="ubi">${info.ubicacion||"-"}</div>
-<div class="det">${info.conexion||"-"} | ${info.ip||"-"}</div>
+<div class="proveedor">${info.proveedor || "-"}</div>
+<div class="ubi">${info.ubicacion || "-"}</div>
+<div class="det">${info.conexion || "-"} | ${info.ip || "-"}</div>
 </td>
 <td class="bad">${diasCaida}</td>
 <td class="ok">${diasOnline}</td>`;
 
-fechas.forEach(f=>{
-const e=estados[f]||"-";
-let clase="none";
-if(e.includes("ONLINE")) clase="ok";
-else if(e=="SIN RESPUESTA") clase="bad";
-else if(e=="INESTABLE") clase="warn";
+            fechas.forEach((f) => {
+              const e = estados[f] || "-";
+              let clase = "none";
+              if (e.includes("ONLINE")) clase = "ok";
+              else if (e == "SIN RESPUESTA") clase = "bad";
+              else if (e == "INESTABLE") clase = "warn";
 
-html+=`<td class="${clase}">${e}</td>`;
-});
+              html += `<td class="${clase}">${e}</td>`;
+            });
 
-html+="</tr>";
-});
+            html += "</tr>";
+          });
 
-html+="</table>";
+        html += "</table>";
 
-cantFiltradas.innerText=visibles;
-tablaHistorial.innerHTML=html;
+        cantFiltradas.innerText = visibles;
+        tablaHistorial.innerHTML = html;
 
-let kpi = "";
+        let kpi = "";
 
-Object.entries(proveedores).forEach(([prov, v]) => {
+        Object.entries(proveedores).forEach(([prov, v]) => {
+          const porcOnline = v.total
+            ? ((v.online / v.total) * 100).toFixed(1)
+            : 0;
 
-    const porcOnline = v.total
-        ? ((v.online / v.total) * 100).toFixed(1)
-        : 0;
+          const porcCaidas = v.total
+            ? ((v.caidas / v.total) * 100).toFixed(1)
+            : 0;
 
-    const porcCaidas = v.total
-        ? ((v.caidas / v.total) * 100).toFixed(1)
-        : 0;
-
-    kpi += `
+          kpi += `
     <div class="kpi-box">
 
         <div style="
@@ -708,57 +829,181 @@ Object.entries(proveedores).forEach(([prov, v]) => {
         </div>
 
     </div>`;
-});
+        });
 
-kpiProveedor.innerHTML=kpi;
-}
+        kpiProveedor.innerHTML = kpi;
+      }
 
-/* RANKING */
-function abrirRanking(){
-popupFallas.style.display="block";
-generarRanking();
-}
+      /* RANKING */
+      function abrirRanking() {
+        popupFallas.style.display = "block";
+        generarRanking();
+      }
 
-function cerrarRanking(){
-popupFallas.style.display="none";
-}
+      function cerrarRanking() {
+        popupFallas.style.display = "none";
+      }
 
-async function generarRanking(){
-const res=await fetch("/historial");
-const data=await res.json();
+      async function generarRanking() {
+        const res = await fetch("/historial");
+        const data = await res.json();
 
-let ranking=[];
+        let ranking = [];
 
-Object.entries(data.camaras).forEach(([nombre,obj])=>{
-let fallas=0;
+        Object.entries(data.camaras).forEach(([nombre, obj]) => {
+          let fallas = 0;
 
-Object.values(obj.estados).forEach(e=>{
-if(e==="SIN RESPUESTA" || e==="INESTABLE") fallas++;
-});
+          Object.values(obj.estados).forEach((e) => {
+            if (e === "SIN RESPUESTA" || e === "INESTABLE") fallas++;
+          });
 
-ranking.push({nombre,fallas});
-});
+          ranking.push({ nombre, fallas });
+        });
 
-ranking.sort((a,b)=>b.fallas-a.fallas);
-ranking=ranking.slice(0,10);
+        ranking.sort((a, b) => b.fallas - a.fallas);
+        ranking = ranking.slice(0, 10);
 
-let html="";
+        let html = "";
 
-ranking.forEach((cam,i)=>{
-html+=`
+        ranking.forEach((cam, i) => {
+          html += `
 <div class="rank-item">
-<div class="rank-num">#${i+1}</div>
+<div class="rank-num">#${i + 1}</div>
 <b>${cam.nombre}</b><br>
 🔴 ${cam.fallas} fallas
 </div>`;
-});
+        });
 
-contenidoRanking.innerHTML=html;
+        contenidoRanking.innerHTML = html;
+      }
+      let estabaEscaneando = false;
+
+async function revisarAutoEscaneo() {
+  try {
+
+    const res = await fetch("/progreso");
+
+    const p = await res.json();
+
+    const contenedor =
+      document.getElementById("estadoEscaneo");
+
+    const barra =
+      document.getElementById("barraEscaneo");
+
+    const texto =
+      document.getElementById("textoEscaneo");
+
+    const detalle =
+      document.getElementById("detalleEscaneo");
+
+    const btn =
+      document.getElementById("btnAnalizarTodas");
+
+
+    if (p.escaneoEnCurso) {
+
+      estabaEscaneando = true;
+
+      contenedor.style.display = "block";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+      }
+
+
+      const total = Number(p.total || 0);
+
+      const procesadas =
+        Number(p.procesadas || 0);
+
+
+      let porcentaje = 0;
+
+      if (total > 0) {
+        porcentaje =
+          Math.round(
+            (procesadas / total) * 100
+          );
+      }
+
+
+      barra.style.width =
+        porcentaje + "%";
+
+
+      texto.innerText =
+        "🔄 Autoescaneo en curso... " +
+        porcentaje +
+        "%";
+
+
+      detalle.innerText =
+        `Procesadas: ${procesadas} / ${total}`;
+
+    } else {
+
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+      }
+
+
+      if (estabaEscaneando) {
+
+        texto.innerText =
+          "✅ Autoescaneo finalizado";
+
+        barra.style.width =
+          "100%";
+
+        detalle.innerText =
+          "Escaneo completado";
+
+
+        setTimeout(() => {
+          contenedor.style.display =
+            "none";
+
+          barra.style.width =
+            "0%";
+        }, 5000);
+
+
+        estabaEscaneando = false;
+
+      } else {
+
+        contenedor.style.display =
+          "none";
+
+      }
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Error consultando autoescaneo:",
+      err
+    );
+
+  }
 }
 
-verHistorial();
-cargarUltimoEscaneo();
-</script>
 
-</body>
+setInterval(
+  revisarAutoEscaneo,
+  1000
+);
+
+revisarAutoEscaneo();
+
+      verHistorial();
+      cargarUltimoEscaneo();
+    </script>
+  </body>
 </html>

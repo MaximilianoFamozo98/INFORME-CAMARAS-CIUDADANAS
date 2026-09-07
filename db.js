@@ -1,11 +1,39 @@
 const Database = require("better-sqlite3");
-const db = new Database("camaras.db");
+const path = require("path");
+
+// =============================
+// CARPETA REAL DEL PROGRAMA
+// =============================
+//
+// Con Node normal:
+//   usa __dirname
+//
+// Compilado con pkg:
+//   usa la carpeta donde está el .exe
+//
+const baseDir = process.pkg
+  ? path.dirname(process.execPath)
+  : __dirname;
+
+const rutaDB = path.join(
+  baseDir,
+  "camaras.db"
+);
+
+console.log("📂 Base SQLite:", rutaDB);
+
+// =============================
+// ABRIR BASE
+// =============================
+
+const db = new Database(rutaDB);
 
 console.log("✅ SQLite conectado");
 
 /* =========================
 TABLA HISTORIAL
 ========================= */
+
 db.prepare(`
 CREATE TABLE IF NOT EXISTS historial (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,6 +45,7 @@ CREATE TABLE IF NOT EXISTS historial (
 /* =========================
 TABLA COORDENADAS
 ========================= */
+
 db.prepare(`
 CREATE TABLE IF NOT EXISTS coordenadas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,10 +54,11 @@ CREATE TABLE IF NOT EXISTS coordenadas (
     lng REAL
 )
 `).run();
+
 /* =========================
-TABLA COORDENADAS
-     MAPA
+TABLA ESTADO ACTUAL
 ========================= */
+
 db.prepare(`
 CREATE TABLE IF NOT EXISTS estado_actual (
     nombre TEXT PRIMARY KEY,

@@ -2,666 +2,904 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>MAP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <title>Mapa Cámaras</title>
+
+    <link rel="stylesheet" href="/maplibre/maplibre-gl.css" />
 
     <style>
       * {
-        margin: 0;
-        padding: 0;
         box-sizing: border-box;
       }
 
+      html,
       body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
         font-family:
           Segoe UI,
           Arial,
           sans-serif;
-        background: #0b1220;
-        color: #fff;
-        overflow: hidden;
       }
 
-      /* HEADER PREMIUM */
-      header {
-        height: 68px;
-        background: linear-gradient(90deg, #071122, #0d1b34);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
-      }
-
-      header h1 {
-        font-size: 21px;
-        font-weight: 900;
-        letter-spacing: 0.4px;
-      }
-
-      header span {
-        font-size: 13px;
-        color: #94a3b8;
-      }
-
-      /* MAPA */
       #map {
-        height: calc(100vh - 68px);
         width: 100%;
+        height: 100%;
       }
 
-      /* ZOOM abajo derecha */
-      .leaflet-top.leaflet-left {
-        display: none;
-      }
+      /* =============================
+       PANEL
+    ============================= */
 
-      .leaflet-bottom.leaflet-right {
-        bottom: 18px;
-        right: 14px;
-      }
-
-      .leaflet-control-zoom {
-        border: none !important;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35) !important;
-        border-radius: 14px !important;
-        overflow: hidden;
-      }
-
-      .leaflet-control-zoom a {
-        width: 42px !important;
-        height: 42px !important;
-        line-height: 42px !important;
-        font-size: 22px !important;
-        background: #111827 !important;
-        color: #fff !important;
-        border: none !important;
-      }
-
-      /* PANEL */
-      .panel {
+      #panel {
         position: absolute;
-        top: 78px;
-        left: 12px;
-        z-index: 999;
-        width: 340px;
-        max-width: 88vw;
-        max-height: calc(100vh - 92px);
-        background: rgba(17, 24, 39, 0.96);
-        backdrop-filter: blur(8px);
-        border-radius: 18px;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
-        overflow: hidden;
-        transition: left 0.28s ease;
-      }
-
-      .panel.closed {
-        left: -360px;
-      }
-
-      /* PANEL HEADER */
-      .panel-header {
-        height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 14px;
-        background: #0f172a;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .panel-header b {
-        font-size: 15px;
-      }
-
-      .toggle-btn {
-        width: 36px;
-        height: 36px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        background: #2563eb;
-        color: #fff;
-        font-size: 18px;
-        font-weight: 800;
-      }
-
-      .panel-body {
-        padding: 14px;
-        max-height: calc(100vh - 160px);
+        top: 20px;
+        left: 20px;
+        width: 330px;
+        max-height: calc(100vh - 40px);
         overflow: auto;
-      }
+        z-index: 10;
 
-      /* scrollbar */
-      .panel-body::-webkit-scrollbar {
-        width: 8px;
-      }
-      .panel-body::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 10px;
-      }
+        background: rgba(15, 23, 42, 0.96);
+        color: white;
 
-      /* TAB */
-      .side-tab {
-        position: absolute;
-        top: 78px;
-        left: 10px;
-        z-index: 2000;
-        width: 40px;
-        height: 58px;
-        border-radius: 0 14px 14px 0;
-        background: #2563eb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        font-weight: 900;
-        cursor: pointer;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
-        transition: 0.2s;
-      }
+        border-radius: 16px;
+        padding: 14px;
 
-      .side-tab:hover {
-        transform: scale(1.04);
-      }
-
-      .side-tab.hide {
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      /* GRID */
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 14px;
-      }
-
-      .card {
-        background: #0b1220;
-        padding: 12px;
-        border-radius: 14px;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-      }
-
-      .card small {
-        display: block;
-        font-size: 12px;
-        color: #94a3b8;
-        margin-bottom: 6px;
-      }
-
-      .card b {
-        font-size: 23px;
-      }
-
-      .green {
-        color: #22c55e;
-      }
-      .red {
-        color: #ef4444;
-      }
-      .gray {
-        color: #94a3b8;
-      }
-
-      /* FORM */
-      input,
-      select,
-      button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        outline: none;
-        border-radius: 10px;
-        background: #0b1220;
-        color: #fff;
-        margin-bottom: 10px;
-      }
-
-      button {
-        cursor: pointer;
-        font-weight: 700;
-        background: #2563eb;
-      }
-
-      button:hover {
-        opacity: 0.92;
-      }
-
-      /* LISTA */
-      .list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .item {
-        background: #0b1220;
-        padding: 11px;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: 0.18s;
-        border: 1px solid rgba(255, 255, 255, 0.03);
-      }
-
-      .item:hover {
-        transform: translateX(4px);
-        background: #13203d;
-      }
-
-      .badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
-        margin-top: 6px;
-      }
-
-      /* POPUP */
-      .leaflet-popup-content-wrapper {
-        border-radius: 14px !important;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
       }
 
-      @media (max-width: 700px) {
-        header h1 {
-          font-size: 18px;
-        }
-
-        .panel {
-          width: 88vw;
-        }
-
-        .side-tab {
-          width: 38px;
-          height: 54px;
-        }
+      .panel-titulo {
+        font-size: 18px;
+        font-weight: 900;
+        margin-bottom: 12px;
       }
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-          box-shadow: 0 0 5px #ef4444;
-        }
 
-        50% {
-          transform: scale(1.35);
-          box-shadow: 0 0 14px #ef4444;
-        }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
 
-        100% {
-          transform: scale(1);
-          box-shadow: 0 0 5px #ef4444;
-        }
+      .stat {
+        background: #111827;
+        padding: 10px;
+        border-radius: 10px;
+      }
+
+      .stat small {
+        color: #94a3b8;
+      }
+
+      .stat-numero {
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      #online {
+        color: #22c55e;
+      }
+
+      #caidas {
+        color: #ef4444;
+      }
+
+      #sincoord {
+        color: #94a3b8;
+      }
+
+      #buscar,
+      #filtroEstado {
+        width: 100%;
+        padding: 10px;
+
+        margin-bottom: 8px;
+
+        border: none;
+        border-radius: 9px;
+        outline: none;
+
+        background: #0b1220;
+        color: white;
+      }
+
+      #listaCamaras {
+        margin-top: 6px;
+      }
+
+      .cam-item {
+        padding: 9px;
+        margin-bottom: 6px;
+
+        background: #0b1220;
+
+        border-radius: 9px;
+
+        cursor: pointer;
+
+        font-size: 13px;
+
+        transition: 0.15s;
+      }
+
+      .cam-item:hover {
+        background: #17233b;
+        transform: translateX(3px);
+      }
+
+      .cam-ubicacion {
+        color: #94a3b8;
+        margin-top: 3px;
+      }
+
+      .cam-estado {
+        margin-top: 5px;
+        font-weight: 800;
       }
     </style>
   </head>
 
   <body>
-    <header>
-      <h1>📍 MAPA</h1>
-      <span id="hora"></span>
-    </header>
+    <!-- =============================
+       PANEL
+  ============================= -->
 
-    <div class="side-tab hide" id="tabBtn" onclick="abrirPanel()">☰</div>
+    <div id="panel">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        "
+      >
+        <div class="panel-titulo" style="margin-bottom: 0">📍 Cámaras</div>
 
-    <div class="panel" id="panel">
-      <div class="panel-header">
-        <b>Panel</b>
-        <button class="toggle-btn" onclick="cerrarPanel()">✕</button>
+        <button
+          id="btnCerrarPanel"
+          style="
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-weight: 900;
+            cursor: pointer;
+          "
+        >
+          ✕
+        </button>
       </div>
 
-      <div class="panel-body">
-        <div class="grid">
-          <div class="card"><small>Total</small><b id="total">0</b></div>
-          <div class="card">
-            <small>Online</small><b class="green" id="online">0</b>
-          </div>
-          <div class="card">
-            <small>Caídas</small><b class="red" id="caidas">0</b>
-          </div>
-          <div class="card">
-            <small>Sin Coord</small><b class="gray" id="sincoord">0</b>
-          </div>
+      <div class="stats">
+        <div class="stat">
+          <small>Total</small>
+          <div id="total" class="stat-numero">0</div>
         </div>
 
-        <input
-          id="buscar"
-          placeholder="Buscar cámara o calle..."
-          oninput="filtrar()"
-        />
-
-        <select id="filtroEstado" onchange="filtrar()">
-          <option value="TODAS">Todas</option>
-          <option value="ONLINE">Online</option>
-          <option value="CAIDA">Caídas</option>
-        </select>
-
-        <button onclick="fullscreenMapa()">🖥 Fullscreen</button>
-        <button onclick="cargar()">🔄 Actualizar</button>
-
-        <select id="camaraEdit"></select>
-
-        <button onclick="activarEdicion()">📌 Reubicar cámara</button>
-
-        <button onclick="eliminarCoord()">🗑 Eliminar coordenada</button>
-
-        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px">
-          1) Elegí cámara<br />
-          2) Tocá Reubicar<br />
-          3) Click en el mapa
+        <div class="stat">
+          <small>Online</small>
+          <div id="online" class="stat-numero">0</div>
         </div>
 
-        <div class="list" id="lista"></div>
+        <div class="stat">
+          <small>Caídas</small>
+          <div id="caidas" class="stat-numero">0</div>
+        </div>
+
+        <div class="stat">
+          <small>Sin Coord</small>
+          <div id="sincoord" class="stat-numero">0</div>
+        </div>
       </div>
+
+      <input id="buscar" placeholder="Buscar cámara o calle..." />
+
+      <select id="filtroEstado">
+        <option value="TODAS">Todas</option>
+
+        <option value="ONLINE">Online</option>
+
+        <option value="CAIDA">Caídas</option>
+      </select>
+<button
+        id="btnActualizar"
+        style="
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 10px;
+          border: none;
+          border-radius: 9px;
+          background: #2563eb;
+          color: white;
+          font-weight: 800;
+          cursor: pointer;
+        "
+      >
+        🔄 Actualizar ahora
+      </button>
+
+      <button
+        id="btnFullscreen"
+        style="
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 10px;
+          border: none;
+          border-radius: 9px;
+          background: #2563eb;
+          color: white;
+          font-weight: 800;
+          cursor: pointer;
+        "
+      >
+        🖥 Fullscreen
+      </button>
+
+      <details id="panelCoordenadas" style="margin-bottom:10px;background:#111827;border-radius:10px;padding:10px">
+        <summary style="cursor:pointer;font-weight:900;user-select:none">
+          ⚙️ Coordenadas
+          <span id="contadorPendientes" style="margin-left:6px;color:#f59e0b"></span>
+        </summary>
+        <div style="margin-top:12px">
+          <select id="camaraEdit" style="width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:9px;background:#0b1220;color:white;outline:none"></select>
+          <button id="btnReubicar" style="width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:9px;background:#2563eb;color:white;font-weight:800;cursor:pointer">
+            📌 Ubicar / Reubicar cámara
+          </button>
+          <button id="btnEliminarCoord" style="width:100%;padding:10px;border:none;border-radius:9px;background:#991b1b;color:white;font-weight:800;cursor:pointer">
+            🗑 Eliminar coordenada
+          </button>
+        </div>
+      </details>
+
+      <div id="listaCamaras"></div>
     </div>
 
+    <div
+      id="estadoEscaneoMapa"
+      style="
+        display: none;
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        width: 420px;
+        max-width: 90%;
+        background: rgba(11, 18, 32, 0.95);
+        padding: 12px 14px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(6px);
+      "
+    >
+      <div
+        id="textoEscaneoMapa"
+        style="font-weight: 800; margin-bottom: 8px; color: white"
+      >
+        🔄 Autoescaneo en curso...
+      </div>
+
+      <div
+        style="
+          width: 100%;
+          height: 12px;
+          background: #1e293b;
+          border-radius: 999px;
+          overflow: hidden;
+        "
+      >
+        <div
+          id="barraEscaneoMapa"
+          style="
+            width: 0%;
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+          "
+        ></div>
+      </div>
+
+      <div
+        id="detalleEscaneoMapa"
+        style="margin-top: 7px; font-size: 12px; color: #94a3b8"
+      ></div>
+    </div>
+
+    <!-- =============================
+       MAPA
+  ============================= -->
+    <button
+      id="btnAbrirPanel"
+      style="
+        position: absolute;
+        top: 20px;
+        left: 12px;
+        z-index: 11;
+        width: 42px;
+        height: 52px;
+        border: none;
+        border-radius: 0 12px 12px 0;
+        background: #2563eb;
+        color: white;
+        font-size: 20px;
+        font-weight: 900;
+        cursor: pointer;
+        display: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      "
+    >
+      ☰
+    </button>
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script type="module">
+      import * as maplibregl from "/maplibre/maplibre-gl.mjs";
 
-    <script>
-      const markersPorNombre = {};
-      const datosPorNombre = {};
+      /* ============================================================
+       ELEMENTOS HTML
+    ============================================================ */
+      const totalEl = document.getElementById("total");
+      const onlineEl = document.getElementById("online");
+      const caidasEl = document.getElementById("caidas");
+      const sincoordEl = document.getElementById("sincoord");
+      const buscarInput = document.getElementById("buscar");
+      const filtroEstadoSelect = document.getElementById("filtroEstado");
+      const listaCamarasEl = document.getElementById("listaCamaras");
+      const camaraEditSelect = document.getElementById("camaraEdit");
+      const btnReubicar = document.getElementById("btnReubicar");
+      const btnEliminarCoord = document.getElementById("btnEliminarCoord");
+      const contadorPendientes = document.getElementById("contadorPendientes");
+      /* ============================================================
+       VARIABLES GLOBALES
+    ============================================================ */
+      let camarasGeoJSON = null;
+      let historialData = null;
+      let totalCamaras = 0;
+      let sinCoordCount = 0;
+      let modoEdicion = false;
+      let coordsData = [];
+      /* ============================================================
+       MAPA
+    ============================================================ */
 
-      const map = L.map("map", { zoomControl: false }).setView(
-        [-34.806, -58.276],
-        12,
+      const map = new maplibregl.Map({
+        container: "map",
+
+        center: [-58.276, -34.806],
+
+        zoom: 12,
+
+        style: {
+          version: 8,
+
+          /* =============================
+           FUENTE MAPA OFFLINE
+        ============================= */
+
+          sources: {
+            osm: {
+              type: "vector",
+
+              tiles: ["/tiles/{z}/{x}/{y}.pbf"],
+
+              minzoom: 0,
+
+              maxzoom: 14,
+            },
+          },
+
+          /* =============================
+           CAPAS MAPA
+        ============================= */
+
+          layers: [
+            /* =============================
+             FONDO
+          ============================= */
+
+            {
+              id: "background",
+
+              type: "background",
+
+              paint: {
+                "background-color": "#f2efe9",
+              },
+            },
+
+            /* =============================
+             USO DEL SUELO
+          ============================= */
+
+            {
+              id: "landuse",
+
+              type: "fill",
+
+              source: "osm",
+
+              "source-layer": "landuse",
+
+              paint: {
+                "fill-color": "#e7e3db",
+
+                "fill-opacity": 0.55,
+              },
+            },
+
+            /* =============================
+             PARQUES
+          ============================= */
+
+            {
+              id: "parks",
+
+              type: "fill",
+
+              source: "osm",
+
+              "source-layer": "park",
+
+              paint: {
+                "fill-color": "#cfe8c8",
+
+                "fill-opacity": 0.9,
+              },
+            },
+
+            /* =============================
+             AGUA
+          ============================= */
+
+            {
+              id: "water",
+
+              type: "fill",
+
+              source: "osm",
+
+              "source-layer": "water",
+
+              paint: {
+                "fill-color": "#a9d6e5",
+
+                "fill-opacity": 1,
+              },
+            },
+
+            /* =============================
+             EDIFICIOS
+          ============================= */
+
+            {
+              id: "buildings",
+
+              type: "fill",
+
+              source: "osm",
+
+              "source-layer": "building",
+
+              minzoom: 14,
+
+              paint: {
+                "fill-color": "#d6d3cf",
+
+                "fill-outline-color": "#bbb7b1",
+
+                "fill-opacity": 0.9,
+              },
+            },
+
+            /* =============================
+             CALLES SECUNDARIAS
+          ============================= */
+
+            {
+              id: "roads-minor",
+
+              type: "line",
+
+              source: "osm",
+
+              "source-layer": "transportation",
+
+              filter: [
+                "match",
+
+                ["get", "class"],
+
+                ["minor", "service", "path", "track"],
+
+                true,
+
+                false,
+              ],
+
+              paint: {
+                "line-color": "#ffffff",
+
+                "line-width": [
+                  "interpolate",
+
+                  ["linear"],
+
+                  ["zoom"],
+
+                  12,
+                  0.8,
+
+                  14,
+                  1.4,
+
+                  16,
+                  2.5,
+                ],
+              },
+            },
+
+            /* =============================
+             CALLES PRINCIPALES
+          ============================= */
+
+            {
+              id: "roads-main",
+
+              type: "line",
+
+              source: "osm",
+
+              "source-layer": "transportation",
+
+              filter: [
+                "match",
+
+                ["get", "class"],
+
+                ["primary", "secondary", "tertiary", "trunk"],
+
+                true,
+
+                false,
+              ],
+
+              paint: {
+                "line-color": "#f6d18a",
+
+                "line-width": [
+                  "interpolate",
+
+                  ["linear"],
+
+                  ["zoom"],
+
+                  10,
+                  1.2,
+
+                  12,
+                  2.2,
+
+                  14,
+                  4,
+
+                  16,
+                  6,
+                ],
+              },
+            },
+
+            /* =============================
+             AUTOPISTAS
+          ============================= */
+
+            {
+              id: "motorways",
+
+              type: "line",
+
+              source: "osm",
+
+              "source-layer": "transportation",
+
+              filter: ["==", ["get", "class"], "motorway"],
+
+              paint: {
+                "line-color": "#f2a65a",
+
+                "line-width": [
+                  "interpolate",
+
+                  ["linear"],
+
+                  ["zoom"],
+
+                  10,
+                  2,
+
+                  12,
+                  3.5,
+
+                  14,
+                  6,
+
+                  16,
+                  8,
+                ],
+              },
+            },
+
+            /* =============================
+             LIMITES
+          ============================= */
+
+            {
+              id: "boundaries",
+
+              type: "line",
+
+              source: "osm",
+
+              "source-layer": "boundary",
+
+              paint: {
+                "line-color": "#8a8a8a",
+
+                "line-width": 1,
+
+                "line-dasharray": [3, 3],
+
+                "line-opacity": 0.6,
+              },
+            },
+
+            /* =============================
+             NOMBRES DE CALLES
+          ============================= */
+
+            {
+              id: "road-labels",
+
+              type: "symbol",
+
+              source: "osm",
+
+              "source-layer": "transportation_name",
+
+              minzoom: 13,
+
+              layout: {
+                "symbol-placement": "line",
+
+                "text-field": ["coalesce", ["get", "name:es"], ["get", "name"]],
+
+                "text-font": ["Arial"],
+
+                "text-size": [
+                  "interpolate",
+
+                  ["linear"],
+
+                  ["zoom"],
+
+                  13,
+                  10,
+
+                  15,
+                  12,
+
+                  18,
+                  15,
+                ],
+
+                "text-padding": 4,
+              },
+
+              paint: {
+                "text-color": "#4b5563",
+
+                "text-halo-color": "#ffffff",
+
+                "text-halo-width": 1.5,
+              },
+            },
+
+            /* =============================
+             LOCALIDADES
+          ============================= */
+
+            {
+              id: "place-labels",
+
+              type: "symbol",
+
+              source: "osm",
+
+              "source-layer": "place",
+
+              layout: {
+                "text-field": ["coalesce", ["get", "name:es"], ["get", "name"]],
+
+                "text-font": ["Arial"],
+
+                "text-size": [
+                  "interpolate",
+
+                  ["linear"],
+
+                  ["zoom"],
+
+                  10,
+                  12,
+
+                  14,
+                  17,
+                ],
+
+                "text-padding": 8,
+              },
+
+              paint: {
+                "text-color": "#374151",
+
+                "text-halo-color": "#ffffff",
+
+                "text-halo-width": 2,
+              },
+            },
+          ],
+        },
+      });
+
+      window.mapMapLibre = map;
+
+      map.addControl(
+        new maplibregl.NavigationControl(),
+
+        "bottom-right",
       );
 
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-      }).addTo(map);
-
-      let markers = L.layerGroup();
-      map.addLayer(markers);
-
-      let cache = [];
-      let modoEdicion = false;
-      setInterval(() => {
-        hora.innerText = new Date().toLocaleString("es-AR");
-      }, 1000);
-
-      /* PANEL */
-      function cerrarPanel() {
-        panel.classList.add("closed");
-        tabBtn.classList.remove("hide");
-      }
-
-      function abrirPanel() {
-        panel.classList.remove("closed");
-        tabBtn.classList.add("hide");
-      }
-
-      /* ICONO */
-      function icono(color) {
-        return L.divIcon({
-          html: `
-<div style="
-width:14px;
-height:14px;
-border-radius:50%;
-background:${color};
-border:2px solid white;
-">
-</div>
-`,
-          className: "",
-          iconSize: [14, 14],
-        });
-      }
-
-      function colorEstado(e) {
-        e = (e || "").toUpperCase();
-        if (e.includes("ONLINE")) return "#22c55e";
-        return "#ef4444";
-      }
-
-      function badge(e) {
-        e = (e || "").toUpperCase();
-
-        if (e.includes("ONLINE")) {
-          return `<span class="badge" style="background:#14532d">ONLINE</span>`;
-        }
-
-        return `<span class="badge" style="background:#7f1d1d">CAÍDA</span>`;
-      }
-
-      /* =========================
-NORMALIZADOR DEFINITIVO
-========================= */
+      /* ============================================================
+       NORMALIZAR NOMBRE
+    ============================================================ */
 
       function normalizarNombre(txt) {
         txt = (txt || "").toUpperCase();
 
-        txt = txt;
         txt = txt
+
           .normalize("NFD")
+
           .replace(/[\u0300-\u036f]/g, "")
+
           .replace(/\(DOMO\)/gi, " DOMO ")
+
           .replace(/\(FIJA\)/gi, " FIJA ")
+
           .replace(/\(.*?\)/g, " ")
+
           .replace(/([A-Z])(\d)/g, "$1 $2")
+
           .replace(/(\d)([A-Z])/g, "$1 $2")
+
           .replace(/[-_/]/g, " ")
+
           .replace(/\./g, " ")
+
           .replace(/\s+/g, " ")
+
           .trim();
 
-        // ===== CASOS ESPECIALES =====
+        /* DJO */
 
-        // DJ O6 -> DJO 06
         txt = txt.replace(/^DJ\s*O\s*(\d)$/, "DJO 0$1");
+
         txt = txt.replace(/^DJO\s*O\s*(\d)$/, "DJO 0$1");
+
         txt = txt.replace(/^DJ\s*(\d)$/, "DJO 0$1");
+
         txt = txt.replace(/^DJO\s*(\d)$/, "DJO 0$1");
 
-        // DORI -> DORIO
+        /* DORI */
+
         txt = txt.replace(/^DORI\s+(\d{1,2})$/, "DORIO $1");
 
-        // completar ceros
+        /* COMPLETAR CERO */
+
         txt = txt.replace(/\b([A-Z]{2,10})\s(\d)\b/g, "$1 0$2");
 
         return txt.trim();
       }
 
-      /* =========================
-POPUP (reutilizable para poder
-reconstruirlo cuando cambia el estado)
-========================= */
-      function construirPopup(nombre, estado, coord, cam, info) {
-        const h = window.historialData;
+      //LOGICA AUTOESCANEO
+      let estabaEscaneandoMapa = false;
 
-        /* HISTORIAL últimos 7 días */
-        const ult7 = h.fechas.slice(-7);
+      async function revisarAutoEscaneoMapa() {
+        try {
+          const res = await fetch("/progreso");
+          const p = await res.json();
 
-        let historial = "";
+          const contenedor = document.getElementById("estadoEscaneoMapa");
 
-        ult7.forEach((f) => {
-          const est = cam.estados[f] || "SIN RESPUESTA";
+          const barra = document.getElementById("barraEscaneoMapa");
 
-          if (est.includes("ONLINE")) {
-            historial += "🟢 ";
+          const texto = document.getElementById("textoEscaneoMapa");
+
+          const detalle = document.getElementById("detalleEscaneoMapa");
+
+          if (p.escaneoEnCurso) {
+            estabaEscaneandoMapa = true;
+
+            contenedor.style.display = "block";
+
+            const total = Number(p.total || 0);
+
+            const procesadas = Number(p.procesadas || 0);
+
+            let porcentaje = 0;
+
+            if (total > 0) {
+              porcentaje = Math.round((procesadas / total) * 100);
+            }
+
+            barra.style.width = porcentaje + "%";
+
+            texto.innerText = `🔄 Autoescaneo en curso... ${porcentaje}%`;
+
+            detalle.innerText = `Procesadas: ${procesadas} / ${total}`;
           } else {
-            historial += "🔴 ";
+            if (estabaEscaneandoMapa) {
+              contenedor.style.display = "block";
+
+              texto.innerText = "✅ Autoescaneo finalizado";
+
+              barra.style.width = "100%";
+
+              detalle.innerText = "Estados actualizados";
+
+              setTimeout(() => {
+                contenedor.style.display = "none";
+
+                barra.style.width = "0%";
+              }, 5000);
+
+              estabaEscaneandoMapa = false;
+            } else {
+              contenedor.style.display = "none";
+            }
           }
-        });
-
-        /* UPTIME 30 días */
-        const ult30 = h.fechas.slice(-30);
-
-        let ok = 0;
-
-        ult30.forEach((f) => {
-          const est = cam.estados[f] || "";
-
-          if (est.includes("ONLINE")) {
-            ok++;
-          }
-        });
-
-        const uptime = ult30.length ? Math.round((ok / ult30.length) * 100) : 0;
-
-        /* CAÍDA ACTUAL */
-        let caidaTexto = "";
-
-        if (!estado.includes("ONLINE")) {
-          let diasCaida = 0;
-
-          for (let i = h.fechas.length - 1; i >= 0; i--) {
-            const f = h.fechas[i];
-            const e = cam.estados[f] || "";
-
-            if (e.includes("ONLINE")) break;
-
-            diasCaida++;
-          }
-
-          caidaTexto = `
-<div style="
-margin-top:8px;
-padding:8px;
-border-radius:10px;
-background:#450a0a;
-color:#fecaca;
-font-weight:700;
-">
-🔴 Caída hace ${diasCaida} día(s)
-</div>
-`;
+        } catch (err) {
+          console.error("Error consultando autoescaneo:", err);
         }
-
-        return `
-<div style="
-min-width:260px;
-font-family:Segoe UI,Arial,sans-serif;
-color:#111827;
-">
-
-<div style="
-font-size:20px;
-font-weight:900;
-margin-bottom:6px;
-">
-${nombre}
-</div>
-
-<div style="
-margin-bottom:8px;
-font-size:14px;
-color:#374151;
-">
-${info.ubicacion || "-"}
-</div>
-
-<div style="
-padding:8px;
-border-radius:10px;
-background:${estado.includes("ONLINE") ? "#dcfce7" : "#fee2e2"};
-color:${estado.includes("ONLINE") ? "#166534" : "#991b1b"};
-font-weight:800;
-text-align:center;
-margin-bottom:10px;
-">
-${estado.includes("ONLINE") ? "🟢 ONLINE" : "🔴 OFFLINE"}
-</div>
-
-<div style="font-size:13px;line-height:1.6">
-
-<b>IP:</b> ${info.ip || "-"}<br>
-<b>Proveedor:</b> ${info.proveedor || "-"}<br>
-
-</div>
-
-${caidaTexto}
-
-<hr style="margin:10px 0;border:0;border-top:1px solid #e5e7eb">
-
-<div style="
-font-size:13px;
-font-weight:700;
-margin-bottom:5px;
-">
-Últimos 7 días
-</div>
-
-<div style="
-font-size:18px;
-margin-bottom:10px;
-">
-${historial}
-</div>
-
-<div style="
-padding:8px;
-border-radius:10px;
-background:#eff6ff;
-color:#1d4ed8;
-font-weight:800;
-text-align:center;
-">
-📈 Uptime 30 días: ${uptime}%
-</div>
-
-<div style="
-margin-top:10px;
-text-align:center;
-">
-<button
-onclick="map.setView([${coord.lat},${coord.lng}],19)"
-style="
-border:none;
-padding:8px 14px;
-border-radius:10px;
-background:#2563eb;
-color:white;
-font-weight:800;
-cursor:pointer;
-">
-📍 Centrar cámara
-</button>
-</div>
-
-</div>
-`;
       }
 
-      /* =========================
-CARGAR
-========================= */
+      setInterval(revisarAutoEscaneoMapa, 1000);
+
+      revisarAutoEscaneoMapa();
+      /* ============================================================
+       EXTRAER CODIGO
+    ============================================================ */
+
       function extraerCodigo(txt) {
         txt = normalizarNombre(txt);
 
-        // =========================
-        // CASOS ESPECIALES
-        // =========================
+        /* CAR 03 F1 => CAR 03 */
 
-        // CAR 03 F1 => CAR 03
         txt = txt.replace(/\sF\d$/, "");
 
-        // DORIO => DORI
+        /* DORIO => DORI */
+
         txt = txt.replace(/^DORIO\s(\d{2})$/, "DORI $1");
-
-        // PUNTO SEGURO
-
-        // =========================
-        // SEPARAR LETRAS Y NUMEROS
-        // CEN90 => CEN 90
-        // MON05 => MON 05
-        // =========================
 
         txt = txt.replace(/^([A-Z]{2,10})(\d{2,3})$/, "$1 $2");
 
-        // =========================
-        // KM08 UPA 03
-        // devolver KM 08
-        // =========================
+        /* KM */
 
         const km = txt.match(/^KM\s?(\d{2})/);
 
@@ -669,483 +907,1151 @@ CARGAR
           return `KM ${km[1]}`;
         }
 
-        // =========================
-        // CODIGO PRINCIPAL
-        // =========================
-
         const m = txt.match(/[A-Z]{2,10}\s\d{2,3}/);
 
         return m ? m[0] : txt;
       }
 
-      async function cargar() {
-        try {
-          markers.clearLayers();
-          cache = [];
+      /* ============================================================
+       ESTADO ONLINE
+    ============================================================ */
 
-          Object.keys(markersPorNombre).forEach(
-            (key) => delete markersPorNombre[key],
-          );
+      function estaOnline(estado) {
+        return (estado || "").includes("ONLINE");
+      }
 
-          Object.keys(datosPorNombre).forEach(
-            (key) => delete datosPorNombre[key],
-          );
+      /* ============================================================
+       CARGAR CAMARAS
+    ============================================================ */
 
-          window.debugSinCoord = [];
-          window.debugCoordVacia = [];
+      async function cargarCamaras() {
+        const [estadoActual, coords, historial] = await Promise.all([
+          fetch("/estado-actual").then((r) => r.json()),
 
-          const h = await fetch("/historial").then((r) => r.json());
-          window.historialData = h;
+          fetch("/api/coords").then((r) => r.json()),
 
-          const estadoActual = await fetch("/estado-actual").then((r) =>
-            r.json(),
-          );
+          fetch("/historial").then((r) => r.json()),
+        ]);
 
-          const c = await fetch("/api/coords").then((r) => r.json());
+        historialData = historial;
 
-          const mapaEstado = {};
+        coordsData = coords;
+        totalCamaras = coords.length;
 
-          estadoActual.forEach((cam) => {
-            mapaEstado[cam.nombre] = cam;
-          });
+        /* =============================
+         MAPA ESTADOS
+      ============================= */
 
-          const mapaCoords = {};
-          window.mapaCoords = mapaCoords;
+        const mapaEstado = {};
 
-          /* =========================
-ARMAR MAPA COORDS
-========================= */
-          window.debugClaves = {};
-          c.forEach((x) => {
-            const nombreReal =
-              x.nombre || x.denominacion || x.DENOMINACION || x.camara || "";
+        estadoActual.forEach((cam) => {
+          const clave = extraerCodigo(cam.nombre);
 
-            if (!nombreReal) return;
+          mapaEstado[clave] = cam;
+        });
 
-            const clave = extraerCodigo(nombreReal);
+        /* =============================
+         FEATURES
+      ============================= */
 
-            if (!window.debugClaves[clave]) {
-              window.debugClaves[clave] = new Set();
-            }
+        const features = [];
 
-            window.debugClaves[clave].add(nombreReal);
-            // ============================
+        coords.forEach((c) => {
+          const lat = parseFloat(c.lat);
 
-            
+          const lng = parseFloat(c.lng);
 
-            
-
-            const lat = parseFloat(x.lat);
-            const lng = parseFloat(x.lng);
-
-            if (isNaN(lat) || isNaN(lng)) {
-              console.log("❌ Coordenada inválida:", x);
-              return;
-            }
-
-            // si ya existe una buena, NO la pises con 0,0
-            if (
-              mapaCoords[clave] &&
-              mapaCoords[clave].lat !== 0 &&
-              mapaCoords[clave].lng !== 0 &&
-              (lat === 0 || lng === 0)
-            ) {
-              return;
-            }
-
-            if (mapaCoords[clave]) {
-              console.log("🚨 COORD DUPLICADA:", clave);
-              console.log("EXISTE:", mapaCoords[clave]);
-              console.log("NUEVA :", nombreReal);
-            }
-            mapaCoords[clave] = {
-              nombre: nombreReal,
-              lat,
-              lng,
-            };
-          });
-
-          
-
-          Object.entries(window.debugClaves).forEach(([clave, valores]) => {
-            const arr = [...valores];
-
-            if (arr.length > 1) {
-              console.log("COLISION:", clave);
-              console.log(arr);
-            }
-          });
-
-          if (!h.fechas.length) {
+          if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
             return;
           }
 
-          //const ultima = h.fechas.at(-1);
-          window.camarasHistorial = Object.keys(h.camaras);
+          const clave = extraerCodigo(c.nombre);
 
-          let totalCam = 0;
-          let onlineCount = 0;
-          let caidasCount = 0;
-          let sincoordCount = 0;
+          const datosEstado = mapaEstado[clave];
 
-          /* =========================
-RECORRER CAMARAS
-========================= */
+          const estado = datosEstado?.estado || "SIN RESPUESTA";
 
-          for (const nombre in h.camaras) {
-            totalCam++;
+          const historialCam = historial.camaras?.[normalizarNombre(c.nombre)];
 
-            const cam = h.camaras[nombre];
-            const info = cam.info || {};
-            const estado = mapaEstado[nombre]?.estado || "SIN RESPUESTA";
+          features.push({
+            type: "Feature",
 
-            const clave = extraerCodigo(nombre);
+            geometry: {
+              type: "Point",
 
-            const coord = mapaCoords[clave];
+              coordinates: [lng, lat],
+            },
 
-            if (nombre.includes("AGUSTIN") || clave.includes("AGUSTIN")) {
-              console.log("BUSCANDO:", nombre);
-              console.log("CLAVE:", clave);
-              console.log("ENCONTRADA:", mapaCoords[clave]);
+            properties: {
+              nombre: c.nombre,
+
+              estado: estado,
+
+              latencia: datosEstado?.latencia || "-",
+
+              fecha: datosEstado?.fecha || "",
+
+              proveedor: historialCam?.info?.proveedor || "-",
+
+              ubicacion: historialCam?.info?.ubicacion || "-",
+
+              ip: historialCam?.info?.ip || "-",
+
+              historial: JSON.stringify(historialCam?.estados || {}),
+            },
+          });
+        });
+
+        /* =============================
+         GEOJSON
+      ============================= */
+
+        camarasGeoJSON = {
+          type: "FeatureCollection",
+          features,
+        };
+
+        camaraEditSelect.innerHTML = "";
+        let pendientes = 0;
+
+        [...coords]
+          .sort((a, b) => {
+            const latA = parseFloat(a.lat);
+            const lngA = parseFloat(a.lng);
+            const latB = parseFloat(b.lat);
+            const lngB = parseFloat(b.lng);
+
+            const aTieneCoord =
+              !isNaN(latA) && !isNaN(lngA) && latA !== 0 && lngA !== 0;
+
+            const bTieneCoord =
+              !isNaN(latB) && !isNaN(lngB) && latB !== 0 && lngB !== 0;
+
+            // Primero las cámaras SIN coordenadas
+            if (aTieneCoord !== bTieneCoord) {
+              return aTieneCoord ? 1 : -1;
             }
-            if (!coord) {
-              sincoordCount++;
 
-              console.log("SIN COORD:", nombre);
-              console.log("NORMALIZADO:", clave);
-              window.debugSinCoord = window.debugSinCoord || [];
-
-              window.debugSinCoord.push({
-                nombre,
-                clave,
-              });
-
-              continue;
-            }
-
-            // coordenada vacía
-            if (coord.lat == 0 || coord.lng == 0) {
-              sincoordCount++;
-
-              console.log("COORD VACIA:", nombre);
-              window.debugCoordVacia = window.debugCoordVacia || [];
-
-              window.debugCoordVacia.push(nombre);
-              continue;
-            }
-
-            if (estado.includes("ONLINE")) {
-              onlineCount++;
-            } else {
-              caidasCount++;
-            }
-
-            /* =========================
-MARKER
-========================= */
-
-            const marker = L.marker([coord.lat, coord.lng], {
-              icon: icono(colorEstado(estado)),
+            // Dentro de cada grupo, ordenar por nombre
+            return a.nombre.localeCompare(b.nombre, "es", {
+              numeric: true,
+              sensitivity: "base",
             });
+          })
+          .forEach((camara) => {
+            const lat = parseFloat(camara.lat);
+            const lng = parseFloat(camara.lng);
+            const tieneCoord = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
-            markersPorNombre[nombre] = marker;
+            const option = document.createElement("option");
+            option.value = camara.nombre;
+            option.textContent = tieneCoord
+              ? camara.nombre
+              : `⚠ ${camara.nombre} — SIN COORDENADAS`;
 
-            marker.estado = estado;
-            marker.nombre = nombre;
+            camaraEditSelect.appendChild(option);
+            if (!tieneCoord) pendientes++;
+          });
 
-            datosPorNombre[nombre] = { cam, info, coord };
+        sinCoordCount = pendientes;
+        contadorPendientes.innerText =
+          pendientes > 0 ? `(${pendientes} pendientes)` : "(sin pendientes)";
 
-            marker.bindPopup(construirPopup(nombre, estado, coord, cam, info));
+        console.log("📍 Cámaras cargadas:", features.length);
 
-            markers.addLayer(marker);
+        /* =============================
+         SOURCE
+      ============================= */
 
-            cache.push({
-              nombre,
-              estado,
-              ubicacion: info.ubicacion || "",
-              lat: coord.lat,
-              lng: coord.lng,
-              marker,
-            });
-          }
+        map.addSource("camaras", {
+          type: "geojson",
 
-          /* =========================
-STATS
-========================= */
-          window.camarasMapa = cache.map((x) => x.nombre);
-          window.totalMapa = cache.length;
+          data: camarasGeoJSON,
+        });
 
-          console.log("TOTAL MAPA:", cache.length);
+        /* =============================
+         CAPA CAMARAS
+      ============================= */
 
-          total.innerText = totalCam;
-          online.innerText = onlineCount;
-          caidas.innerText = caidasCount;
-          sincoord.innerText = sincoordCount;
+        map.addLayer({
+          id: "camaras-puntos",
 
-          /* =========================
-SELECT EDIT
-========================= */
+          type: "circle",
 
-          camaraEdit.innerHTML = "";
+          source: "camaras",
 
-          cache
-            .sort((a, b) => a.nombre.localeCompare(b.nombre))
-            .forEach((x) => {
-              const op = document.createElement("option");
+          paint: {
+            "circle-radius": [
+              "interpolate",
 
-              op.value = x.nombre;
-              op.textContent = x.nombre;
+              ["linear"],
 
-              camaraEdit.appendChild(op);
-            });
+              ["zoom"],
 
-          renderLista();
-        } catch (err) {
-          console.error(err);
+              10,
+              4,
 
-          alert(err.message);
-        }
+              12,
+              5,
+
+              15,
+              7,
+
+              18,
+              9,
+            ],
+
+            /*
+           ONLINE y ONLINE (HTTP)
+           verdes.
+           El resto rojo.
+          */
+
+            "circle-color": [
+              "case",
+
+              [
+                "match",
+
+                ["get", "estado"],
+
+                ["ONLINE", "ONLINE (HTTP)"],
+
+                true,
+
+                false,
+              ],
+
+              "#22c55e",
+
+              "#ef4444",
+            ],
+
+            "circle-stroke-color": "#ffffff",
+
+            "circle-stroke-width": 2,
+          },
+        });
+
+        /* =============================
+         PANEL
+      ============================= */
+
+        actualizarPanel();
       }
 
+      /* ============================================================
+       ACTUALIZAR PANEL
+    ============================================================ */
+
       function actualizarPanel() {
+        if (!camarasGeoJSON) {
+          return;
+        }
+
+        const todas = camarasGeoJSON.features;
+
         let onlineCount = 0;
+
         let caidasCount = 0;
 
-        cache.forEach((cam) => {
-          if (cam.estado.includes("ONLINE")) {
+        todas.forEach((f) => {
+          if (estaOnline(f.properties.estado)) {
             onlineCount++;
           } else {
             caidasCount++;
           }
         });
 
-        online.innerText = onlineCount;
-        caidas.innerText = caidasCount;
+        /*
+       Total incluye las cámaras
+       sin coordenadas.
+      */
+
+        totalEl.innerText = totalCamaras;
+
+        onlineEl.innerText = onlineCount;
+
+        caidasEl.innerText = caidasCount;
+
+        sincoordEl.innerText = sinCoordCount;
+
+        renderLista();
       }
-      /* =========================
-Actualizar estado
-========================= */
+
+      /* ============================================================
+       RENDER LISTA
+    ============================================================ */
+
+      function renderLista() {
+        if (!camarasGeoJSON) {
+          return;
+        }
+
+        const texto = (buscarInput.value || "")
+
+          .toUpperCase()
+
+          .trim();
+
+        const estadoFiltro = filtroEstadoSelect.value || "TODAS";
+
+        const filtradas = camarasGeoJSON.features.filter((f) => {
+          const p = f.properties;
+
+          const coincideTexto =
+            (p.nombre || "")
+
+              .toUpperCase()
+
+              .includes(texto) ||
+            (p.ubicacion || "")
+
+              .toUpperCase()
+
+              .includes(texto);
+
+          let coincideEstado = true;
+
+          if (estadoFiltro === "ONLINE") {
+            coincideEstado = estaOnline(p.estado);
+          }
+
+          if (estadoFiltro === "CAIDA") {
+            coincideEstado = !estaOnline(p.estado);
+          }
+
+          return coincideTexto && coincideEstado;
+        });
+
+        /* =============================
+         LISTADO HTML
+      ============================= */
+
+        listaCamarasEl.innerHTML = filtradas
+
+          .sort((a, b) =>
+            a.properties.nombre.localeCompare(b.properties.nombre),
+          )
+
+          .map((f) => {
+            const p = f.properties;
+
+            const coord = f.geometry.coordinates;
+
+            const online = estaOnline(p.estado);
+
+            return `
+  <div
+    class="cam-item"
+    data-nombre="${p.nombre}"
+    data-lng="${coord[0]}"
+    data-lat="${coord[1]}"
+  >
+
+                  <b>
+                    ${p.nombre}
+                  </b>
+
+
+                  <div
+                    class="cam-ubicacion"
+                  >
+                    ${p.ubicacion || "-"}
+                  </div>
+
+
+                  <div
+                    class="cam-estado"
+
+                    style="
+                      color:
+                      ${online ? "#22c55e" : "#ef4444"};
+                    "
+                  >
+
+                    ${online ? "🟢 ONLINE" : "🔴 CAÍDA"}
+
+                  </div>
+
+                </div>
+
+              `;
+          })
+
+          .join("");
+
+        /* =============================
+         CLICK LISTA
+      ============================= */
+
+        document.querySelectorAll(".cam-item").forEach((item) => {
+          item.addEventListener("click", () => {
+            const nombre = item.dataset.nombre;
+
+            const feature = camarasGeoJSON.features.find(
+              (f) => f.properties.nombre === nombre,
+            );
+
+            if (!feature) {
+              return;
+            }
+
+            const coordenadas = feature.geometry.coordinates;
+
+            map.flyTo({
+              center: coordenadas,
+              zoom: 17,
+              duration: 800,
+            });
+
+            setTimeout(() => {
+              abrirPopupCamara(feature);
+            }, 850);
+          });
+        });
+      }
+
+      function aplicarFiltroMapa() {
+        if (!map.getLayer("camaras-puntos")) {
+          return;
+        }
+
+        const texto = (buscarInput.value || "").toUpperCase().trim();
+
+        const estadoFiltro = filtroEstadoSelect.value || "TODAS";
+
+        const filtros = [];
+
+        // =============================
+        // FILTRO TEXTO
+        // =============================
+
+        if (texto) {
+          filtros.push([
+            "any",
+
+            ["in", texto, ["upcase", ["get", "nombre"]]],
+
+            ["in", texto, ["upcase", ["get", "ubicacion"]]],
+          ]);
+        }
+
+        // =============================
+        // FILTRO ESTADO
+        // =============================
+
+        if (estadoFiltro === "ONLINE") {
+          filtros.push([
+            "match",
+            ["get", "estado"],
+            ["ONLINE", "ONLINE (HTTP)"],
+            true,
+            false,
+          ]);
+        }
+
+        if (estadoFiltro === "CAIDA") {
+          filtros.push([
+            "!",
+            [
+              "match",
+              ["get", "estado"],
+              ["ONLINE", "ONLINE (HTTP)"],
+              true,
+              false,
+            ],
+          ]);
+        }
+
+        // =============================
+        // APLICAR
+        // =============================
+
+        if (filtros.length === 0) {
+          map.setFilter("camaras-puntos", null);
+        } else if (filtros.length === 1) {
+          map.setFilter("camaras-puntos", filtros[0]);
+        } else {
+          map.setFilter("camaras-puntos", ["all", ...filtros]);
+        }
+      }
 
       async function actualizarEstados() {
         try {
-
           const estadoActual = await fetch("/estado-actual").then((r) =>
             r.json(),
           );
 
-          console.log("Estado actual recibido:", estadoActual.length);
-
           const mapaEstado = {};
 
           estadoActual.forEach((cam) => {
-            mapaEstado[cam.nombre] = cam.estado;
-          });
+            const clave = extraerCodigo(cam.nombre);
 
-          console.log(
-            "Markers cargados:",
-            Object.keys(markersPorNombre).length,
-          );
+            mapaEstado[clave] = cam;
+          });
 
           let cambios = 0;
 
-          for (const nombre in markersPorNombre) {
-            const marker = markersPorNombre[nombre];
-            const nuevoEstado = mapaEstado[nombre] || "SIN RESPUESTA";
+          camarasGeoJSON.features.forEach((feature) => {
+            const clave = extraerCodigo(feature.properties.nombre);
 
-            if (marker.estado !== nuevoEstado) {
+            const nuevo = mapaEstado[clave];
+
+            const nuevoEstado = nuevo?.estado || "SIN RESPUESTA";
+
+            if (feature.properties.estado !== nuevoEstado) {
               cambios++;
-
-              
-
-              marker.estado = nuevoEstado;
-
-              marker.setIcon(icono(colorEstado(nuevoEstado)));
-
-              const datos = datosPorNombre[nombre];
-
-              if (datos) {
-                marker.setPopupContent(
-                  construirPopup(
-                    nombre,
-                    nuevoEstado,
-                    datos.coord,
-                    datos.cam,
-                    datos.info,
-                  ),
-                );
-              }
-
-              const camCache = cache.find((c) => c.nombre === nombre);
-
-              if (camCache) {
-                camCache.estado = nuevoEstado;
-              }
-            }
-          }
-
-
-          if (cambios > 0) {
-            actualizarPanel();
-
-            filtrar();
-          }
-        } catch (err) {
-          console.error("Error actualizando estados:", err);
-        }
-      }
-      /* =========================
-LISTA
-========================= */
-
-      function renderLista(txt = "", estadoFiltro = "TODAS") {
-        let html = "";
-
-        cache
-          .filter((x) => {
-            let okTexto =
-              x.nombre.toUpperCase().includes(txt) ||
-              x.ubicacion.toUpperCase().includes(txt);
-
-            let okEstado = true;
-
-            if (estadoFiltro === "ONLINE") {
-              okEstado = x.estado.includes("ONLINE");
             }
 
-            if (estadoFiltro === "CAIDA") {
-              okEstado = !x.estado.includes("ONLINE");
-            }
+            feature.properties.estado = nuevoEstado;
 
-            return okTexto && okEstado;
-          })
-          .sort((a, b) => a.nombre.localeCompare(b.nombre))
-          .forEach((x) => {
-            html += `
-<div class="item" onclick="ir(${x.lat},${x.lng})">
-<b>${x.nombre}</b>
-<div>${x.ubicacion}</div>
-${badge(x.estado)}
-</div>
-`;
+            feature.properties.latencia = nuevo?.latencia || "-";
+
+            feature.properties.fecha = nuevo?.fecha || "";
           });
 
-        lista.innerHTML = html;
-      }
+          const source = map.getSource("camaras");
 
-      /* =========================
-FILTRO
-========================= */
-
-      function filtrar() {
-        const txt = buscar.value.toUpperCase();
-        const est = filtroEstado.value;
-
-        markers.clearLayers();
-
-        cache.forEach((x) => {
-          let okTexto =
-            x.nombre.toUpperCase().includes(txt) ||
-            x.ubicacion.toUpperCase().includes(txt);
-
-          let okEstado = true;
-
-          if (est === "ONLINE") {
-            okEstado = x.estado.includes("ONLINE");
+          if (source) {
+            source.setData(camarasGeoJSON);
           }
 
-          if (est === "CAIDA") {
-            okEstado = !x.estado.includes("ONLINE");
+          if (cambios > 0) {
+            console.log("🔄 Estados actualizados:", cambios);
+          } else {
+            console.log("✅ Sin cambios en los estados");
           }
 
-          if (okTexto && okEstado) {
-            markers.addLayer(x.marker);
-          }
-        });
+          actualizarPanel();
 
-        renderLista(txt, est);
-      }
-
-      /* =========================
-IR
-========================= */
-
-      function ir(lat, lng) {
-        map.setView([lat, lng], 18);
-      }
-
-      /* =========================
-FULLSCREEN
-========================= */
-
-      function fullscreenMapa() {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
+          aplicarFiltroMapa();
+        } catch (err) {
+          console.error("❌ Error actualizando estados:", err);
         }
       }
+      /* ============================================================
+       FILTROS PANEL
+    ============================================================ */
 
-      /* =========================
-EDICION
-========================= */
-
-      function activarEdicion() {
-        modoEdicion = true;
-
-        alert("Ahora hacé click en el mapa.");
-      }
-
-      map.on("click", async function (e) {
-        if (!modoEdicion) return;
-
-        await fetch("/api/coords", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            nombre: camaraEdit.value,
-            lat: e.latlng.lat,
-            lng: e.latlng.lng,
-          }),
-        });
-
-        modoEdicion = false;
-
-        alert("Coordenada actualizada");
-
-        cargar();
+      buscarInput.addEventListener("input", () => {
+        renderLista();
+        aplicarFiltroMapa();
       });
 
-      async function eliminarCoord() {
-        const nombre = camaraEdit.value;
+      filtroEstadoSelect.addEventListener("change", () => {
+        renderLista();
+
+        aplicarFiltroMapa();
+      });
+
+      /* ============================================================
+       ULTIMOS DIAS
+    ============================================================ */
+
+      function obtenerUltimosDias(estados, cantidad = 7) {
+        const entradas = Object.entries(estados || {});
+
+        entradas.sort((a, b) => {
+          const [da, ma, ya] = a[0].split("/");
+
+          const [db, mb, yb] = b[0].split("/");
+
+          const fechaA = new Date(`${ya}-${ma}-${da}`);
+
+          const fechaB = new Date(`${yb}-${mb}-${db}`);
+
+          return fechaA - fechaB;
+        });
+
+        return entradas.slice(-cantidad);
+      }
+
+      /* ============================================================
+       UPTIME
+    ============================================================ */
+
+      function calcularUptime(estados, dias = 30) {
+        const entradas = obtenerUltimosDias(estados, dias);
+
+        if (!entradas.length) {
+          return 0;
+        }
+
+        let online = 0;
+
+        entradas.forEach(([fecha, estado]) => {
+          if (estaOnline(estado)) {
+            online++;
+          }
+        });
+
+        return Math.round((online / entradas.length) * 100);
+      }
+
+      /* ============================================================
+       DIAS DE CAIDA
+    ============================================================ */
+
+      function calcularCaida(estados, fechas) {
+        let diasCaida = 0;
+
+        for (let i = fechas.length - 1; i >= 0; i--) {
+          const f = fechas[i];
+
+          const estado = estados[f] || "";
+
+          if (estado.includes("ONLINE")) {
+            break;
+          }
+
+          diasCaida++;
+        }
+
+        return diasCaida;
+      }
+      function abrirPopupCamara(feature) {
+        const p = feature.properties;
+
+        const coordenadas = feature.geometry.coordinates.slice();
+
+        const nombre = p.nombre || "-";
+
+        const estado = p.estado || "SIN RESPUESTA";
+
+        const ubicacion = p.ubicacion || "-";
+
+        const proveedor = p.proveedor || "-";
+
+        const ip = p.ip || "-";
+
+        const online = estaOnline(estado);
+
+        let estados = {};
+
+        try {
+          estados = JSON.parse(p.historial || "{}");
+        } catch {
+          estados = {};
+        }
+
+        const ultimos7 = obtenerUltimosDias(estados, 7);
+
+        const uptime = calcularUptime(estados, 30);
+
+        const diasCaida = calcularCaida(estados, historialData?.fechas || []);
+
+        let circulos = "";
+
+        ultimos7.forEach(([fecha, estadoDia]) => {
+          const ok = estaOnline(estadoDia);
+
+          circulos += `
+        <div
+          title="${fecha} - ${estadoDia}"
+          style="
+            width:18px;
+            height:18px;
+            border-radius:50%;
+            background:${ok ? "#22c55e" : "#ef4444"};
+            border:1.5px solid #111827;
+          "
+        ></div>
+      `;
+        });
+
+        const html = `
+    <div style="
+      width:260px;
+      font-family:Segoe UI,Arial,sans-serif;
+      color:#111827;
+    ">
+
+      <div style="
+        font-size:21px;
+        font-weight:900;
+        margin-bottom:3px;
+      ">
+        ${nombre}
+      </div>
+
+      <div style="
+        color:#4b5563;
+        font-size:13px;
+        margin-bottom:10px;
+      ">
+        ${ubicacion}
+      </div>
+
+      <div style="
+        background:${online ? "#dcfce7" : "#fee2e2"};
+        color:${online ? "#166534" : "#991b1b"};
+        padding:8px;
+        border-radius:10px;
+        text-align:center;
+        font-weight:900;
+        margin-bottom:10px;
+      ">
+        <span style="
+          display:inline-block;
+          width:12px;
+          height:12px;
+          border-radius:50%;
+          background:${online ? "#22c55e" : "#ef4444"};
+          border:1px solid #111;
+          vertical-align:-1px;
+          margin-right:4px;
+        "></span>
+
+        ${online ? "ONLINE" : "OFFLINE"}
+      </div>
+
+      <div style="
+        font-size:13px;
+        line-height:1.55;
+      ">
+        <div>
+  <b>IP:</b>
+  ${
+    ip && ip !== "-"
+      ? `
+        <a
+          href="http://${ip}"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="
+            color:#2563eb;
+            font-weight:800;
+            text-decoration:none;
+          "
+        >
+          ${ip}
+        </a>
+      `
+      : "-"
+  }
+</div>
+
+        <div>
+          <b>Proveedor:</b> ${proveedor}
+        </div>
+      </div>
+
+      ${
+        !online
+          ? `
+            <div style="
+              margin-top:10px;
+              background:#650b0b;
+              color:white;
+              padding:8px 10px;
+              border-radius:10px;
+              font-weight:800;
+            ">
+              🔴 Caída hace ${diasCaida} día(s)
+            </div>
+          `
+          : ""
+      }
+
+      <div style="
+        height:1px;
+        background:#e5e7eb;
+        margin:10px 0;
+      "></div>
+
+      <div style="
+        font-size:13px;
+        font-weight:800;
+        margin-bottom:8px;
+      ">
+        Últimos 7 días
+      </div>
+
+      <div style="
+        display:flex;
+        gap:9px;
+        align-items:center;
+        margin-bottom:10px;
+      ">
+        ${circulos || "Sin historial"}
+      </div>
+
+      <div style="
+        background:#eff6ff;
+        color:#2563eb;
+        padding:9px;
+        border-radius:10px;
+        text-align:center;
+        font-size:13px;
+        font-weight:900;
+        margin-bottom:10px;
+      ">
+        📈 Uptime 30 días: ${uptime}%
+      </div>
+
+      <button
+        id="btn-centrar-popup"
+        style="
+          width:100%;
+          border:0;
+          background:#2563eb;
+          color:white;
+          padding:9px;
+          border-radius:9px;
+          font-weight:900;
+          cursor:pointer;
+          font-size:13px;
+        "
+      >
+        📍 Centrar cámara
+      </button>
+
+    </div>
+  `;
+
+        const popup = new maplibregl.Popup({
+          offset: 12,
+          maxWidth: "300px",
+        })
+          .setLngLat(coordenadas)
+          .setHTML(html)
+          .addTo(map);
+
+        const botonCentrar = popup
+          .getElement()
+          .querySelector("#btn-centrar-popup");
+
+        botonCentrar?.addEventListener("click", () => {
+          map.flyTo({
+            center: coordenadas,
+            zoom: 17,
+            duration: 800,
+          });
+        });
+      }
+      function actualizarSelectorCoordenadas() {
+        const seleccionActual = camaraEditSelect.value;
+
+        const ordenadas = [...coordsData].sort((a, b) => {
+          const latA = parseFloat(a.lat);
+          const lngA = parseFloat(a.lng);
+          const latB = parseFloat(b.lat);
+          const lngB = parseFloat(b.lng);
+
+          const aTieneCoord =
+            !isNaN(latA) && !isNaN(lngA) && latA !== 0 && lngA !== 0;
+
+          const bTieneCoord =
+            !isNaN(latB) && !isNaN(lngB) && latB !== 0 && lngB !== 0;
+
+          // Pendientes primero
+          if (aTieneCoord !== bTieneCoord) {
+            return aTieneCoord ? 1 : -1;
+          }
+
+          return a.nombre.localeCompare(b.nombre, "es", {
+            numeric: true,
+            sensitivity: "base",
+          });
+        });
+
+        camaraEditSelect.innerHTML = "";
+
+        let pendientes = 0;
+
+        ordenadas.forEach((camara) => {
+          const lat = parseFloat(camara.lat);
+          const lng = parseFloat(camara.lng);
+
+          const tieneCoord =
+            !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
+          const option = document.createElement("option");
+          option.value = camara.nombre;
+          option.textContent = tieneCoord
+            ? camara.nombre
+            : `⚠ ${camara.nombre} — SIN COORDENADAS`;
+
+          camaraEditSelect.appendChild(option);
+
+          if (!tieneCoord) {
+            pendientes++;
+          }
+        });
+
+        // Mantener seleccionada la cámara con la que se estaba trabajando
+        if (
+          seleccionActual &&
+          Array.from(camaraEditSelect.options).some(
+            (option) => option.value === seleccionActual,
+          )
+        ) {
+          camaraEditSelect.value = seleccionActual;
+        }
+
+        sinCoordCount = pendientes;
+        sincoordEl.innerText = pendientes;
+
+        contadorPendientes.innerText =
+          pendientes > 0
+            ? `(${pendientes} pendientes)`
+            : "(sin pendientes)";
+      }
+
+      async function eliminarCoordenadaSeleccionada() {
+        const nombre = camaraEditSelect.value;
 
         if (!nombre) {
           alert("Seleccioná una cámara");
           return;
         }
 
-        const ok = confirm("¿Eliminar coordenada de:\n\n" + nombre + " ?");
+        const coord = coordsData.find((c) => c.nombre === nombre);
+        const lat = parseFloat(coord?.lat);
+        const lng = parseFloat(coord?.lng);
+        const tieneCoord = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
-        if (!ok) return;
+        if (!tieneCoord) {
+          alert("⚠️ Esa cámara ya está sin coordenadas.");
+          return;
+        }
+
+        if (!confirm("¿Eliminar coordenada de:\n\n" + nombre + " ?")) return;
 
         try {
-          await fetch("/api/coords/" + encodeURIComponent(nombre), {
+          const respuesta = await fetch("/api/coords/" + encodeURIComponent(nombre), {
             method: "DELETE",
           });
 
+          if (!respuesta.ok) throw new Error("Error eliminando coordenada");
+
+          coord.lat = 0;
+          coord.lng = 0;
+
+          camarasGeoJSON.features = camarasGeoJSON.features.filter(
+            (f) => f.properties.nombre !== nombre,
+          );
+
+          map.getSource("camaras")?.setData(camarasGeoJSON);
+          actualizarSelectorCoordenadas();
+          actualizarPanel();
+          aplicarFiltroMapa();
+
           alert("✅ Coordenada eliminada");
-
-          cargar();
         } catch (err) {
-          console.log(err);
-
-          alert("Error eliminando coordenada");
+          console.error("❌ Error eliminando coordenada:", err);
+          alert("❌ Error eliminando coordenada");
         }
       }
 
-      cargar();
+      function activarEdicion() {
+        const nombre = camaraEditSelect.value;
 
-      console.log("Iniciando auto refresh...");
-      setInterval(actualizarEstados, 10000);
+        if (!nombre) {
+          alert("Seleccioná una cámara");
+          return;
+        }
+
+        modoEdicion = true;
+
+        map.getCanvas().style.cursor = "crosshair";
+
+        alert("Ahora hacé click en la nueva ubicación de la cámara.");
+      }
+      /* ============================================================
+       MAPA CARGADO
+    ============================================================ */
+
+      map.on("load", async () => {
+        console.log("✅ MapLibre cargado correctamente");
+
+        await cargarCamaras();
+
+        const panelEl = document.getElementById("panel");
+        const btnCerrarPanel = document.getElementById("btnCerrarPanel");
+        const btnAbrirPanel = document.getElementById("btnAbrirPanel");
+        const btnFullscreen = document.getElementById("btnFullscreen");
+
+        btnCerrarPanel?.addEventListener("click", () => {
+          panelEl.style.display = "none";
+          btnAbrirPanel.style.display = "block";
+
+          setTimeout(() => {
+            map.resize();
+          }, 100);
+        });
+
+        btnAbrirPanel?.addEventListener("click", () => {
+          panelEl.style.display = "block";
+          btnAbrirPanel.style.display = "none";
+
+          setTimeout(() => {
+            map.resize();
+          }, 100);
+        });
+
+        btnFullscreen?.addEventListener("click", async () => {
+          try {
+            if (!document.fullscreenElement) {
+              await document.documentElement.requestFullscreen();
+            } else {
+              await document.exitFullscreen();
+            }
+
+            setTimeout(() => {
+              map.resize();
+            }, 100);
+          } catch (err) {
+            console.error("Error fullscreen:", err);
+          }
+        });
+        const btnActualizar = document.getElementById("btnActualizar");
+
+        btnActualizar?.addEventListener("click", async () => {
+          btnActualizar.disabled = true;
+          btnActualizar.innerText = "Actualizando...";
+
+          await actualizarEstados();
+
+          btnActualizar.innerText = "🔄 Actualizar ahora";
+          btnActualizar.disabled = false;
+        });
+        btnReubicar?.addEventListener("click", activarEdicion);
+        btnEliminarCoord?.addEventListener("click", eliminarCoordenadaSeleccionada);
+        /* ============================================================
+           CLICK CAMARA / POPUP
+        ============================================================ */
+
+        map.on("click", "camaras-puntos", (e) => {
+          if (modoEdicion) {
+            return;
+          }
+
+          if (!e.features || !e.features.length) {
+            return;
+          }
+
+          abrirPopupCamara(e.features[0]);
+        });
+        map.on("click", async (e) => {
+          if (!modoEdicion) {
+            return;
+          }
+
+          const nombre = camaraEditSelect.value;
+
+          const lat = e.lngLat.lat;
+
+          const lng = e.lngLat.lng;
+
+          try {
+            const respuesta = await fetch("/api/coords", {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                nombre,
+                lat,
+                lng,
+              }),
+            });
+
+            if (!respuesta.ok) {
+              throw new Error("Error actualizando coordenada");
+            }
+
+            // =============================
+            // ACTUALIZAR ESTE MAPA
+            // =============================
+            let feature = camarasGeoJSON.features.find(
+              (f) => f.properties.nombre === nombre,
+            );
+
+            if (feature) {
+              feature.geometry.coordinates = [lng, lat];
+            } else {
+              const estadoActual = await fetch("/estado-actual").then((r) => r.json());
+              const datosEstado = estadoActual.find(
+                (c) => extraerCodigo(c.nombre) === extraerCodigo(nombre),
+              );
+              const historialCam = historialData?.camaras?.[normalizarNombre(nombre)];
+
+              feature = {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [lng, lat] },
+                properties: {
+                  nombre,
+                  estado: datosEstado?.estado || "SIN RESPUESTA",
+                  latencia: datosEstado?.latencia || "-",
+                  fecha: datosEstado?.fecha || "",
+                  proveedor: historialCam?.info?.proveedor || "-",
+                  ubicacion: historialCam?.info?.ubicacion || "-",
+                  ip: historialCam?.info?.ip || "-",
+                  historial: JSON.stringify(historialCam?.estados || {}),
+                },
+              };
+
+              camarasGeoJSON.features.push(feature);
+            }
+
+            const coordLocal = coordsData.find((c) => c.nombre === nombre);
+            if (coordLocal) {
+              coordLocal.lat = lat;
+              coordLocal.lng = lng;
+            }
+
+            map.getSource("camaras")?.setData(camarasGeoJSON);
+            actualizarSelectorCoordenadas();
+            actualizarPanel();
+            aplicarFiltroMapa();
+
+            modoEdicion = false;
+
+            map.getCanvas().style.cursor = "";
+
+            alert("✅ Coordenada actualizada");
+          } catch (err) {
+            console.error(err);
+
+            modoEdicion = false;
+
+            map.getCanvas().style.cursor = "";
+
+            alert("❌ Error actualizando coordenada");
+          }
+        });
+
+        /* ============================================================
+           CURSOR CAMARAS
+        ============================================================ */
+
+        map.on("mouseenter", "camaras-puntos", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+
+        map.on("mouseleave", "camaras-puntos", () => {
+          map.getCanvas().style.cursor = "";
+        });
+
+        /* ============================================================
+           AUTO REFRESH ESTADOS
+        ============================================================ */
+
+        console.log("🔄 Autoactualización iniciada cada 10 segundos");
+        setInterval(actualizarEstados, 10000);
+      });
+
+      /* ============================================================
+         ERRORES MAPLIBRE
+      ============================================================ */
+
+      map.on("error", (e) => {
+        console.error("❌ Error MapLibre:", e.error || e);
+      });
     </script>
   </body>
 </html>

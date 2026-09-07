@@ -2,6 +2,28 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const fs = require("fs");
+//------  Archivo mapa -------------------
+const Database = require("better-sqlite3");
+const exeDir = process.pkg
+  ? path.dirname(process.execPath)
+  : __dirname;
+
+const rutaMapa = path.join(
+  exeDir,
+  "data",
+  "mapa.mbtiles"
+);
+
+console.log("🗺️ Ruta MBTiles:", rutaMapa);
+
+const mapaDB = new Database(
+  rutaMapa,
+  {
+    readonly: true,
+    fileMustExist: true,
+  }
+);
+//--------------------------
 const { exec } = require("child_process");
 const db = require("./db");
 const {
@@ -44,10 +66,13 @@ function resetProgreso() {
 // =============================
 // RUTA PROGRESO
 // =============================
-app.get("/progreso", (req, res) => {
-  res.json(progreso);
-});
 
+app.get("/progreso", (req, res) => {
+  res.json({
+    ...progreso,
+    escaneoEnCurso
+  });
+});
 // =============================
 // GUARDAR HISTORIAL SQLITE
 // =============================
@@ -410,7 +435,13 @@ app.get("/", (req, res) => {
 // MAPA
 // =============================
 app.get("/mapa", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "mapa.html"));
+  res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      "mapa.html"
+    )
+  );
 });
 
 // TRAER COORDENADAS
@@ -482,69 +513,51 @@ app.delete("/api/coords/:nombre", (req, res) => {
   }
 });
 
-//DEBUGSS//
-app.get("/debug", (req, res) => {
-  const historial = db
-    .prepare(
-      `
-    SELECT COUNT(*) AS total
-    FROM historial
-  `,
-    )
-    .get();
 
-  const coords = db
-    .prepare(
-      `
-    SELECT COUNT(*) AS total
-    FROM coordenadas
-  `,
-    )
-    .get();
 
-  res.json({
-    historial,
-    coords,
-  });
-});
-app.get("/debug-diferencias", async (req, res) => {
-  const excel = await obtenerTodasLasCamarasExcel();
-
-  const excelSet = new Set(
-    excel.map((x) => normalizarNombre(x["[Denominacion]"])),
-  );
-
-  const coords = db
-    .prepare(
-      `
-    SELECT nombre
-    FROM coordenadas
-  `,
-    )
-    .all();
-
-  const coordsSet = new Set(coords.map((x) => normalizarNombre(x.nombre)));
-
-  const soloExcel = [...excelSet].filter((x) => !coordsSet.has(x));
-  const soloCoords = [...coordsSet].filter((x) => !excelSet.has(x));
-
-  res.json({
-    excel: excelSet.size,
-    coords: coordsSet.size,
-    soloExcel,
-    soloCoords,
-  });
-});
 
 // ========
 // AUTOESCANEO CADA 10 MINUTOS
 // ==========
-setInterval(
-  () => {
-    autoEscaneo();
-  },
-  10 * 60 * 1000,
-);
+setInterval(autoEscaneo, 10 * 60 * 1000);
+
+// =============================
+// MAPA OFFLINE - MBTILES
+// =============================
+
+app.get("/tiles/:z/:x/:y.pbf", (req, res) => {
+  try {
+    const z = Number(req.params.z);
+    const x = Number(req.params.x);
+    const y = Number(req.params.y);
+
+    // MBTiles usa coordenadas TMS.
+    // MapLibre usa XYZ.
+    const tmsY = Math.pow(2, z) - 1 - y;
+
+    const tile = mapaDB
+      .prepare(`
+        SELECT tile_data
+        FROM tiles
+        WHERE zoom_level = ?
+          AND tile_column = ?
+          AND tile_row = ?
+      `)
+      .get(z, x, tmsY);
+
+    if (!tile) {
+      return res.status(404).end();
+    }
+
+    res.setHeader("Content-Type", "application/x-protobuf");
+    res.setHeader("Content-Encoding", "gzip");
+
+    res.send(tile.tile_data);
+  } catch (err) {
+    console.error("❌ Error cargando tile:", err);
+    res.status(500).end();
+  }
+});
 
 
 // =============================

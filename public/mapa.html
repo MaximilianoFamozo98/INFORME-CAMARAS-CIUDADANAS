@@ -242,6 +242,39 @@
         🖥 Fullscreen
       </button>
 
+      <details id="panelEscaneos" open style="margin-bottom:10px;background:#111827;border-radius:10px;padding:10px">
+        <summary style="cursor:pointer;font-weight:900;user-select:none">
+          🛰️ Escaneos
+        </summary>
+
+        <div style="margin-top:12px;font-size:13px;line-height:1.5">
+          <div id="estadoAutoescaneoPanel" style="font-weight:900;margin-bottom:4px">
+            🟢 Autoescaneo activo
+          </div>
+          <div id="proximoAutoescaneoPanel" style="color:#94a3b8;margin-bottom:4px">
+            Próximo autoescaneo: calculando...
+          </div>
+          <div id="estadoAnalisisPanel" style="color:#cbd5e1;margin-bottom:4px">
+            Sin análisis en curso
+          </div>
+          <div id="ultimaAccionPanel" style="color:#94a3b8;margin-bottom:10px">
+            Última acción: -
+          </div>
+
+          <button id="btnAnalizarTodasAhora" style="width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:9px;background:#2563eb;color:white;font-weight:800;cursor:pointer">
+            ▶ Analizar todas ahora
+          </button>
+
+          <button id="btnDetenerEscaneo" style="width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:9px;background:#991b1b;color:white;font-weight:800;cursor:pointer" disabled>
+            ⛔ Detener análisis
+          </button>
+
+          <button id="btnPausarAutoescaneo" style="width:100%;padding:10px;border:none;border-radius:9px;background:#b45309;color:white;font-weight:800;cursor:pointer">
+            ⏸ Pausar autoescaneo
+          </button>
+        </div>
+      </details>
+
       <details id="panelCoordenadas" style="margin-bottom:10px;background:#111827;border-radius:10px;padding:10px">
         <summary style="cursor:pointer;font-weight:900;user-select:none">
           ⚙️ Coordenadas
@@ -356,6 +389,13 @@
       const btnReubicar = document.getElementById("btnReubicar");
       const btnEliminarCoord = document.getElementById("btnEliminarCoord");
       const contadorPendientes = document.getElementById("contadorPendientes");
+      const btnAnalizarTodasAhora = document.getElementById("btnAnalizarTodasAhora");
+      const btnDetenerEscaneo = document.getElementById("btnDetenerEscaneo");
+      const btnPausarAutoescaneo = document.getElementById("btnPausarAutoescaneo");
+      const estadoAutoescaneoPanel = document.getElementById("estadoAutoescaneoPanel");
+      const proximoAutoescaneoPanel = document.getElementById("proximoAutoescaneoPanel");
+      const estadoAnalisisPanel = document.getElementById("estadoAnalisisPanel");
+      const ultimaAccionPanel = document.getElementById("ultimaAccionPanel");
       /* ============================================================
        VARIABLES GLOBALES
     ============================================================ */
@@ -817,70 +857,249 @@
         return txt.trim();
       }
 
-      //LOGICA AUTOESCANEO
+      // ============================================================
+      // CONTROL GLOBAL DE ESCANEOS
+      // ============================================================
       let estabaEscaneandoMapa = false;
+      let timeoutOcultarEstado = null;
+
+      function nombreTipoEscaneo(tipo) {
+        if (tipo === "AUTOMATICO") return "automático";
+        if (tipo === "MANUAL_TEXTO") return "manual por lista";
+        if (tipo === "MANUAL_TODAS") return "manual de todas las cámaras";
+        return "";
+      }
+
+      function horaCorta(fechaIso) {
+        if (!fechaIso) return "-";
+        const d = new Date(fechaIso);
+        if (Number.isNaN(d.getTime())) return "-";
+        return d.toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function cuentaRegresiva(fechaIso) {
+        if (!fechaIso) return null;
+
+        const ms = new Date(fechaIso).getTime() - Date.now();
+        if (!Number.isFinite(ms)) return null;
+        if (ms <= 0) return "00:00";
+
+        const totalSegundos = Math.ceil(ms / 1000);
+        const minutos = Math.floor(totalSegundos / 60);
+        const segundos = totalSegundos % 60;
+
+        return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+      }
+
+      function textoAccion(accion) {
+        const nombres = {
+          INICIO_ANALISIS: "inició un análisis",
+          ANALISIS_FINALIZADO: "finalizó un análisis",
+          ANALISIS_CANCELADO: "canceló un análisis",
+          ERROR_ANALISIS: "análisis con error",
+          SOLICITO_CANCELACION: "solicitó detener el análisis",
+          PAUSO_AUTOESCANEO: "pausó el autoescaneo",
+          REANUDO_AUTOESCANEO: "reanudó el autoescaneo",
+          GUARDO_COORDENADA: "guardó una coordenada",
+          ELIMINO_COORDENADA: "eliminó una coordenada",
+        };
+
+        return nombres[accion] || accion || "-";
+      }
+
+      async function postControl(url) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ usuario: "SIN LOGIN" }),
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch {}
+
+        if (!res.ok) {
+          throw new Error(data.mensaje || "No se pudo completar la acción");
+        }
+
+        return data;
+      }
+
+      btnAnalizarTodasAhora.addEventListener("click", async () => {
+        try {
+          btnAnalizarTodasAhora.disabled = true;
+          await postControl("/iniciar-analisis-todas");
+          await revisarAutoEscaneoMapa();
+        } catch (err) {
+          alert(err.message);
+          btnAnalizarTodasAhora.disabled = false;
+        }
+      });
+
+      btnDetenerEscaneo.addEventListener("click", async () => {
+        if (!confirm("¿Detener el análisis que está en curso para todos los usuarios?")) {
+          return;
+        }
+
+        try {
+          btnDetenerEscaneo.disabled = true;
+          await postControl("/cancelar-escaneo");
+          await revisarAutoEscaneoMapa();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+
+      btnPausarAutoescaneo.addEventListener("click", async () => {
+        try {
+          const estado = await fetch("/progreso").then((r) => r.json());
+          const url = estado.autoescaneoHabilitado
+            ? "/autoescaneo/pausar"
+            : "/autoescaneo/reanudar";
+
+          await postControl(url);
+          await revisarAutoEscaneoMapa();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
 
       async function revisarAutoEscaneoMapa() {
         try {
-          const res = await fetch("/progreso");
+          const res = await fetch("/progreso", { cache: "no-store" });
           const p = await res.json();
 
           const contenedor = document.getElementById("estadoEscaneoMapa");
-
           const barra = document.getElementById("barraEscaneoMapa");
-
           const texto = document.getElementById("textoEscaneoMapa");
-
           const detalle = document.getElementById("detalleEscaneoMapa");
 
+          const total = Number(p.total || 0);
+          const procesadas = Number(p.procesadas || 0);
+          const porcentaje = total > 0
+            ? Math.round((procesadas / total) * 100)
+            : 0;
+
+          // PANEL DE CONTROL
+          if (p.autoescaneoHabilitado) {
+            estadoAutoescaneoPanel.innerText = "🟢 Autoescaneo activo";
+            estadoAutoescaneoPanel.style.color = "#22c55e";
+            btnPausarAutoescaneo.innerText = "⏸ Pausar autoescaneo";
+            btnPausarAutoescaneo.style.background = "#b45309";
+
+            if (p.escaneoEnCurso) {
+              proximoAutoescaneoPanel.innerText =
+                "Próximo autoescaneo: se programará al finalizar";
+            } else {
+              const restante = cuentaRegresiva(p.proximoAutoescaneo);
+              proximoAutoescaneoPanel.innerText = restante
+                ? `Próximo autoescaneo en: ${restante}`
+                : "Próximo autoescaneo: programando...";
+            }
+          } else {
+            estadoAutoescaneoPanel.innerText = "⏸ Autoescaneo pausado";
+            estadoAutoescaneoPanel.style.color = "#f59e0b";
+            proximoAutoescaneoPanel.innerText = "Próximo autoescaneo: pausado";
+            btnPausarAutoescaneo.innerText = "▶ Reanudar autoescaneo";
+            btnPausarAutoescaneo.style.background = "#15803d";
+          }
+
+          if (p.escaneoEnCurso) {
+            const tipo = nombreTipoEscaneo(p.tipoEscaneo);
+            const cancelando = p.cancelarSolicitado ? " · deteniendo..." : "";
+            estadoAnalisisPanel.innerText =
+              `🔄 Análisis ${tipo} · ${procesadas}/${total} · ${porcentaje}%${cancelando}
+` +
+              `Iniciado por: ${p.iniciadoPor || "-"} · ${horaCorta(p.horaInicio)}`;
+          } else if (p.estadoEscaneo === "CANCELADO") {
+            estadoAnalisisPanel.innerText =
+              `⛔ Último análisis cancelado por ${p.canceladoPor || p.iniciadoPor || "-"}`;
+          } else if (p.estadoEscaneo === "ERROR") {
+            estadoAnalisisPanel.innerText = "❌ El último análisis terminó con error";
+          } else if (p.estadoEscaneo === "FINALIZADO") {
+            estadoAnalisisPanel.innerText =
+              `✅ Último análisis finalizado · ${p.iniciadoPor || "-"} · ${horaCorta(p.horaFin)}`;
+          } else {
+            estadoAnalisisPanel.innerText = "Sin análisis en curso";
+          }
+
+          if (p.ultimaAccion) {
+            const u = p.ultimaAccion.usuario || "-";
+            const accion = textoAccion(p.ultimaAccion.accion);
+            const detalleAccion = p.ultimaAccion.detalle
+              ? ` · ${p.ultimaAccion.detalle}`
+              : "";
+
+            ultimaAccionPanel.innerText =
+              `Última acción: ${u} ${accion}${detalleAccion} · ${horaCorta(p.ultimaAccion.fecha)}`;
+          } else {
+            ultimaAccionPanel.innerText = "Última acción: -";
+          }
+
+          btnAnalizarTodasAhora.disabled = !!p.escaneoEnCurso;
+          btnAnalizarTodasAhora.style.opacity = p.escaneoEnCurso ? "0.55" : "1";
+          btnAnalizarTodasAhora.style.cursor = p.escaneoEnCurso ? "not-allowed" : "pointer";
+
+          btnDetenerEscaneo.disabled = !p.escaneoEnCurso || !!p.cancelarSolicitado;
+          btnDetenerEscaneo.style.opacity = btnDetenerEscaneo.disabled ? "0.55" : "1";
+          btnDetenerEscaneo.style.cursor = btnDetenerEscaneo.disabled ? "not-allowed" : "pointer";
+
+          // CARTEL CENTRAL COMPARTIDO POR TODOS LOS USUARIOS
           if (p.escaneoEnCurso) {
             estabaEscaneandoMapa = true;
 
-            contenedor.style.display = "block";
-
-            const total = Number(p.total || 0);
-
-            const procesadas = Number(p.procesadas || 0);
-
-            let porcentaje = 0;
-
-            if (total > 0) {
-              porcentaje = Math.round((procesadas / total) * 100);
+            if (timeoutOcultarEstado) {
+              clearTimeout(timeoutOcultarEstado);
+              timeoutOcultarEstado = null;
             }
 
+            contenedor.style.display = "block";
             barra.style.width = porcentaje + "%";
 
-            texto.innerText = `🔄 Autoescaneo en curso... ${porcentaje}%`;
+            const tipo = nombreTipoEscaneo(p.tipoEscaneo);
+            texto.innerText = p.cancelarSolicitado
+              ? `⛔ Deteniendo análisis ${tipo}... ${porcentaje}%`
+              : `🔄 Análisis ${tipo} en curso... ${porcentaje}%`;
 
-            detalle.innerText = `Procesadas: ${procesadas} / ${total}`;
-          } else {
-            if (estabaEscaneandoMapa) {
-              contenedor.style.display = "block";
+            detalle.innerText =
+              `Procesadas: ${procesadas} / ${total} · ` +
+              `Iniciado por: ${p.iniciadoPor || "-"} · ${horaCorta(p.horaInicio)}`;
+          } else if (estabaEscaneandoMapa) {
+            contenedor.style.display = "block";
 
-              texto.innerText = "✅ Autoescaneo finalizado";
-
-              barra.style.width = "100%";
-
-              detalle.innerText = "Estados actualizados";
-
-              setTimeout(() => {
-                contenedor.style.display = "none";
-
-                barra.style.width = "0%";
-              }, 5000);
-
-              estabaEscaneandoMapa = false;
+            if (p.estadoEscaneo === "CANCELADO") {
+              texto.innerText = "⛔ Análisis cancelado";
+              detalle.innerText = `Cancelado por: ${p.canceladoPor || p.iniciadoPor || "-"}`;
+              barra.style.width = porcentaje + "%";
+            } else if (p.estadoEscaneo === "ERROR") {
+              texto.innerText = "❌ El análisis terminó con error";
+              detalle.innerText = "Revisar la consola del servidor";
             } else {
-              contenedor.style.display = "none";
+              texto.innerText = "✅ Análisis finalizado";
+              detalle.innerText = `Estados actualizados · ${p.iniciadoPor || "-"}`;
+              barra.style.width = "100%";
             }
+
+            timeoutOcultarEstado = setTimeout(() => {
+              contenedor.style.display = "none";
+              barra.style.width = "0%";
+            }, 5000);
+
+            estabaEscaneandoMapa = false;
+          } else {
+            contenedor.style.display = "none";
           }
         } catch (err) {
-          console.error("Error consultando autoescaneo:", err);
+          console.error("Error consultando estado de escaneo:", err);
         }
       }
 
       setInterval(revisarAutoEscaneoMapa, 1000);
-
       revisarAutoEscaneoMapa();
       /* ============================================================
        EXTRAER CODIGO

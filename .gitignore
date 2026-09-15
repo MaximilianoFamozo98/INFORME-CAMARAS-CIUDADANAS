@@ -2,3 +2,7 @@ camaras-ciudadanas.exe
 *.exe
 node_modules/
 .env
+camaras.db
+camaras.db-shm
+camaras.db-wal
+informes/todas_las_camaras.xlsx

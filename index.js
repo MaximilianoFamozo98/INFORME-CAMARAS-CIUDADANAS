@@ -80,12 +80,20 @@ function ordenarResultados(data) {
 // =============================
 // PING INTELIGENTE
 // =============================
-async function hacerPing(ip) {
+async function hacerPing(ip, debeCancelar = () => false) {
   let exitos = 0;
   let latencias = [];
 
   for (let i = 0; i < INTENTOS; i++) {
+    if (debeCancelar()) {
+      return { exitos, latenciaPromedio: null, cancelado: true };
+    }
+
     const res = await ping.promise.probe(ip, { timeout: TIMEOUT });
+
+    if (debeCancelar()) {
+      return { exitos, latenciaPromedio: null, cancelado: true };
+    }
 
     if (res.alive) {
       exitos++;
@@ -104,16 +112,18 @@ async function hacerPing(ip) {
       ? Math.round(latencias.reduce((a, b) => a + b, 0) / latencias.length)
       : null;
 
-  return { exitos, latenciaPromedio };
+  return { exitos, latenciaPromedio, cancelado: false };
 }
 
 // =============================
 // CHECK HTTP
 // =============================
-async function checkHTTP(ip) {
+async function checkHTTP(ip, debeCancelar = () => false) {
+  if (debeCancelar()) return false;
+
   try {
     await axios.get(`http://${ip}`, { timeout: 1500 });
-    return true;
+    return !debeCancelar();
   } catch {
     return false;
   }
@@ -122,13 +132,22 @@ async function checkHTTP(ip) {
 // =============================
 // PROCESAR CAMARA
 // =============================
-async function procesarCamara(fila, index, progreso) {
+async function procesarCamara(
+  fila,
+  index,
+  progreso,
+  debeCancelar = () => false,
+) {
+  if (debeCancelar()) return null;
+
   let ip = fila["[IP]"] ? fila["[IP]"].toString() : "";
   ip = ip.replace(/[, ]/g, ".").trim();
 
   const conexion = (fila["[Tipo de Conexion]"] || "-").toUpperCase();
 
   if (!ip) {
+    if (debeCancelar()) return null;
+
     progreso.ipVacia++;
     return {
       DENOMINACION: fila["[Denominacion]"],
@@ -148,18 +167,19 @@ async function procesarCamara(fila, index, progreso) {
     console.log("******** MODO DESARROLLO ACTIVADO ********");
     const nombre = fila["[Denominacion]"] || "";
 
-    // Usa el nombre de la cámara para generar siempre el mismo resultado
     const numero = nombre.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 
-    const ciclo = Math.floor(Date.now() / 30000); // cambia cada 30 segundos
+    const ciclo = Math.floor(Date.now() / 30000);
     const online = (numero + ciclo) % 100 < 20;
+
+    if (debeCancelar()) return null;
 
     if (online) {
       progreso.online++;
     } else {
       progreso.sinRespuesta++;
     }
-    
+
     return {
       DENOMINACION: nombre,
       PROVEEDOR: fila["[Empresa Mantenimiento]"] || "-",
@@ -172,20 +192,29 @@ async function procesarCamara(fila, index, progreso) {
   }
 
   try {
-    const { exitos, latenciaPromedio } = await hacerPing(ip);
+    const primerIntento = await hacerPing(ip, debeCancelar);
 
+    if (primerIntento.cancelado || debeCancelar()) return null;
+
+    const { exitos, latenciaPromedio } = primerIntento;
     let estado = "";
 
     if (exitos === 0) {
       await new Promise((r) => setTimeout(r, 1000));
 
-      const segundoIntento = await hacerPing(ip);
+      if (debeCancelar()) return null;
+
+      const segundoIntento = await hacerPing(ip, debeCancelar);
+
+      if (segundoIntento.cancelado || debeCancelar()) return null;
 
       if (segundoIntento.exitos > 0) {
         estado = "INESTABLE";
         progreso.sinRespuesta++;
       } else {
-        const httpOk = await checkHTTP(ip);
+        const httpOk = await checkHTTP(ip, debeCancelar);
+
+        if (debeCancelar()) return null;
 
         if (httpOk) {
           estado = "ONLINE (HTTP)";
@@ -213,6 +242,8 @@ async function procesarCamara(fila, index, progreso) {
       ESTADO: estado,
     };
   } catch {
+    if (debeCancelar()) return null;
+
     progreso.sinRespuesta++;
     return {
       DENOMINACION: fila["[Denominacion]"],
@@ -255,7 +286,10 @@ async function generarExcel(resultado, nombre) {
 // =============================
 // TODAS
 // =============================
-async function analizarTodasLasCamaras(progreso) {
+async function analizarTodasLasCamaras(
+  progreso,
+  debeCancelar = () => false,
+) {
   const workbook = XLSX.readFile(archivoExcel);
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
   const data = XLSX.utils.sheet_to_json(sheet, { range: 6 });
@@ -271,25 +305,42 @@ async function analizarTodasLasCamaras(progreso) {
 
   const tareas = data.map((fila, i) =>
     limit(async () => {
-      const res = await procesarCamara(fila, i, progreso);
-      progreso.procesadas++;
+      if (debeCancelar()) return null;
+
+      const res = await procesarCamara(fila, i, progreso, debeCancelar);
+
+      if (res) progreso.procesadas++;
       return res;
     }),
   );
 
-  const resultado = await Promise.all(tareas);
+  const resultado = (await Promise.all(tareas)).filter(Boolean);
   const ordenado = ordenarResultados(resultado);
+  const cancelado = debeCancelar();
+
+  if (cancelado) {
+    return {
+      ruta: null,
+      resultado: ordenado,
+      cancelado: true,
+    };
+  }
 
   return {
     ruta: await generarExcel(ordenado, "todas_las_camaras.xlsx"),
     resultado: ordenado,
+    cancelado: false,
   };
 }
 
 // =============================
 // TEXTO
 // =============================
-async function analizarCamaras(lista, progreso) {
+async function analizarCamaras(
+  lista,
+  progreso,
+  debeCancelar = () => false,
+) {
   const workbook = XLSX.readFile(archivoExcel);
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
   const data = XLSX.utils.sheet_to_json(sheet, { range: 6 });
@@ -304,13 +355,10 @@ async function analizarCamaras(lista, progreso) {
   progreso.noEncontrada = 0;
 
   const tareas = lista.map((nombre) => {
+    if (debeCancelar()) return Promise.resolve(null);
 
-    
     let fila = null;
-
     const codigo = extraerCodigo(nombre);
-
-   
 
     if (codigo) {
       fila = data.find((r) => {
@@ -318,7 +366,11 @@ async function analizarCamaras(lista, progreso) {
         return codExcel === codigo;
       });
     }
-    console.log("FILA ENCONTRADA:", fila ? fila["[Denominacion]"] : "NO ENCONTRADA");
+
+    console.log(
+      "FILA ENCONTRADA:",
+      fila ? fila["[Denominacion]"] : "NO ENCONTRADA",
+    );
 
     if (!fila && nombre.toUpperCase().includes("PUNTO SEGURO")) {
       const { base, tipo } = parsearPuntoSeguro(nombre);
@@ -330,6 +382,8 @@ async function analizarCamaras(lista, progreso) {
     }
 
     if (!fila) {
+      if (debeCancelar()) return Promise.resolve(null);
+
       progreso.noEncontrada++;
       progreso.procesadas++;
       return Promise.resolve({
@@ -346,24 +400,36 @@ async function analizarCamaras(lista, progreso) {
     const index = data.indexOf(fila);
 
     return limit(async () => {
-      const res = await procesarCamara(fila, index, progreso);
-      progreso.procesadas++;
+      if (debeCancelar()) return null;
+
+      const res = await procesarCamara(fila, index, progreso, debeCancelar);
+
+      if (res) progreso.procesadas++;
       return res;
     });
   });
 
-  const resultado = await Promise.all(tareas);
+  const resultado = (await Promise.all(tareas)).filter(Boolean);
   const ordenado = ordenarResultados(resultado);
+  const cancelado = debeCancelar();
+
+  if (cancelado) {
+    return {
+      ruta: null,
+      resultado: ordenado,
+      cancelado: true,
+    };
+  }
 
   return {
     ruta: await generarExcel(ordenado, "resultado_texto.xlsx"),
     resultado: ordenado,
+    cancelado: false,
   };
 }
 
 async function obtenerTodasLasCamarasExcel() {
   const workbook = XLSX.readFile(archivoExcel);
-
   const sheet = workbook.Sheets["RESUMEN TOTAL"];
 
   const data = XLSX.utils.sheet_to_json(sheet, {

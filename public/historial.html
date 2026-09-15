@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Historial de acciones</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#0b1220;
+  color:#e5e7eb;
+  font-family:Segoe UI,Arial,sans-serif;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+header{
+  background:#0f172a;
+  border-bottom:1px solid #1e293b;
+  padding:20px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+h1{
+  margin:0;
+  font-size:23px;
+}
+
+.sub{
+  color:#94a3b8;
+  font-size:13px;
+  margin-top:5px;
+}
+
+.volver{
+  background:#2563eb;
+  color:#fff;
+  text-decoration:none;
+  padding:10px 14px;
+  border-radius:9px;
+  font-weight:800;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+main{
+  max-width:1400px;
+  margin:auto;
+  padding:24px;
+}
+
+/* =========================
+   FILTROS
+========================= */
+
+.tools{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+button,
+input,
+select{
+  border:0;
+  border-radius:9px;
+  padding:10px 12px;
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+  font-weight:800;
+}
+
+.f{
+  background:#1e293b;
+  color:#cbd5e1;
+}
+
+.f:hover{
+  background:#2b3a52;
+}
+
+.f.on{
+  background:#2563eb;
+  color:white;
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.search-wrap{
+  flex:1;
+  min-width:280px;
+  position:relative;
+}
+
+.search-wrap::before{
+  content:"🔎";
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:14px;
+}
+
+#q{
+  width:100%;
+  background:#111827;
+  color:white;
+  outline:1px solid #263449;
+  padding-left:36px;
+}
+
+#q:focus{
+  outline:1px solid #3b82f6;
+}
+
+select{
+  background:#111827;
+  color:white;
+  outline:1px solid #263449;
+}
+
+#refresh{
+  background:#15803d;
+  color:#fff;
+}
+
+#refresh:hover{
+  background:#166534;
+}
+
+/* =========================
+   FILTRO POR PERIODO
+========================= */
+
+.periodos{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+
+  background:#0f172a;
+  border:1px solid #1e293b;
+  border-radius:12px;
+
+  padding:11px 13px;
+  margin-bottom:15px;
+}
+
+.periodos-titulo{
+  color:#94a3b8;
+  font-size:13px;
+  font-weight:800;
+  margin-right:3px;
+}
+
+.periodo{
+  background:#1e293b;
+  color:#cbd5e1;
+}
+
+.periodo:hover{
+  background:#2b3a52;
+}
+
+.periodo.on{
+  background:#2563eb;
+  color:white;
+}
+
+/* =========================
+   CONTENEDOR
+========================= */
+
+.box{
+  background:#111827;
+  border:1px solid #1f2937;
+  border-radius:14px;
+  overflow:auto;
+}
+
+/* =========================
+   TABLA
+========================= */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1050px;
+}
+
+th{
+  text-align:left;
+  background:#0f172a;
+  color:#94a3b8;
+  padding:13px;
+  font-size:12px;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+
+td{
+  padding:13px;
+  border-top:1px solid #1f2937;
+  font-size:14px;
+  vertical-align:top;
+}
+
+tr:hover td{
+  background:#162033;
+}
+
+/* =========================
+   USUARIO
+========================= */
+
+.usuario{
+  font-weight:800;
+  color:#f8fafc;
+}
+
+/* =========================
+   BADGES TIPO
+========================= */
+
+.badge{
+  border-radius:99px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:900;
+  display:inline-block;
+}
+
+.badge.ANALISIS{
+  background:#172554;
+  color:#bfdbfe;
+}
+
+.badge.AUTOESCANEO{
+  background:#422006;
+  color:#fde68a;
+}
+
+.badge.COORDENADAS{
+  background:#064e3b;
+  color:#a7f3d0;
+}
+
+.badge.OTROS{
+  background:#1e293b;
+  color:#cbd5e1;
+}
+
+/* =========================
+   ACCION
+========================= */
+
+.accion{
+  font-weight:800;
+}
+
+.accion-inicio{
+  color:#93c5fd;
+}
+
+.accion-ok{
+  color:#86efac;
+}
+
+.accion-error{
+  color:#fca5a5;
+}
+
+.accion-alerta{
+  color:#fde68a;
+}
+
+.accion-coord{
+  color:#a7f3d0;
+}
+
+/* =========================
+   DETALLE
+========================= */
+
+.detalle{
+  color:#94a3b8;
+}
+
+.detalle-analisis{
+  min-width:410px;
+}
+
+.tipo-analisis{
+  color:#e5e7eb;
+  font-weight:900;
+  margin-bottom:9px;
+  font-size:13px;
+}
+
+.metricas{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.metrica{
+  background:#0f172a;
+  border:1px solid #243044;
+  border-radius:8px;
+  padding:6px 9px;
+  font-size:11px;
+  white-space:nowrap;
+}
+
+.metrica strong{
+  color:white;
+}
+
+.metrica.online{
+  border-color:#14532d;
+}
+
+.metrica.online strong{
+  color:#86efac;
+}
+
+.metrica.sin-respuesta{
+  border-color:#7f1d1d;
+}
+
+.metrica.sin-respuesta strong{
+  color:#fca5a5;
+}
+
+.metrica.duracion{
+  border-color:#1e3a8a;
+}
+
+.metrica.duracion strong{
+  color:#bfdbfe;
+}
+
+/* =========================
+   ESTADO
+========================= */
+
+.estado{
+  text-align:center;
+  color:#94a3b8;
+  padding:35px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:700px){
+
+  header{
+    padding:15px;
+  }
+
+  main{
+    padding:14px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <div>
+    <h1>📋 Historial de acciones</h1>
+
+    <div class="sub">
+      Actividad registrada en Cámaras Ciudadanas
+    </div>
+  </div>
+
+  <a class="volver" href="/">
+    ← Inicio
+  </a>
+
+</header>
+
+<main>
+
+  <div class="tools">
+
+    <button class="f on" data-t="TODOS">
+      Todos
+    </button>
+
+    <button class="f" data-t="ANALISIS">
+      Análisis
+    </button>
+
+    <button class="f" data-t="AUTOESCANEO">
+      Autoescaneo
+    </button>
+
+    <button class="f" data-t="COORDENADAS">
+      Coordenadas
+    </button>
+
+    <div class="search-wrap">
+
+      <input
+        id="q"
+        placeholder="Buscar por usuario, cámara o acción..."
+      >
+
+    </div>
+
+    <select id="lim">
+
+      <option>50</option>
+
+      <option selected>
+        100
+      </option>
+
+      <option>250</option>
+
+      <option>500</option>
+
+    </select>
+
+    <button id="refresh">
+      ↻ Actualizar
+    </button>
+
+  </div>
+
+
+  <div class="periodos">
+
+    <span class="periodos-titulo">
+      📅 Período:
+    </span>
+
+    <button
+      class="periodo"
+      data-dias="0"
+    >
+      Hoy
+    </button>
+
+    <button
+      class="periodo"
+      data-dias="7"
+    >
+      7 días
+    </button>
+
+    <button
+      class="periodo"
+      data-dias="30"
+    >
+      30 días
+    </button>
+
+    <button
+      class="periodo on"
+      data-dias="TODO"
+    >
+      Todo
+    </button>
+
+  </div>
+
+
+  <div class="box">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Fecha y hora
+          </th>
+
+          <th>
+            Usuario
+          </th>
+
+          <th>
+            Tipo
+          </th>
+
+          <th>
+            Acción
+          </th>
+
+          <th>
+            Detalle
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="tb">
+      </tbody>
+
+    </table>
+
+    <div
+      id="estado"
+      class="estado"
+    >
+      Cargando...
+    </div>
+
+  </div>
+
+</main>
+
+
+<script>
+
+/* =========================
+   NOMBRES AMIGABLES
+========================= */
+
+const nombres = {
+
+  INICIO_ANALISIS:
+    "▶ Inició análisis",
+
+  ANALISIS_FINALIZADO:
+    "✅ Finalizó análisis",
+
+  ANALISIS_CANCELADO:
+    "⛔ Análisis cancelado",
+
+  ERROR_ANALISIS:
+    "❌ Error en análisis",
+
+  SOLICITO_CANCELACION:
+    "⏹ Solicitó detener análisis",
+
+  PAUSO_AUTOESCANEO:
+    "⏸ Pausó autoescaneo",
+
+  REANUDO_AUTOESCANEO:
+    "▶ Reanudó autoescaneo",
+
+  GUARDO_COORDENADA:
+    "📍 Guardó / modificó coordenada",
+
+  ELIMINO_COORDENADA:
+    "🗑 Eliminó coordenada"
+
+};
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let tipo = "TODOS";
+
+let periodoDias = "TODO";
+
+let timer;
+
+
+const tb =
+  document.querySelector("#tb");
+
+const est =
+  document.querySelector("#estado");
+
+const q =
+  document.querySelector("#q");
+
+const lim =
+  document.querySelector("#lim");
+
+
+/* =========================
+   ESCAPAR HTML
+========================= */
+
+const esc = (v) =>
+  String(v ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+
+/* =========================
+   FECHA
+========================= */
+
+function fecha(x){
+
+  const d =
+    new Date(x);
+
+  return isNaN(d)
+    ? x
+    : d.toLocaleString(
+        "es-AR"
+      );
+
+}
+
+
+/* =========================
+   INFERIR TIPO
+========================= */
+
+function inferir(a){
+
+  if(a.tipo){
+    return a.tipo;
+  }
+
+  if(
+    [
+      "PAUSO_AUTOESCANEO",
+      "REANUDO_AUTOESCANEO"
+    ].includes(a.accion)
+  ){
+    return "AUTOESCANEO";
+  }
+
+  if(
+    [
+      "GUARDO_COORDENADA",
+      "ELIMINO_COORDENADA"
+    ].includes(a.accion)
+  ){
+    return "COORDENADAS";
+  }
+
+  return "ANALISIS";
+
+}
+
+
+/* =========================
+   COLOR ACCION
+========================= */
+
+function claseAccion(accion){
+
+  if(
+    accion ===
+    "INICIO_ANALISIS"
+  ){
+    return "accion-inicio";
+  }
+
+  if(
+    accion ===
+    "ANALISIS_FINALIZADO"
+  ){
+    return "accion-ok";
+  }
+
+  if(
+    [
+      "ANALISIS_CANCELADO",
+      "ERROR_ANALISIS"
+    ].includes(accion)
+  ){
+    return "accion-error";
+  }
+
+  if(
+    [
+      "SOLICITO_CANCELACION",
+      "PAUSO_AUTOESCANEO"
+    ].includes(accion)
+  ){
+    return "accion-alerta";
+  }
+
+  if(
+    [
+      "GUARDO_COORDENADA",
+      "ELIMINO_COORDENADA"
+    ].includes(accion)
+  ){
+    return "accion-coord";
+  }
+
+  return "";
+
+}
+
+
+/* =========================
+   FILTRO POR FECHA
+========================= */
+
+function dentroDelPeriodo(fechaAccion){
+
+  if(
+    periodoDias === "TODO"
+  ){
+    return true;
+  }
+
+  const fechaAccionDate =
+    new Date(fechaAccion);
+
+  if(
+    isNaN(fechaAccionDate)
+  ){
+    return true;
+  }
+
+  const ahora =
+    new Date();
+
+
+  /* HOY */
+
+  if(
+    periodoDias === "0"
+  ){
+
+    return (
+
+      fechaAccionDate.getDate() ===
+        ahora.getDate()
+
+      &&
+
+      fechaAccionDate.getMonth() ===
+        ahora.getMonth()
+
+      &&
+
+      fechaAccionDate.getFullYear() ===
+        ahora.getFullYear()
+
+    );
+
+  }
+
+
+  /* ULTIMOS X DIAS */
+
+  const inicio =
+    new Date();
+
+  inicio.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  inicio.setDate(
+    inicio.getDate() -
+    (
+      Number(periodoDias) - 1
+    )
+  );
+
+  return (
+    fechaAccionDate >= inicio
+  );
+
+}
+
+
+/* =========================
+   DETALLE ANALISIS
+========================= */
+
+function mostrarDetalle(a){
+
+  if(!a.detalle){
+    return "-";
+  }
+
+
+  if(
+    ![
+      "ANALISIS_FINALIZADO",
+      "ANALISIS_CANCELADO",
+      "ERROR_ANALISIS"
+    ].includes(a.accion)
+  ){
+
+    return esc(
+      a.detalle
+    );
+
+  }
+
+
+  const partes =
+    a.detalle
+      .split("|")
+      .map(
+        x => x.trim()
+      )
+      .filter(Boolean);
+
+
+  if(
+    partes.length < 2
+  ){
+
+    return esc(
+      a.detalle
+    );
+
+  }
+
+
+  const tipoAnalisis =
+    partes.shift();
+
+
+  let procesadas = "";
+  let online = "";
+  let sinRespuesta = "";
+  let ipVacia = "";
+  let noEncontrada = "";
+  let duracion = "";
+
+
+  partes.forEach(
+    parte => {
+
+      const pos =
+        parte.indexOf(":");
+
+      if(
+        pos === -1
+      ){
+        return;
+      }
+
+
+      const nombre =
+        parte
+          .slice(
+            0,
+            pos
+          )
+          .trim()
+          .toLowerCase();
+
+
+      const valor =
+        parte
+          .slice(
+            pos + 1
+          )
+          .trim();
+
+
+      if(
+        nombre ===
+        "procesadas"
+      ){
+        procesadas =
+          valor;
+      }
+
+
+      if(
+        nombre ===
+        "online"
+      ){
+        online =
+          valor;
+      }
+
+
+      if(
+        nombre ===
+        "sin respuesta"
+      ){
+        sinRespuesta =
+          valor;
+      }
+
+
+      if(
+        nombre ===
+        "ip vacía"
+      ){
+        ipVacia =
+          valor;
+      }
+
+
+      if(
+        nombre ===
+        "no encontrada"
+      ){
+        noEncontrada =
+          valor;
+      }
+
+
+      if(
+        nombre ===
+        "duración"
+      ){
+        duracion =
+          valor;
+      }
+
+    }
+  );
+
+
+  let html = `
+
+    <div class="detalle-analisis">
+
+      <div class="tipo-analisis">
+
+        ${esc(
+          tipoAnalisis
+        )}
+
+      </div>
+
+      <div class="metricas">
+
+  `;
+
+
+  if(procesadas){
+
+    html += `
+
+      <span class="metrica">
+
+        📷 Procesadas:
+
+        <strong>
+          ${esc(procesadas)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  if(online){
+
+    html += `
+
+      <span class="metrica online">
+
+        🟢 Online:
+
+        <strong>
+          ${esc(online)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  if(sinRespuesta){
+
+    html += `
+
+      <span class="metrica sin-respuesta">
+
+        🔴 Sin respuesta:
+
+        <strong>
+          ${esc(sinRespuesta)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  if(ipVacia){
+
+    html += `
+
+      <span class="metrica">
+
+        IP vacía:
+
+        <strong>
+          ${esc(ipVacia)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  if(noEncontrada){
+
+    html += `
+
+      <span class="metrica">
+
+        No encontrada:
+
+        <strong>
+          ${esc(noEncontrada)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  if(duracion){
+
+    html += `
+
+      <span class="metrica duracion">
+
+        ⏱ Duración:
+
+        <strong>
+          ${esc(duracion)}
+        </strong>
+
+      </span>
+
+    `;
+
+  }
+
+
+  html += `
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  return html;
+
+}
+
+
+/* =========================
+   CARGAR HISTORIAL
+========================= */
+
+async function cargar(){
+
+  est.style.display =
+    "block";
+
+  est.textContent =
+    "Cargando...";
+
+
+  const p =
+    new URLSearchParams({
+
+      limit:
+        lim.value,
+
+      tipo:
+        tipo,
+
+      buscar:
+        q.value.trim()
+
+    });
+
+
+  try{
+
+    const r =
+      await fetch(
+
+        "/api/auditoria?" +
+        p,
+
+        {
+          cache:
+            "no-store"
+        }
+
+      );
+
+
+    const d =
+      await r.json();
+
+
+    if(!r.ok){
+
+      throw Error(
+
+        d.mensaje ||
+        "Error"
+
+      );
+
+    }
+
+
+    const accionesFiltradas =
+      d.filter(
+
+        a =>
+          dentroDelPeriodo(
+            a.fecha
+          )
+
+      );
+
+
+    tb.innerHTML =
+      accionesFiltradas
+        .map(
+          a => {
+
+            const t =
+              inferir(a);
+
+
+            return `
+
+              <tr>
+
+                <td>
+
+                  ${esc(
+                    fecha(
+                      a.fecha
+                    )
+                  )}
+
+                </td>
+
+
+                <td
+                  class="usuario"
+                >
+
+                  ${esc(
+                    a.usuario ||
+                    "-"
+                  )}
+
+                </td>
+
+
+                <td>
+
+                  <span
+                    class="badge ${esc(t)}"
+                  >
+
+                    ${esc(t)}
+
+                  </span>
+
+                </td>
+
+
+                <td
+                  class="
+                    accion
+                    ${claseAccion(
+                      a.accion
+                    )}
+                  "
+                >
+
+                  ${esc(
+                    nombres[
+                      a.accion
+                    ] ||
+                    a.accion
+                  )}
+
+                </td>
+
+
+                <td
+                  class="detalle"
+                >
+
+                  ${mostrarDetalle(a)}
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }
+        )
+        .join("");
+
+
+    est.style.display =
+      accionesFiltradas.length
+        ? "none"
+        : "block";
+
+
+    est.textContent =
+      accionesFiltradas.length
+        ? ""
+        : "No hay acciones para mostrar en este período.";
+
+  }
+  catch(e){
+
+    tb.innerHTML =
+      "";
+
+    est.style.display =
+      "block";
+
+    est.textContent =
+      e.message;
+
+  }
+
+}
+
+
+/* =========================
+   FILTRO POR TIPO
+========================= */
+
+document
+  .querySelectorAll(".f")
+  .forEach(
+
+    b =>
+
+      b.onclick =
+        () => {
+
+          document
+            .querySelectorAll(
+              ".f"
+            )
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "on"
+                )
+            );
+
+
+          b.classList.add(
+            "on"
+          );
+
+
+          tipo =
+            b.dataset.t;
+
+
+          cargar();
+
+        }
+
+  );
+
+
+/* =========================
+   FILTRO POR PERIODO
+========================= */
+
+document
+  .querySelectorAll(
+    ".periodo"
+  )
+  .forEach(
+
+    boton =>
+
+      boton.onclick =
+        () => {
+
+          document
+            .querySelectorAll(
+              ".periodo"
+            )
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "on"
+                )
+            );
+
+
+          boton.classList.add(
+            "on"
+          );
+
+
+          periodoDias =
+            boton.dataset.dias;
+
+
+          cargar();
+
+        }
+
+  );
+
+
+/* =========================
+   BUSCADOR
+========================= */
+
+q.oninput =
+  () => {
+
+    clearTimeout(
+      timer
+    );
+
+
+    timer =
+      setTimeout(
+        cargar,
+        300
+      );
+
+  };
+
+
+/* =========================
+   LIMITE
+========================= */
+
+lim.onchange =
+  cargar;
+
+
+/* =========================
+   ACTUALIZAR
+========================= */
+
+document
+  .querySelector(
+    "#refresh"
+  )
+  .onclick =
+    cargar;
+
+
+/* =========================
+   INICIO
+========================= */
+
+cargar();
+
+
+setInterval(
+  cargar,
+  15000
+);
+
+</script>
+
+</body>
+</html>

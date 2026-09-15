@@ -232,6 +232,52 @@
         margin-bottom: 15px;
       }
 
+
+      /* FILTROS RAPIDOS DE ESTADO Y ORDEN */
+      .quick-tools {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0 0 16px;
+        padding: 12px 14px;
+        background: #0b1220;
+        border: 1px solid #1e293b;
+        border-radius: 14px;
+      }
+
+      .quick-label {
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 800;
+        margin-right: 2px;
+      }
+
+      .quick-btn {
+        background: #1e293b;
+        color: #cbd5e1;
+        padding: 9px 12px;
+        border-radius: 10px;
+      }
+
+      .quick-btn.active {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .quick-btn.caidas.active { background: #b91c1c; }
+      .quick-btn.online.active { background: #15803d; }
+
+      #ordenHistorial {
+        background: #111827;
+        color: #fff;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-weight: 700;
+        outline: none;
+      }
+
       /* KPI PROVEEDOR */
       #kpiProveedor {
         display: grid;
@@ -248,17 +294,18 @@
         line-height: 1.6;
       }
 
-      /* TABLA */
+      /* TABLA HISTORICA RESUMIDA */
       .table-wrap {
         overflow: auto;
         max-height: 720px;
         border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 1500px;
+        min-width: 1250px;
       }
 
       th {
@@ -266,15 +313,17 @@
         top: 0;
         background: #1e293b;
         padding: 12px;
-        font-size: 14px;
+        font-size: 13px;
+        color: #cbd5e1;
         z-index: 5;
       }
 
       td {
-        padding: 10px;
+        padding: 11px 10px;
         font-size: 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         text-align: center;
+        vertical-align: middle;
       }
 
       tr:nth-child(even) {
@@ -292,42 +341,261 @@
         z-index: 4;
         text-align: left;
         font-weight: 800;
-        min-width: 180px;
+        min-width: 135px;
+      }
+
+      tr:nth-child(even) .cam {
+        background: #0f172a;
+      }
+
+      tr:hover .cam {
+        background: #172033;
+      }
+
+      .cam-link {
+        color: #f8fafc;
+        cursor: pointer;
+        text-decoration: none;
+        border-bottom: 1px dashed #64748b;
+      }
+
+      .cam-link:hover {
+        color: #60a5fa;
       }
 
       .info {
         text-align: left;
-        min-width: 320px;
+        min-width: 300px;
         line-height: 1.45;
       }
 
       .proveedor {
         font-weight: 800;
       }
+
       .ubi {
         font-size: 13px;
         color: #cbd5e1;
       }
+
       .det {
         font-size: 13px;
         color: #60a5fa;
       }
 
-      .ok {
-        background: #15803d;
+      .estado-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 118px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .estado-pill.ok {
+        background: rgba(21, 128, 61, 0.22);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.45);
+      }
+
+      .estado-pill.bad {
+        background: rgba(220, 38, 38, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.45);
+      }
+
+      .estado-pill.warn {
+        background: rgba(217, 119, 6, 0.2);
+        color: #fde68a;
+        border: 1px solid rgba(245, 158, 11, 0.45);
+      }
+
+      .estado-pill.none {
+        background: rgba(71, 85, 105, 0.25);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      .numero-caida {
+        color: #fca5a5;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .numero-online {
+        color: #86efac;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .disp-wrap {
+        min-width: 145px;
+      }
+
+      .disp-num {
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+
+      .disp-bar {
+        height: 7px;
+        background: #1e293b;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .disp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #16a34a, #22c55e);
+        border-radius: 999px;
+      }
+
+      .hist-mini {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        min-width: 170px;
+      }
+
+      .hist-dot {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 2px solid rgba(255,255,255,.08);
+      }
+
+      .hist-dot.ok { background: #22c55e; }
+      .hist-dot.bad { background: #ef4444; }
+      .hist-dot.warn { background: #f59e0b; }
+      .hist-dot.none { background: #475569; }
+
+      .ultimo-cambio {
+        color: #cbd5e1;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .btn-detalle-cam {
+        background: #2563eb;
+        color: white;
+        padding: 8px 11px;
+        border-radius: 9px;
+        font-size: 12px;
         font-weight: 800;
       }
-      .bad {
-        background: #dc2626;
+
+      /* MODAL HISTORIAL POR CAMARA */
+      #modalCamara {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.78);
+        backdrop-filter: blur(3px);
+        z-index: 12000;
+        padding: 25px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #modalCamara.abierto {
+        display: flex;
+      }
+
+      .modal-camara-card {
+        width: min(820px, 96vw);
+        max-height: 88vh;
+        overflow: auto;
+        background: #111827;
+        border: 1px solid #263449;
+        border-radius: 18px;
+        box-shadow: 0 25px 70px rgba(0,0,0,.55);
+        padding: 22px;
+      }
+
+      .modal-camara-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+      }
+
+      .modal-camara-head h2 {
+        margin: 0 0 5px;
+        font-size: 24px;
+      }
+
+      .modal-camara-sub {
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .cerrar-modal-camara {
+        background: #1e293b;
+        color: #cbd5e1;
+        padding: 7px 11px;
+        border-radius: 9px;
+        font-size: 18px;
+      }
+
+      .camara-resumen {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .camara-resumen-box {
+        background: #0b1220;
+        border: 1px solid #1e293b;
+        border-radius: 13px;
+        padding: 13px;
+      }
+
+      .camara-resumen-box small {
+        display: block;
+        color: #94a3b8;
+        margin-bottom: 6px;
+      }
+
+      .camara-resumen-box strong {
+        font-size: 18px;
+      }
+
+      .timeline-camara {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 125px 1fr;
+        gap: 12px;
+        align-items: center;
+        background: #0b1220;
+        border: 1px solid #1e293b;
+        border-radius: 11px;
+        padding: 10px 12px;
+      }
+
+      .timeline-fecha {
+        color: #94a3b8;
+        font-size: 12px;
+      }
+
+      .timeline-estado {
         font-weight: 800;
       }
-      .warn {
-        background: #d97706;
-        font-weight: 800;
-      }
-      .none {
-        background: #475569;
-      }
+
+      .timeline-estado.ok { color: #86efac; }
+      .timeline-estado.bad { color: #fca5a5; }
+      .timeline-estado.warn { color: #fde68a; }
+      .timeline-estado.none { color: #cbd5e1; }
 
       footer {
         text-align: center;
@@ -445,6 +713,7 @@
           </button>
 
           <a href="/mapa" class="btn-link btn-purple"> 📍 Ir al Mapa </a>
+          <a href="/historial-acciones" class="btn-link btn-purple">📋 Historial</a>
         </div>
         <div
           id="estadoEscaneo"
@@ -534,6 +803,21 @@
           <button class="btn-blue" onclick="verHistorial()">Todo</button>
         </div>
 
+
+        <div class="quick-tools">
+          <span class="quick-label">Estado actual:</span>
+          <button class="quick-btn active" data-estado="TODOS" onclick="cambiarFiltroEstado('TODOS', this)">Todos</button>
+          <button class="quick-btn caidas" data-estado="CAIDAS" onclick="cambiarFiltroEstado('CAIDAS', this)">🔴 Solo caídas</button>
+          <button class="quick-btn online" data-estado="ONLINE" onclick="cambiarFiltroEstado('ONLINE', this)">🟢 Solo online</button>
+
+          <span class="quick-label" style="margin-left:8px">Ordenar:</span>
+          <select id="ordenHistorial" onchange="cambiarOrdenHistorial(this.value)">
+            <option value="NOMBRE">Nombre</option>
+            <option value="MAS_CAIDA">🔴 Más caída</option>
+            <option value="MAS_ONLINE">🟢 Más online</option>
+          </select>
+        </div>
+
         <div id="kpiProveedor"></div>
 
         <div style="margin-bottom: 14px; color: #94a3b8">
@@ -543,6 +827,24 @@
         <div class="table-wrap">
           <div id="tablaHistorial"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL HISTORIAL POR CAMARA -->
+    <div id="modalCamara" onclick="cerrarModalCamaraFondo(event)">
+      <div class="modal-camara-card">
+        <div class="modal-camara-head">
+          <div>
+            <h2 id="modalCamaraNombre">Cámara</h2>
+            <div id="modalCamaraInfo" class="modal-camara-sub"></div>
+          </div>
+          <button class="cerrar-modal-camara" onclick="cerrarModalCamara()">✕</button>
+        </div>
+
+        <div id="modalCamaraResumen" class="camara-resumen"></div>
+
+        <h3 style="margin:0 0 12px">Historial completo</h3>
+        <div id="modalCamaraTimeline" class="timeline-camara"></div>
       </div>
     </div>
 
@@ -562,6 +864,8 @@
     <script>
       let intervalo;
       let filtroDias = null;
+      let filtroEstadoHistorial = "TODOS";
+      let ordenHistorialActual = "NOMBRE";
 
       /* reloj */
       setInterval(() => {
@@ -673,22 +977,76 @@
       }
 
       /* historial */
+      let datosHistorialActual = null;
+
+      function claseEstado(e = "") {
+        if (e.includes("ONLINE")) return "ok";
+        if (e === "SIN RESPUESTA") return "bad";
+        if (e === "INESTABLE") return "warn";
+        return "none";
+      }
+
+      function textoEstado(e = "") {
+        if (e.includes("ONLINE")) return "🟢 ONLINE";
+        if (e === "SIN RESPUESTA") return "🔴 SIN RESPUESTA";
+        if (e === "INESTABLE") return "🟠 INESTABLE";
+        return "⚪ SIN DATO";
+      }
+
+      function obtenerUltimoCambio(fechas, estados) {
+        if (!fechas.length) return "-";
+
+        let ultimoEstado = estados[fechas[fechas.length - 1]] || "-";
+
+        for (let i = fechas.length - 2; i >= 0; i--) {
+          const estadoAnterior = estados[fechas[i]] || "-";
+          if (estadoAnterior !== ultimoEstado) {
+            return fechas[i + 1];
+          }
+        }
+
+        return fechas[0] || "-";
+      }
+
+      function escaparHtml(valor) {
+        return String(valor ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function cambiarFiltroEstado(nuevoFiltro, boton) {
+        filtroEstadoHistorial = nuevoFiltro;
+
+        document.querySelectorAll(".quick-btn[data-estado]").forEach((b) => {
+          b.classList.remove("active");
+        });
+
+        if (boton) boton.classList.add("active");
+        verHistorial(filtroDias);
+      }
+
+      function cambiarOrdenHistorial(nuevoOrden) {
+        ordenHistorialActual = nuevoOrden;
+        verHistorial(filtroDias);
+      }
+
       async function verHistorial(dias = null) {
         filtroDias = dias;
 
-        const res = await fetch("/historial");
+        const res = await fetch("/historial", { cache: "no-store" });
         const data = await res.json();
+        datosHistorialActual = data;
 
-        let fechas = data.fechas;
-        let camaras = data.camaras;
+        const fechasTodas = Array.isArray(data.fechas) ? data.fechas : [];
+        const camaras = data.camaras || {};
 
-        let html =
-          "<table><tr><th>Cámara</th><th>Info</th><th>Días Caída</th><th>Días Online</th>";
-        fechas.forEach((f) => (html += `<th>${f}</th>`));
-        html += "</tr>";
-
-        let visibles = 0;
-        let proveedores = {};
+        let fechasVista = fechasTodas;
+        if (dias && Number(dias) > 0) {
+          fechasVista = fechasTodas.slice(-Number(dias));
+        }
 
         const qCamara = (filtroCamara.value || "").toUpperCase().trim();
         const qProveedor = (filtroProveedor.value || "").toUpperCase().trim();
@@ -696,143 +1054,298 @@
         const qConexion = (filtroConexion.value || "").toUpperCase().trim();
         const qIP = (filtroIP.value || "").toUpperCase().trim();
 
-        Object.entries(camaras)
-          .sort((a, b) =>
-            a[0].localeCompare(b[0], "es", {
-              numeric: true,
-              sensitivity: "base",
-            }),
-          )
-          .forEach(([nombre, obj]) => {
-            const info = obj.info || {};
-            const estados = obj.estados || {};
+        const ultimaFecha = fechasTodas[fechasTodas.length - 1];
 
-            if (qCamara && !nombre.toUpperCase().includes(qCamara)) return;
-            if (
-              qProveedor &&
-              !(info.proveedor || "").toUpperCase().includes(qProveedor)
-            )
-              return;
-            if (
-              qUbicacion &&
-              !(info.ubicacion || "").toUpperCase().includes(qUbicacion)
-            )
-              return;
-            if (
-              qConexion &&
-              !(info.conexion || "").toUpperCase().includes(qConexion)
-            )
-              return;
-            if (qIP && !(info.ip || "").toUpperCase().includes(qIP)) return;
+        let filas = Object.entries(camaras).map(([nombre, obj]) => {
+          const info = obj.info || {};
+          const estados = obj.estados || {};
+          const ultimoEstado = ultimaFecha ? estados[ultimaFecha] || "-" : "-";
 
-            visibles++;
+          let diasCaida = 0;
+          let diasOnline = 0;
+          let diasInestable = 0;
 
-            let prov = info.proveedor || "SIN DATO";
-            if (!proveedores[prov])
-              proveedores[prov] = { online: 0, caidas: 0, total: 0 };
-            proveedores[prov].total++;
-
-            // Estado actual de la cámara (última fecha registrada)
-            const ultimoEstado = estados[fechas[fechas.length - 1]] || "";
-
-            if (ultimoEstado.includes("ONLINE")) {
-              proveedores[prov].online++;
-            } else {
-              proveedores[prov].caidas++;
-            }
-
-            let diasCaida = 0;
-            let diasOnline = 0;
-
-            fechas.forEach((f) => {
-              const e = estados[f] || "-";
-
-              if (e === "SIN RESPUESTA") diasCaida++;
-
-              if (e.includes("ONLINE")) diasOnline++;
-            });
-
-            html += `<tr>
-<td class="cam">${nombre}</td>
-<td class="info">
-<div class="proveedor">${info.proveedor || "-"}</div>
-<div class="ubi">${info.ubicacion || "-"}</div>
-<div class="det">${info.conexion || "-"} | ${info.ip || "-"}</div>
-</td>
-<td class="bad">${diasCaida}</td>
-<td class="ok">${diasOnline}</td>`;
-
-            fechas.forEach((f) => {
-              const e = estados[f] || "-";
-              let clase = "none";
-              if (e.includes("ONLINE")) clase = "ok";
-              else if (e == "SIN RESPUESTA") clase = "bad";
-              else if (e == "INESTABLE") clase = "warn";
-
-              html += `<td class="${clase}">${e}</td>`;
-            });
-
-            html += "</tr>";
+          fechasTodas.forEach((f) => {
+            const e = estados[f] || "-";
+            if (e === "SIN RESPUESTA") diasCaida++;
+            if (e.includes("ONLINE")) diasOnline++;
+            if (e === "INESTABLE") diasInestable++;
           });
+
+          const totalConEstado = diasCaida + diasOnline + diasInestable;
+          const disponibilidad = totalConEstado
+            ? ((diasOnline / totalConEstado) * 100).toFixed(1)
+            : "0.0";
+
+          return {
+            nombre,
+            info,
+            estados,
+            ultimoEstado,
+            diasCaida,
+            diasOnline,
+            diasInestable,
+            disponibilidad,
+          };
+        });
+
+        filas = filas.filter((cam) => {
+          const { nombre, info, ultimoEstado } = cam;
+
+          if (qCamara && !nombre.toUpperCase().includes(qCamara)) return false;
+          if (qProveedor && !(info.proveedor || "").toUpperCase().includes(qProveedor)) return false;
+          if (qUbicacion && !(info.ubicacion || "").toUpperCase().includes(qUbicacion)) return false;
+          if (qConexion && !(info.conexion || "").toUpperCase().includes(qConexion)) return false;
+          if (qIP && !(info.ip || "").toUpperCase().includes(qIP)) return false;
+
+          if (filtroEstadoHistorial === "CAIDAS") {
+            return ultimoEstado === "SIN RESPUESTA" || ultimoEstado === "INESTABLE";
+          }
+
+          if (filtroEstadoHistorial === "ONLINE") {
+            return ultimoEstado.includes("ONLINE");
+          }
+
+          return true;
+        });
+
+        filas.sort((a, b) => {
+          if (ordenHistorialActual === "MAS_CAIDA") {
+            return b.diasCaida - a.diasCaida || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+          }
+
+          if (ordenHistorialActual === "MAS_ONLINE") {
+            return b.diasOnline - a.diasOnline || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+          }
+
+          return a.nombre.localeCompare(b.nombre, "es", {
+            numeric: true,
+            sensitivity: "base",
+          });
+        });
+
+        let html = `
+          <table>
+            <tr>
+              <th>Cámara</th>
+              <th>Info</th>
+              <th>Estado actual</th>
+              <th>Disponibilidad</th>
+              <th>Días caída</th>
+              <th>Días online</th>
+              <th>Historial reciente</th>
+              <th>Último cambio</th>
+              <th>Detalle</th>
+            </tr>
+        `;
+
+        let proveedores = {};
+
+        filas.forEach((cam) => {
+          const {
+            nombre,
+            info,
+            estados,
+            ultimoEstado,
+            diasCaida,
+            diasOnline,
+            disponibilidad,
+          } = cam;
+
+          const prov = info.proveedor || "SIN DATO";
+          if (!proveedores[prov]) {
+            proveedores[prov] = { online: 0, caidas: 0, total: 0 };
+          }
+
+          proveedores[prov].total++;
+          if (ultimoEstado.includes("ONLINE")) proveedores[prov].online++;
+          else proveedores[prov].caidas++;
+
+          const ultimasFechas = fechasVista.slice(-10);
+          const miniHistorial = ultimasFechas.length
+            ? ultimasFechas
+                .map((f) => {
+                  const e = estados[f] || "-";
+                  return `<span class="hist-dot ${claseEstado(e)}" title="${escaparHtml(f)} · ${escaparHtml(e)}"></span>`;
+                })
+                .join("")
+            : '<span style="color:#64748b">Sin datos</span>';
+
+          const ultimoCambio = obtenerUltimoCambio(fechasTodas, estados);
+          const estadoClase = claseEstado(ultimoEstado);
+
+          html += `
+            <tr>
+              <td class="cam">
+                <span class="cam-link" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>
+                  ${escaparHtml(nombre)}
+                </span>
+              </td>
+
+              <td class="info">
+                <div class="proveedor">${escaparHtml(info.proveedor || "-")}</div>
+                <div class="ubi">${escaparHtml(info.ubicacion || "-")}</div>
+                <div class="det">${escaparHtml(info.conexion || "-")} | ${escaparHtml(info.ip || "-")}</div>
+              </td>
+
+              <td>
+                <span class="estado-pill ${estadoClase}">
+                  ${textoEstado(ultimoEstado)}
+                </span>
+              </td>
+
+              <td>
+                <div class="disp-wrap">
+                  <div class="disp-num">${disponibilidad}%</div>
+                  <div class="disp-bar">
+                    <div class="disp-fill" style="width:${Math.min(100, Number(disponibilidad))}%"></div>
+                  </div>
+                </div>
+              </td>
+
+              <td><span class="numero-caida">${diasCaida}</span></td>
+              <td><span class="numero-online">${diasOnline}</span></td>
+
+              <td>
+                <div class="hist-mini">${miniHistorial}</div>
+              </td>
+
+              <td class="ultimo-cambio">${escaparHtml(ultimoCambio)}</td>
+
+              <td>
+                <button class="btn-detalle-cam" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>
+                  Ver historial
+                </button>
+              </td>
+            </tr>
+          `;
+        });
 
         html += "</table>";
 
-        cantFiltradas.innerText = visibles;
+        cantFiltradas.innerText = filas.length;
         tablaHistorial.innerHTML = html;
 
         let kpi = "";
 
         Object.entries(proveedores).forEach(([prov, v]) => {
-          const porcOnline = v.total
-            ? ((v.online / v.total) * 100).toFixed(1)
-            : 0;
-
-          const porcCaidas = v.total
-            ? ((v.caidas / v.total) * 100).toFixed(1)
-            : 0;
+          const porcOnline = v.total ? ((v.online / v.total) * 100).toFixed(1) : 0;
+          const porcCaidas = v.total ? ((v.caidas / v.total) * 100).toFixed(1) : 0;
 
           kpi += `
-    <div class="kpi-box">
+            <div class="kpi-box">
+              <div style="font-size:18px;font-weight:800;margin-bottom:12px">
+                ${escaparHtml(prov)}
+              </div>
 
-        <div style="
-            font-size:18px;
-            font-weight:800;
-            margin-bottom:12px;
-        ">
-            ${prov}
-        </div>
+              <div style="margin-bottom:6px">
+                🟢 <b>Online:</b> ${v.online}
+                <span style="color:#22c55e">(${porcOnline}%)</span>
+              </div>
 
-        <div style="margin-bottom:6px">
-            🟢 <b>Online:</b>
-            ${v.online}
-            <span style="color:#22c55e">
-                (${porcOnline}%)
-            </span>
-        </div>
+              <div style="margin-bottom:6px">
+                🔴 <b>Caídas:</b> ${v.caidas}
+                <span style="color:#ef4444">(${porcCaidas}%)</span>
+              </div>
 
-        <div style="margin-bottom:6px">
-            🔴 <b>Caídas:</b>
-            ${v.caidas}
-            <span style="color:#ef4444">
-                (${porcCaidas}%)
-            </span>
-        </div>
+              <hr style="border:0;border-top:1px solid #334155;margin:10px 0">
 
-        <hr style="
-            border:0;
-            border-top:1px solid #334155;
-            margin:10px 0;
-        ">
-
-        <div>
-            📷 <b>Total:</b> ${v.total}
-        </div>
-
-    </div>`;
+              <div>📷 <b>Total:</b> ${v.total}</div>
+            </div>
+          `;
         });
 
         kpiProveedor.innerHTML = kpi;
       }
+
+      function abrirDetalleCamara(nombre) {
+        if (!datosHistorialActual || !datosHistorialActual.camaras) return;
+
+        const obj = datosHistorialActual.camaras[nombre];
+        if (!obj) return;
+
+        const info = obj.info || {};
+        const estados = obj.estados || {};
+        const fechas = datosHistorialActual.fechas || [];
+
+        let diasCaida = 0;
+        let diasOnline = 0;
+        let diasInestable = 0;
+
+        fechas.forEach((f) => {
+          const e = estados[f] || "-";
+          if (e === "SIN RESPUESTA") diasCaida++;
+          if (e.includes("ONLINE")) diasOnline++;
+          if (e === "INESTABLE") diasInestable++;
+        });
+
+        const total = diasCaida + diasOnline + diasInestable;
+        const disponibilidad = total ? ((diasOnline / total) * 100).toFixed(1) : "0.0";
+        const ultimaFecha = fechas[fechas.length - 1];
+        const ultimoEstado = ultimaFecha ? estados[ultimaFecha] || "-" : "-";
+        const ultimoCambio = obtenerUltimoCambio(fechas, estados);
+
+        modalCamaraNombre.innerText = nombre;
+        modalCamaraInfo.innerHTML = `
+          <b>${escaparHtml(info.proveedor || "-")}</b><br>
+          ${escaparHtml(info.ubicacion || "-")}<br>
+          <span style="color:#60a5fa">${escaparHtml(info.conexion || "-")} | ${escaparHtml(info.ip || "-")}</span>
+        `;
+
+        modalCamaraResumen.innerHTML = `
+          <div class="camara-resumen-box">
+            <small>Estado actual</small>
+            <strong class="timeline-estado ${claseEstado(ultimoEstado)}">${textoEstado(ultimoEstado)}</strong>
+          </div>
+
+          <div class="camara-resumen-box">
+            <small>Disponibilidad</small>
+            <strong>${disponibilidad}%</strong>
+          </div>
+
+          <div class="camara-resumen-box">
+            <small>Días online</small>
+            <strong style="color:#86efac">${diasOnline}</strong>
+          </div>
+
+          <div class="camara-resumen-box">
+            <small>Días caída</small>
+            <strong style="color:#fca5a5">${diasCaida}</strong>
+          </div>
+
+          <div class="camara-resumen-box">
+            <small>Último cambio</small>
+            <strong style="font-size:15px">${escaparHtml(ultimoCambio)}</strong>
+          </div>
+        `;
+
+        let timeline = "";
+
+        [...fechas].reverse().forEach((f) => {
+          const e = estados[f] || "-";
+          timeline += `
+            <div class="timeline-item">
+              <div class="timeline-fecha">${escaparHtml(f)}</div>
+              <div class="timeline-estado ${claseEstado(e)}">${textoEstado(e)}</div>
+            </div>
+          `;
+        });
+
+        modalCamaraTimeline.innerHTML = timeline || '<div style="color:#94a3b8">Sin historial.</div>';
+        modalCamara.classList.add("abierto");
+      }
+
+      function cerrarModalCamara() {
+        modalCamara.classList.remove("abierto");
+      }
+
+      function cerrarModalCamaraFondo(event) {
+        if (event.target === modalCamara) cerrarModalCamara();
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") cerrarModalCamara();
+      });
 
       /* RANKING */
       function abrirRanking() {

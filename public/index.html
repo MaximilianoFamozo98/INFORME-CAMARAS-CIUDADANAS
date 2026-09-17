@@ -597,6 +597,168 @@
       .timeline-estado.warn { color: #fde68a; }
       .timeline-estado.none { color: #cbd5e1; }
 
+      /* MEJORAS VISUALES HISTORIAL DIARIO */
+      .periodo-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0 0 14px;
+        color: #94a3b8;
+        font-size: 13px;
+      }
+      .periodo-badge {
+        background: #172033;
+        border: 1px solid #334155;
+        color: #dbeafe;
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+      }
+      .days button.periodo-activo {
+        background: #2563eb;
+        box-shadow: 0 0 0 2px rgba(96,165,250,.22);
+      }
+      .hist-mini { align-items: center; }
+      .hist-dot {
+        transition: transform .15s ease, box-shadow .15s ease;
+      }
+      .hist-dot:hover {
+        transform: scale(1.35);
+        box-shadow: 0 0 0 3px rgba(255,255,255,.08);
+      }
+      .hist-dot.sin-registro {
+        background: transparent;
+        border: 2px dashed #475569;
+      }
+      .dias-registro {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .timeline-item.sin-registro {
+        opacity: .72;
+        border-style: dashed;
+      }
+      .timeline-estado.sin-registro { color: #64748b; }
+      .resumen-periodo {
+        margin-bottom: 14px;
+        padding: 11px 13px;
+        border-radius: 12px;
+        background: rgba(37,99,235,.08);
+        border: 1px solid rgba(96,165,250,.18);
+        color: #bfdbfe;
+        font-size: 13px;
+      }
+
+
+      /* INFORME DE CAMARAS CAIDAS */
+      .btn-informe-caidas {
+        background: linear-gradient(135deg, #b91c1c, #dc2626);
+        box-shadow: 0 8px 20px rgba(220,38,38,.18);
+      }
+      #modalInformeCaidas {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, .82);
+        backdrop-filter: blur(4px);
+        z-index: 13000;
+        padding: 24px;
+        align-items: center;
+        justify-content: center;
+      }
+      #modalInformeCaidas.abierto { display: flex; }
+      .informe-card {
+        width: min(1180px, 97vw);
+        max-height: 91vh;
+        overflow: auto;
+        background: #0f172a;
+        border: 1px solid #263449;
+        border-radius: 20px;
+        box-shadow: 0 28px 80px rgba(0,0,0,.6);
+        padding: 22px;
+      }
+      .informe-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+      .informe-head h2 { margin: 0 0 5px; font-size: 24px; }
+      .informe-sub { color: #94a3b8; font-size: 13px; }
+      .informe-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+        gap: 10px;
+        margin: 16px 0;
+      }
+      .informe-kpi {
+        background: #111827;
+        border: 1px solid #1e293b;
+        border-radius: 14px;
+        padding: 13px;
+      }
+      .informe-kpi small { color:#94a3b8; display:block; margin-bottom:5px; }
+      .informe-kpi strong { font-size: 22px; }
+
+      .informe-kpi {
+        position: relative;
+        overflow: hidden;
+        min-height: 112px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .informe-kpi small {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .35px;
+        margin-bottom: 7px;
+      }
+      .informe-kpi strong {
+        font-size: 32px;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+      .informe-kpi span {
+        color: #94a3b8;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .informe-kpi-total { border-left: 4px solid #ef4444; }
+      .informe-kpi-critica { border-left: 4px solid #dc2626; background: rgba(127,29,29,.12); }
+      .informe-kpi-media { border-left: 4px solid #f97316; }
+      .informe-kpi-reciente { border-left: 4px solid #eab308; }
+
+      .informe-tools {
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        align-items:center;
+        margin-bottom: 14px;
+      }
+      .informe-tools input, .informe-tools select {
+        background:#111827;
+        color:#fff;
+        border:1px solid #334155;
+        border-radius:10px;
+        padding:10px 12px;
+        outline:none;
+      }
+      .informe-tabla-wrap { overflow:auto; border:1px solid #1e293b; border-radius:14px; }
+      .informe-tabla { min-width: 980px; }
+      .informe-tabla td { text-align:left; }
+      .dias-consecutivos { font-weight:900; color:#fca5a5; font-size:16px; }
+      .desde-caida { color:#fecaca; font-weight:800; white-space:nowrap; }
+      .nota-informe {
+        margin-top: 12px;
+        color:#94a3b8;
+        font-size:12px;
+        line-height:1.5;
+      }
+
       footer {
         text-align: center;
         padding: 25px;
@@ -798,9 +960,15 @@
         </div>
 
         <div class="days">
-          <button class="btn-gray" onclick="verHistorial(7)">7 días</button>
-          <button class="btn-gray" onclick="verHistorial(30)">30 días</button>
-          <button class="btn-blue" onclick="verHistorial()">Todo</button>
+          <button id="btnPeriodo7" class="btn-gray" onclick="verHistorial(7)">7 días</button>
+          <button id="btnPeriodo30" class="btn-gray" onclick="verHistorial(30)">30 días</button>
+          <button id="btnPeriodoTodo" class="btn-blue periodo-activo" onclick="verHistorial()">Todo</button>
+          <button class="btn-informe-caidas" onclick="abrirInformeCaidas()">📋 Informe de cámaras caídas</button>
+        </div>
+
+        <div class="periodo-info">
+          <span class="periodo-badge" id="periodoSeleccionado">Histórico completo</span>
+          <span id="resumenPeriodo">Los días sin medición no cuentan como caída ni como online.</span>
         </div>
 
 
@@ -848,6 +1016,36 @@
       </div>
     </div>
 
+
+    <!-- MODAL INFORME DE CAMARAS CAIDAS -->
+    <div id="modalInformeCaidas" onclick="cerrarInformeCaidasFondo(event)">
+      <div class="informe-card">
+        <div class="informe-head">
+          <div>
+            <h2>📋 Informe de cámaras caídas</h2>
+            <div class="informe-sub" id="informeFecha">Preparando informe...</div>
+          </div>
+          <button class="cerrar-modal-camara" onclick="cerrarInformeCaidas()">✕</button>
+        </div>
+
+        <div class="informe-kpis" id="informeKpis"></div>
+
+        <div class="informe-tools">
+          <input id="buscarInformeCaidas" placeholder="Buscar cámara o ubicación..." oninput="renderInformeCaidas()" />
+          <select id="proveedorInformeCaidas" onchange="renderInformeCaidas()">
+            <option value="">Todos los proveedores</option>
+          </select>
+          <button class="btn-gray" onclick="copiarInformeCaidas()">📋 Copiar informe</button>
+          <button class="btn-green" onclick="descargarInformeCaidasCSV()">📥 Descargar para Excel</button>
+        </div>
+
+        <div class="informe-tabla-wrap">
+          <div id="tablaInformeCaidas"></div>
+        </div>
+        <div class="nota-informe">Los días sin registro no se cuentan como caída confirmada. “Primera caída registrada” busca hacia atrás hasta el último ONLINE conocido; “Días transcurridos” mide el tiempo calendario y “Días confirmados caída” cuenta únicamente jornadas con una falla observada.</div>
+      </div>
+    </div>
+
     <footer>Sistema Interno · Municipalidad de Florencio Varela</footer>
 
     <!-- BOTON TOP FALLAS -->
@@ -866,6 +1064,7 @@
       let filtroDias = null;
       let filtroEstadoHistorial = "TODOS";
       let ordenHistorialActual = "NOMBRE";
+      let datosInformeCaidas = [];
 
       /* reloj */
       setInterval(() => {
@@ -1033,8 +1232,102 @@
         verHistorial(filtroDias);
       }
 
+      function parsearFechaAR(fecha) {
+        const partes = String(fecha || "").split("/");
+        if (partes.length !== 3) return null;
+        const [dia, mes, anio] = partes.map(Number);
+        if (!dia || !mes || !anio) return null;
+        return new Date(anio, mes - 1, dia, 12, 0, 0, 0);
+      }
+
+      function formatearFechaAR(fecha) {
+        return fecha.toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      }
+
+      function generarDiasCalendario(cantidad) {
+        const dias = [];
+        const hoy = new Date();
+        hoy.setHours(12, 0, 0, 0);
+
+        for (let i = cantidad - 1; i >= 0; i--) {
+          const fecha = new Date(hoy);
+          fecha.setDate(hoy.getDate() - i);
+          dias.push(formatearFechaAR(fecha));
+        }
+
+        return dias;
+      }
+
+      function obtenerFechasPeriodo(fechasTodas, dias) {
+        if (!dias || Number(dias) <= 0) return [...fechasTodas];
+        return generarDiasCalendario(Number(dias));
+      }
+
+      function actualizarBotonesPeriodo(dias) {
+        ["btnPeriodo7", "btnPeriodo30", "btnPeriodoTodo"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove("periodo-activo");
+        });
+
+        const activo = dias === 7
+          ? document.getElementById("btnPeriodo7")
+          : dias === 30
+            ? document.getElementById("btnPeriodo30")
+            : document.getElementById("btnPeriodoTodo");
+
+        if (activo) activo.classList.add("periodo-activo");
+
+        const etiqueta = !dias
+          ? "Histórico completo"
+          : `Últimos ${dias} días calendario`;
+
+        const badge = document.getElementById("periodoSeleccionado");
+        if (badge) badge.innerText = etiqueta;
+      }
+
+      function calcularMetricasPeriodo(fechas, estados) {
+        let diasCaida = 0;
+        let diasOnline = 0;
+        let diasInestable = 0;
+        let diasSinRegistro = 0;
+
+        fechas.forEach((f) => {
+          const e = estados[f];
+          if (!e) {
+            diasSinRegistro++;
+          } else if (e === "SIN RESPUESTA" || e === "ERROR") {
+            diasCaida++;
+          } else if (e.includes("ONLINE")) {
+            diasOnline++;
+          } else if (e === "INESTABLE") {
+            diasInestable++;
+          } else {
+            diasSinRegistro++;
+          }
+        });
+
+        const diasConRegistro = diasCaida + diasOnline + diasInestable;
+        const disponibilidad = diasConRegistro
+          ? ((diasOnline / diasConRegistro) * 100).toFixed(1)
+          : "0.0";
+
+        return {
+          diasCaida,
+          diasOnline,
+          diasInestable,
+          diasSinRegistro,
+          diasConRegistro,
+          disponibilidad,
+        };
+      }
+
       async function verHistorial(dias = null) {
         filtroDias = dias;
+        actualizarBotonesPeriodo(dias);
 
         const res = await fetch("/historial", { cache: "no-store" });
         const data = await res.json();
@@ -1042,11 +1335,7 @@
 
         const fechasTodas = Array.isArray(data.fechas) ? data.fechas : [];
         const camaras = data.camaras || {};
-
-        let fechasVista = fechasTodas;
-        if (dias && Number(dias) > 0) {
-          fechasVista = fechasTodas.slice(-Number(dias));
-        }
+        const fechasVista = obtenerFechasPeriodo(fechasTodas, dias);
 
         const qCamara = (filtroCamara.value || "").toUpperCase().trim();
         const qProveedor = (filtroProveedor.value || "").toUpperCase().trim();
@@ -1054,38 +1343,23 @@
         const qConexion = (filtroConexion.value || "").toUpperCase().trim();
         const qIP = (filtroIP.value || "").toUpperCase().trim();
 
-        const ultimaFecha = fechasTodas[fechasTodas.length - 1];
+        const ultimaFechaRegistrada = fechasTodas[fechasTodas.length - 1];
 
         let filas = Object.entries(camaras).map(([nombre, obj]) => {
           const info = obj.info || {};
           const estados = obj.estados || {};
-          const ultimoEstado = ultimaFecha ? estados[ultimaFecha] || "-" : "-";
+          const ultimoEstado = ultimaFechaRegistrada
+            ? estados[ultimaFechaRegistrada] || "-"
+            : "-";
 
-          let diasCaida = 0;
-          let diasOnline = 0;
-          let diasInestable = 0;
-
-          fechasTodas.forEach((f) => {
-            const e = estados[f] || "-";
-            if (e === "SIN RESPUESTA") diasCaida++;
-            if (e.includes("ONLINE")) diasOnline++;
-            if (e === "INESTABLE") diasInestable++;
-          });
-
-          const totalConEstado = diasCaida + diasOnline + diasInestable;
-          const disponibilidad = totalConEstado
-            ? ((diasOnline / totalConEstado) * 100).toFixed(1)
-            : "0.0";
+          const metricas = calcularMetricasPeriodo(fechasVista, estados);
 
           return {
             nombre,
             info,
             estados,
             ultimoEstado,
-            diasCaida,
-            diasOnline,
-            diasInestable,
-            disponibilidad,
+            ...metricas,
           };
         });
 
@@ -1099,7 +1373,7 @@
           if (qIP && !(info.ip || "").toUpperCase().includes(qIP)) return false;
 
           if (filtroEstadoHistorial === "CAIDAS") {
-            return ultimoEstado === "SIN RESPUESTA" || ultimoEstado === "INESTABLE";
+            return ultimoEstado === "SIN RESPUESTA" || ultimoEstado === "INESTABLE" || ultimoEstado === "ERROR";
           }
 
           if (filtroEstadoHistorial === "ONLINE") {
@@ -1111,7 +1385,9 @@
 
         filas.sort((a, b) => {
           if (ordenHistorialActual === "MAS_CAIDA") {
-            return b.diasCaida - a.diasCaida || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+            const fallasA = a.diasCaida + a.diasInestable;
+            const fallasB = b.diasCaida + b.diasInestable;
+            return fallasB - fallasA || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
           }
 
           if (ordenHistorialActual === "MAS_ONLINE") {
@@ -1143,32 +1419,25 @@
 
         filas.forEach((cam) => {
           const {
-            nombre,
-            info,
-            estados,
-            ultimoEstado,
-            diasCaida,
-            diasOnline,
-            disponibilidad,
+            nombre, info, estados, ultimoEstado, diasCaida, diasOnline,
+            diasInestable, diasSinRegistro, diasConRegistro, disponibilidad,
           } = cam;
 
           const prov = info.proveedor || "SIN DATO";
-          if (!proveedores[prov]) {
-            proveedores[prov] = { online: 0, caidas: 0, total: 0 };
-          }
-
+          if (!proveedores[prov]) proveedores[prov] = { online: 0, caidas: 0, total: 0 };
           proveedores[prov].total++;
           if (ultimoEstado.includes("ONLINE")) proveedores[prov].online++;
           else proveedores[prov].caidas++;
 
           const ultimasFechas = fechasVista.slice(-10);
           const miniHistorial = ultimasFechas.length
-            ? ultimasFechas
-                .map((f) => {
-                  const e = estados[f] || "-";
-                  return `<span class="hist-dot ${claseEstado(e)}" title="${escaparHtml(f)} · ${escaparHtml(e)}"></span>`;
-                })
-                .join("")
+            ? ultimasFechas.map((f) => {
+                const e = estados[f];
+                if (!e) {
+                  return `<span class="hist-dot sin-registro" title="${escaparHtml(f)} · SIN REGISTRO"></span>`;
+                }
+                return `<span class="hist-dot ${claseEstado(e)}" title="${escaparHtml(f)} · ${escaparHtml(e)}"></span>`;
+              }).join("")
             : '<span style="color:#64748b">Sin datos</span>';
 
           const ultimoCambio = obtenerUltimoCambio(fechasTodas, estados);
@@ -1177,84 +1446,55 @@
           html += `
             <tr>
               <td class="cam">
-                <span class="cam-link" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>
-                  ${escaparHtml(nombre)}
-                </span>
+                <span class="cam-link" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>${escaparHtml(nombre)}</span>
               </td>
-
               <td class="info">
                 <div class="proveedor">${escaparHtml(info.proveedor || "-")}</div>
                 <div class="ubi">${escaparHtml(info.ubicacion || "-")}</div>
                 <div class="det">${escaparHtml(info.conexion || "-")} | ${escaparHtml(info.ip || "-")}</div>
               </td>
-
-              <td>
-                <span class="estado-pill ${estadoClase}">
-                  ${textoEstado(ultimoEstado)}
-                </span>
-              </td>
-
+              <td><span class="estado-pill ${estadoClase}">${textoEstado(ultimoEstado)}</span></td>
               <td>
                 <div class="disp-wrap">
                   <div class="disp-num">${disponibilidad}%</div>
-                  <div class="disp-bar">
-                    <div class="disp-fill" style="width:${Math.min(100, Number(disponibilidad))}%"></div>
-                  </div>
+                  <div class="disp-bar"><div class="disp-fill" style="width:${Math.min(100, Number(disponibilidad))}%"></div></div>
+                  <div class="dias-registro">${diasConRegistro} con registro${diasSinRegistro ? ` · ${diasSinRegistro} sin registro` : ""}</div>
                 </div>
               </td>
-
-              <td><span class="numero-caida">${diasCaida}</span></td>
+              <td><span class="numero-caida">${diasCaida}</span>${diasInestable ? `<div class="dias-registro">+ ${diasInestable} inestable</div>` : ""}</td>
               <td><span class="numero-online">${diasOnline}</span></td>
-
-              <td>
-                <div class="hist-mini">${miniHistorial}</div>
-              </td>
-
+              <td><div class="hist-mini">${miniHistorial}</div></td>
               <td class="ultimo-cambio">${escaparHtml(ultimoCambio)}</td>
-
-              <td>
-                <button class="btn-detalle-cam" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>
-                  Ver historial
-                </button>
-              </td>
+              <td><button class="btn-detalle-cam" onclick='abrirDetalleCamara(${JSON.stringify(nombre)})'>Ver historial</button></td>
             </tr>
           `;
         });
 
         html += "</table>";
-
         cantFiltradas.innerText = filas.length;
         tablaHistorial.innerHTML = html;
 
-        let kpi = "";
+        const resumen = document.getElementById("resumenPeriodo");
+        if (resumen) {
+          resumen.innerText = dias
+            ? `${fechasVista.length} días calendario · los días sin medición no alteran la disponibilidad.`
+            : `${fechasTodas.length} días con historial · disponibilidad calculada solo sobre días registrados.`;
+        }
 
+        let kpi = "";
         Object.entries(proveedores).forEach(([prov, v]) => {
           const porcOnline = v.total ? ((v.online / v.total) * 100).toFixed(1) : 0;
           const porcCaidas = v.total ? ((v.caidas / v.total) * 100).toFixed(1) : 0;
-
           kpi += `
             <div class="kpi-box">
-              <div style="font-size:18px;font-weight:800;margin-bottom:12px">
-                ${escaparHtml(prov)}
-              </div>
-
-              <div style="margin-bottom:6px">
-                🟢 <b>Online:</b> ${v.online}
-                <span style="color:#22c55e">(${porcOnline}%)</span>
-              </div>
-
-              <div style="margin-bottom:6px">
-                🔴 <b>Caídas:</b> ${v.caidas}
-                <span style="color:#ef4444">(${porcCaidas}%)</span>
-              </div>
-
+              <div style="font-size:18px;font-weight:800;margin-bottom:12px">${escaparHtml(prov)}</div>
+              <div style="margin-bottom:6px">🟢 <b>Online:</b> ${v.online} <span style="color:#22c55e">(${porcOnline}%)</span></div>
+              <div style="margin-bottom:6px">🔴 <b>Caídas:</b> ${v.caidas} <span style="color:#ef4444">(${porcCaidas}%)</span></div>
               <hr style="border:0;border-top:1px solid #334155;margin:10px 0">
-
               <div>📷 <b>Total:</b> ${v.total}</div>
             </div>
           `;
         });
-
         kpiProveedor.innerHTML = kpi;
       }
 
@@ -1266,24 +1506,13 @@
 
         const info = obj.info || {};
         const estados = obj.estados || {};
-        const fechas = datosHistorialActual.fechas || [];
-
-        let diasCaida = 0;
-        let diasOnline = 0;
-        let diasInestable = 0;
-
-        fechas.forEach((f) => {
-          const e = estados[f] || "-";
-          if (e === "SIN RESPUESTA") diasCaida++;
-          if (e.includes("ONLINE")) diasOnline++;
-          if (e === "INESTABLE") diasInestable++;
-        });
-
-        const total = diasCaida + diasOnline + diasInestable;
-        const disponibilidad = total ? ((diasOnline / total) * 100).toFixed(1) : "0.0";
-        const ultimaFecha = fechas[fechas.length - 1];
+        const fechasTodas = datosHistorialActual.fechas || [];
+        const fechas = obtenerFechasPeriodo(fechasTodas, filtroDias);
+        const metricas = calcularMetricasPeriodo(fechas, estados);
+        const ultimaFecha = fechasTodas[fechasTodas.length - 1];
         const ultimoEstado = ultimaFecha ? estados[ultimaFecha] || "-" : "-";
-        const ultimoCambio = obtenerUltimoCambio(fechas, estados);
+        const ultimoCambio = obtenerUltimoCambio(fechasTodas, estados);
+        const periodoTexto = filtroDias ? `Últimos ${filtroDias} días calendario` : "Histórico completo";
 
         modalCamaraNombre.innerText = nombre;
         modalCamaraInfo.innerHTML = `
@@ -1293,45 +1522,36 @@
         `;
 
         modalCamaraResumen.innerHTML = `
-          <div class="camara-resumen-box">
-            <small>Estado actual</small>
-            <strong class="timeline-estado ${claseEstado(ultimoEstado)}">${textoEstado(ultimoEstado)}</strong>
-          </div>
-
-          <div class="camara-resumen-box">
-            <small>Disponibilidad</small>
-            <strong>${disponibilidad}%</strong>
-          </div>
-
-          <div class="camara-resumen-box">
-            <small>Días online</small>
-            <strong style="color:#86efac">${diasOnline}</strong>
-          </div>
-
-          <div class="camara-resumen-box">
-            <small>Días caída</small>
-            <strong style="color:#fca5a5">${diasCaida}</strong>
-          </div>
-
-          <div class="camara-resumen-box">
-            <small>Último cambio</small>
-            <strong style="font-size:15px">${escaparHtml(ultimoCambio)}</strong>
-          </div>
+          <div class="camara-resumen-box"><small>Estado actual</small><strong class="timeline-estado ${claseEstado(ultimoEstado)}">${textoEstado(ultimoEstado)}</strong></div>
+          <div class="camara-resumen-box"><small>Disponibilidad</small><strong>${metricas.disponibilidad}%</strong></div>
+          <div class="camara-resumen-box"><small>Días online</small><strong style="color:#86efac">${metricas.diasOnline}</strong></div>
+          <div class="camara-resumen-box"><small>Días caída</small><strong style="color:#fca5a5">${metricas.diasCaida}</strong></div>
+          <div class="camara-resumen-box"><small>Inestable</small><strong style="color:#fde68a">${metricas.diasInestable}</strong></div>
+          <div class="camara-resumen-box"><small>Sin registro</small><strong style="color:#94a3b8">${metricas.diasSinRegistro}</strong></div>
+          <div class="camara-resumen-box"><small>Último cambio</small><strong style="font-size:15px">${escaparHtml(ultimoCambio)}</strong></div>
         `;
 
-        let timeline = "";
+        let timeline = `<div class="resumen-periodo"><b>${escaparHtml(periodoTexto)}</b> · ${metricas.diasConRegistro} días con registro · ${metricas.diasSinRegistro} sin registro</div>`;
 
         [...fechas].reverse().forEach((f) => {
-          const e = estados[f] || "-";
+          const e = estados[f];
+          if (!e) {
+            timeline += `
+              <div class="timeline-item sin-registro">
+                <div class="timeline-fecha">${escaparHtml(f)}</div>
+                <div class="timeline-estado sin-registro">⚫ SIN REGISTRO</div>
+              </div>`;
+            return;
+          }
+
           timeline += `
             <div class="timeline-item">
               <div class="timeline-fecha">${escaparHtml(f)}</div>
               <div class="timeline-estado ${claseEstado(e)}">${textoEstado(e)}</div>
-            </div>
-          `;
+            </div>`;
         });
 
-        modalCamaraTimeline.innerHTML = timeline || '<div style="color:#94a3b8">Sin historial.</div>';
+        modalCamaraTimeline.innerHTML = timeline;
         modalCamara.classList.add("abierto");
       }
 
@@ -1344,8 +1564,281 @@
       }
 
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") cerrarModalCamara();
+        if (event.key === "Escape") { cerrarModalCamara(); cerrarInformeCaidas(); }
       });
+
+      function estadoEsCaida(estado = "") {
+        const e = String(estado || "").toUpperCase();
+        return e === "SIN RESPUESTA" || e === "INESTABLE" || e === "ERROR";
+      }
+
+      function normalizarEstadoActualRespuesta(data) {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.camaras)) return data.camaras;
+        if (Array.isArray(data?.resultado)) return data.resultado;
+        if (data && typeof data === "object") {
+          return Object.entries(data).map(([nombre, valor]) => {
+            if (valor && typeof valor === "object") return { DENOMINACION: nombre, ...valor };
+            return { DENOMINACION: nombre, ESTADO: valor };
+          });
+        }
+        return [];
+      }
+
+      function calcularCaidaDesde(nombre, estadoActual, fechasTodas, estados) {
+        const hoyTexto = formatearFechaAR(new Date());
+        const estadoHoyHist = estados[hoyTexto];
+
+        // Si la foto oficial de hoy decía ONLINE pero ahora está caída,
+        // sabemos que la caída comenzó hoy, después de esa foto.
+        if (estadoHoyHist && estadoHoyHist.includes("ONLINE")) {
+          return {
+            desde: hoyTexto,
+            dias: 1,
+            diasConfirmados: 1,
+            sinRegistro: 0,
+            ultimoOnline: hoyTexto,
+          };
+        }
+
+        let desde = hoyTexto;
+        let ultimoOnline = "Sin registro previo";
+        let encontroFallaHistorica = false;
+
+        // Retrocedemos hasta el último ONLINE conocido.
+        for (let i = fechasTodas.length - 1; i >= 0; i--) {
+          const fecha = fechasTodas[i];
+          const e = estados[fecha];
+          if (!e) continue;
+
+          if (e.includes("ONLINE")) {
+            ultimoOnline = fecha;
+            break;
+          }
+
+          if (estadoEsCaida(e)) {
+            desde = fecha;
+            encontroFallaHistorica = true;
+          }
+        }
+
+        const inicio = parsearFechaAR(desde);
+        const hoy = new Date();
+        hoy.setHours(12, 0, 0, 0);
+
+        let dias = 1;
+        let sinRegistro = 0;
+        let diasConfirmados = 0;
+
+        if (inicio) {
+          dias = Math.max(1, Math.floor((hoy - inicio) / 86400000) + 1);
+
+          const cursor = new Date(inicio);
+          while (cursor <= hoy) {
+            const f = formatearFechaAR(cursor);
+            const e = estados[f];
+
+            if (e && estadoEsCaida(e)) {
+              diasConfirmados++;
+            } else if (!e && f !== hoyTexto) {
+              sinRegistro++;
+            }
+
+            cursor.setDate(cursor.getDate() + 1);
+          }
+        }
+
+        // El estado actual confirma una falla hoy aunque todavía no exista
+        // una foto diaria de hoy en el historial.
+        if (estadoEsCaida(estadoActual) && !estadoEsCaida(estadoHoyHist || "")) {
+          diasConfirmados++;
+        }
+
+        return {
+          desde,
+          dias,
+          diasConfirmados,
+          sinRegistro,
+          ultimoOnline,
+          encontroFallaHistorica,
+        };
+      }
+
+      async function abrirInformeCaidas() {
+        const modal = document.getElementById("modalInformeCaidas");
+        modal.classList.add("abierto");
+        document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:24px;color:#94a3b8">Cargando estados actuales e historial...</div>';
+
+        try {
+          const [resHistorial, resActual] = await Promise.all([
+            fetch("/historial", { cache: "no-store" }),
+            fetch("/estado-actual", { cache: "no-store" }),
+          ]);
+
+          const historial = await resHistorial.json();
+          const actualRaw = await resActual.json();
+          const actuales = normalizarEstadoActualRespuesta(actualRaw);
+          const fechasTodas = Array.isArray(historial.fechas) ? historial.fechas : [];
+          const camarasHist = historial.camaras || {};
+
+          datosInformeCaidas = actuales
+            .map((cam) => {
+              const nombre = cam.DENOMINACION || cam.nombre || cam.NOMBRE || "";
+              const estado = cam.ESTADO || cam.estado || "-";
+              if (!nombre || !estadoEsCaida(estado)) return null;
+
+              const hist = camarasHist[nombre] || {};
+              const infoHist = hist.info || {};
+              const estados = hist.estados || {};
+              const caida = calcularCaidaDesde(nombre, estado, fechasTodas, estados);
+
+              return {
+                nombre,
+                estado,
+                proveedor: cam.PROVEEDOR || cam.proveedor || infoHist.proveedor || "-",
+                ubicacion: cam.UBICACION || cam.ubicacion || infoHist.ubicacion || "-",
+                ip: cam.IP || cam.ip || infoHist.ip || "-",
+                desde: caida.desde,
+                dias: caida.dias,
+                diasConfirmados: caida.diasConfirmados,
+                sinRegistro: caida.sinRegistro,
+                ultimoOnline: caida.ultimoOnline,
+              };
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.dias - a.dias || a.nombre.localeCompare(b.nombre, "es", { numeric: true }));
+
+          const select = document.getElementById("proveedorInformeCaidas");
+          const proveedores = [...new Set(datosInformeCaidas.map((x) => x.proveedor).filter(Boolean))].sort();
+          select.innerHTML = '<option value="">Todos los proveedores</option>' + proveedores.map((p) => `<option value="${escaparHtml(p)}">${escaparHtml(p)}</option>`).join("");
+
+          document.getElementById("informeFecha").innerText = `Estado actual · ${new Date().toLocaleString("es-AR")}`;
+          renderInformeCaidas();
+        } catch (err) {
+          console.error("Error generando informe de caídas:", err);
+          document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:24px;color:#fca5a5">No se pudo generar el informe. Verificá que el servidor esté activo.</div>';
+        }
+      }
+
+      function obtenerInformeFiltrado() {
+        const q = (document.getElementById("buscarInformeCaidas")?.value || "").toUpperCase().trim();
+        const proveedor = document.getElementById("proveedorInformeCaidas")?.value || "";
+        return datosInformeCaidas.filter((cam) => {
+          if (proveedor && cam.proveedor !== proveedor) return false;
+          if (q && !`${cam.nombre} ${cam.ubicacion} ${cam.proveedor} ${cam.ip}`.toUpperCase().includes(q)) return false;
+          return true;
+        });
+      }
+
+      function renderInformeCaidas() {
+        const filas = obtenerInformeFiltrado();
+        const total7 = filas.filter((x) => x.dias >= 7).length;
+        const total3a6 = filas.filter((x) => x.dias >= 3 && x.dias <= 6).length;
+        const total1a2 = filas.filter((x) => x.dias <= 2).length;
+
+        document.getElementById("informeKpis").innerHTML = `
+          <div class="informe-kpi informe-kpi-total">
+            <small>🔴 CÁMARAS CAÍDAS AHORA</small>
+            <strong style="color:#fca5a5">${filas.length}</strong>
+            <span>Fallas detectadas en el estado actual</span>
+          </div>
+          <div class="informe-kpi informe-kpi-critica">
+            <small>🚨 CAÍDAS CRÍTICAS</small>
+            <strong style="color:#f87171">${total7}</strong>
+            <span>La primera falla registrada fue hace 7 días o más</span>
+          </div>
+          <div class="informe-kpi informe-kpi-media">
+            <small>🔴 CAÍDAS MEDIAS</small>
+            <strong style="color:#fb923c">${total3a6}</strong>
+            <span>La primera falla registrada fue hace 3 a 6 días</span>
+          </div>
+          <div class="informe-kpi informe-kpi-reciente">
+            <small>🟡 CAÍDAS RECIENTES</small>
+            <strong style="color:#facc15">${total1a2}</strong>
+            <span>Falla iniciada hoy o ayer</span>
+          </div>`;
+
+        if (!filas.length) {
+          document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:28px;text-align:center;color:#86efac;font-weight:800">✅ No hay cámaras caídas con estos filtros.</div>';
+          return;
+        }
+
+        let html = `<table class="informe-tabla"><tr><th>Cámara</th><th>Ubicación</th><th>Proveedor</th><th>Estado</th><th>Primera caída registrada</th><th>Días transcurridos</th><th>Días confirmados caída</th><th>Sin medición</th><th>Último ONLINE</th><th>IP</th></tr>`;
+        filas.forEach((cam) => {
+          html += `<tr>
+            <td><b>${escaparHtml(cam.nombre)}</b></td>
+            <td>${escaparHtml(cam.ubicacion)}</td>
+            <td>${escaparHtml(cam.proveedor)}</td>
+            <td><span class="estado-pill ${claseEstado(cam.estado)}">${textoEstado(cam.estado)}</span></td>
+            <td class="desde-caida">${escaparHtml(cam.desde)}</td>
+            <td><span class="dias-consecutivos">${cam.dias}</span></td>
+            <td><span class="numero-caida">${cam.diasConfirmados}</span></td>
+            <td><span class="dias-registro">${cam.sinRegistro}</span></td>
+            <td>${escaparHtml(cam.ultimoOnline)}</td>
+            <td>${escaparHtml(cam.ip)}</td>
+          </tr>`;
+        });
+        html += "</table>";
+        document.getElementById("tablaInformeCaidas").innerHTML = html;
+      }
+
+      function construirTextoInformeCaidas() {
+        const filas = obtenerInformeFiltrado();
+        const fecha = new Date().toLocaleString("es-AR");
+        let texto = `INFORME DE CÁMARAS CAÍDAS\nFecha: ${fecha}\nCámaras caídas: ${filas.length}\n\n`;
+        filas.forEach((cam, i) => {
+          texto += `${i + 1}. ${cam.nombre} - ${cam.ubicacion}\n`;
+          texto += `   Proveedor: ${cam.proveedor}\n`;
+          texto += `   Estado: ${cam.estado}\n`;
+          texto += `   Primera caída registrada: ${cam.desde}\n`;
+          texto += `   Días transcurridos: ${cam.dias}\n`;
+          texto += `   Días confirmados con falla: ${cam.diasConfirmados}\n`;
+          texto += `   Días sin medición: ${cam.sinRegistro}\n`;
+          texto += `   Último ONLINE registrado: ${cam.ultimoOnline}\n\n`;
+        });
+        return texto.trim();
+      }
+
+      async function copiarInformeCaidas() {
+        const texto = construirTextoInformeCaidas();
+        try {
+          await navigator.clipboard.writeText(texto);
+          alert("Informe copiado al portapapeles.");
+        } catch {
+          const area = document.createElement("textarea");
+          area.value = texto;
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+          alert("Informe copiado al portapapeles.");
+        }
+      }
+
+      function descargarInformeCaidasCSV() {
+        const filas = obtenerInformeFiltrado();
+        const escaparCSV = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+        const lineas = [
+          ["CAMARA", "UBICACION", "PROVEEDOR", "ESTADO", "PRIMERA CAIDA REGISTRADA", "DIAS TRANSCURRIDOS", "DIAS CONFIRMADOS CON FALLA", "DIAS SIN MEDICION", "ULTIMO ONLINE REGISTRADO", "IP"],
+          ...filas.map((cam) => [cam.nombre, cam.ubicacion, cam.proveedor, cam.estado, cam.desde, cam.dias, cam.diasConfirmados, cam.sinRegistro, cam.ultimoOnline, cam.ip]),
+        ];
+        const csv = "\uFEFF" + lineas.map((fila) => fila.map(escaparCSV).join(";")).join("\r\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `informe_camaras_caidas_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function cerrarInformeCaidas() {
+        document.getElementById("modalInformeCaidas").classList.remove("abierto");
+      }
+
+      function cerrarInformeCaidasFondo(event) {
+        if (event.target === document.getElementById("modalInformeCaidas")) cerrarInformeCaidas();
+      }
 
       /* RANKING */
       function abrirRanking() {

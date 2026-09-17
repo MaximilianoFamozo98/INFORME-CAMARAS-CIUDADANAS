@@ -649,15 +649,91 @@ app.post("/autoescaneo/reanudar", (req, res) => {
 // =============================
 // GUARDAR HISTORIAL SQLITE
 // =============================
+// =============================
+// HISTORIAL DIARIO SQLITE
+// =============================
+
+function obtenerFechaLocal() {
+  const ahora = new Date();
+
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+  const dia = String(ahora.getDate()).padStart(2, "0");
+
+  return `${anio}-${mes}-${dia}`;
+}
+
+function existeHistorialDeHoy() {
+  const fechaHoy = obtenerFechaLocal();
+
+  const registros = db
+    .prepare(`
+      SELECT fecha
+      FROM historial
+      ORDER BY fecha DESC
+    `)
+    .all();
+
+  return registros.some((registro) => {
+    const fecha = new Date(registro.fecha);
+
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+    const dia = String(fecha.getDate()).padStart(2, "0");
+
+    return `${anio}-${mes}-${dia}` === fechaHoy;
+  });
+}
+
 function guardarHistorial(resultado) {
-  db.prepare(
-    `
+  db.prepare(`
     INSERT INTO historial (fecha, data)
     VALUES (?, ?)
-  `,
-  ).run(new Date().toISOString(), JSON.stringify(resultado));
+  `).run(
+    new Date().toISOString(),
+    JSON.stringify(resultado),
+  );
 
   console.log("✅ Historial guardado en SQLite");
+}
+
+function guardarHistorialDiarioSiCorresponde(resultado) {
+  const ahora = new Date();
+
+  // Antes de las 08:00 no guardamos historial diario
+  if (ahora.getHours() < 8) {
+    console.log("📅 Historial diario: esperando las 08:00");
+    return false;
+  }
+
+  // No aceptar un resultado vacío
+  // Solo guardar si el análisis fue realmente completo
+if (
+  !Array.isArray(resultado) ||
+  resultado.length === 0 ||
+  progreso.procesadas !== progreso.total
+) {
+  console.warn(
+    `⚠️ Historial diario: análisis incompleto (${progreso.procesadas}/${progreso.total}). No se guardó.`,
+  );
+  return false;
+}
+
+  // Ya tenemos la foto oficial de hoy
+  if (existeHistorialDeHoy()) {
+    console.log(
+      "📅 Historial diario: la foto de hoy ya está guardada",
+    );
+    return false;
+  }
+
+  guardarHistorial(resultado);
+
+  console.log(
+    `📅 Foto diaria guardada: ${obtenerFechaLocal()} - ${resultado.length} cámaras`,
+  );
+
+  return true;
 }
 
 // =============================
@@ -733,8 +809,11 @@ async function autoEscaneo() {
     }
 
     await guardarEstadoActual(resultado);
-    console.log("✅ Autoescaneo finalizado");
-    finalizarEscaneo();
+
+guardarHistorialDiarioSiCorresponde(resultado);
+
+console.log("✅ Autoescaneo finalizado");
+finalizarEscaneo();
   } catch (err) {
     console.error("❌ Error autoescaneo:", err);
     finalizarEscaneo({ error: true });
@@ -913,8 +992,8 @@ app.get("/analizar-todas", async (req, res) => {
     }
 
     await guardarEstadoActual(resultado);
-    guardarHistorial(resultado);
-    await sincronizarCoordenadas();
+guardarHistorialDiarioSiCorresponde(resultado);
+await sincronizarCoordenadas();
 
     finalizarEscaneo();
 
@@ -963,8 +1042,8 @@ app.post("/iniciar-analisis-todas", (req, res) => {
       }
 
       await guardarEstadoActual(datos.resultado);
-      guardarHistorial(datos.resultado);
-      await sincronizarCoordenadas();
+guardarHistorialDiarioSiCorresponde(datos.resultado);
+await sincronizarCoordenadas();
 
       finalizarEscaneo();
     } catch (error) {

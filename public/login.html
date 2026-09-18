@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Acceso | Cámaras Ciudadanas</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, #1d3557, #08111f 65%);
+      color: white;
+    }
+
+    .login {
+      width: 390px;
+      max-width: calc(100% - 30px);
+      background: rgba(17, 28, 45, 0.96);
+      border: 1px solid #2d405e;
+      border-radius: 16px;
+      padding: 34px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 23px;
+    }
+
+    .subtitulo {
+      margin: 8px 0 28px;
+      text-align: center;
+      color: #9eb0c9;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #cbd6e5;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      border: 1px solid #354965;
+      background: #0d1726;
+      color: white;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #4c8bf5;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 8px;
+      background: #2874d0;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #3485e5;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    #mensaje {
+      display: none;
+      margin-top: 16px;
+      padding: 10px;
+      text-align: center;
+      border-radius: 7px;
+      background: rgba(220, 53, 69, .15);
+      color: #ff8995;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login">
+
+    <div class="logo">📹</div>
+
+    <h1>Cámaras Ciudadanas</h1>
+
+    <div class="subtitulo">
+      Sistema de monitoreo
+    </div>
+
+    <form id="formLogin">
+
+      <label>Usuario</label>
+
+      <input
+        id="usuario"
+        type="text"
+        autocomplete="username"
+        required
+        autofocus
+      >
+
+      <label>Contraseña</label>
+
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button id="btnLogin" type="submit">
+        Iniciar sesión
+      </button>
+
+      <div id="mensaje"></div>
+
+    </form>
+
+  </div>
+
+  <script>
+    const form = document.getElementById("formLogin");
+    const boton = document.getElementById("btnLogin");
+    const mensaje = document.getElementById("mensaje");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      mensaje.style.display = "none";
+      boton.disabled = true;
+      boton.textContent = "Ingresando...";
+
+      try {
+        const respuesta = await fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            usuario:
+              document.getElementById("usuario").value,
+            password:
+              document.getElementById("password").value,
+          }),
+        });
+
+        const data = await respuesta.json();
+
+        if (!respuesta.ok) {
+          throw new Error(
+            data.mensaje ||
+            "No se pudo iniciar sesión"
+          );
+        }
+
+        window.location.href = "/";
+
+      } catch (error) {
+        mensaje.textContent = error.message;
+        mensaje.style.display = "block";
+      } finally {
+        boton.disabled = false;
+        boton.textContent = "Iniciar sesión";
+      }
+    });
+  </script>
+
+</body>
+</html>

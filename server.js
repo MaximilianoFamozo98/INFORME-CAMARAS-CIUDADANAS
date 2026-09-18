@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const fs = require("fs");
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
 //------  Archivo mapa -------------------
 const Database = require("better-sqlite3");
 const exeDir = process.pkg
@@ -63,7 +65,535 @@ let ultimaAccion = null;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+
+// =============================
+// SESIONES DE USUARIO
+// =============================
+app.use(
+  session({
+    secret: "camaras-ciudadanas-varela-2026",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 8 * 60 * 60 * 1000, // 8 horas
+    },
+  }),
+);
+
+// =============================
+// CARGAR USUARIO DE LA SESION
+// =============================
+app.use((req, res, next) => {
+  if (!req.session.usuarioId) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const usuario = db
+      .prepare(`
+        SELECT id, usuario, nombre, rol, activo
+        FROM usuarios
+        WHERE id = ?
+      `)
+      .get(req.session.usuarioId);
+
+    if (!usuario || !usuario.activo) {
+      req.session.destroy(() => {});
+      req.user = null;
+      return next();
+    }
+
+    req.user = usuario;
+    next();
+  } catch (error) {
+    console.error("❌ Error cargando usuario:", error);
+    req.user = null;
+    next();
+  }
+});
+// =============================
+// LOGIN
+// =============================
+
+app.get("/login", (req, res) => {
+  if (req.user) {
+    return res.redirect("/");
+  }
+
+  res.sendFile(
+    path.join(__dirname, "public", "login.html"),
+  );
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const usuarioIngresado = String(
+      req.body.usuario || "",
+    ).trim();
+
+    const password = String(
+      req.body.password || "",
+    );
+
+    const usuario = db
+      .prepare(`
+        SELECT *
+        FROM usuarios
+        WHERE usuario = ?
+          AND activo = 1
+      `)
+      .get(usuarioIngresado);
+
+    if (!usuario) {
+      return res.status(401).json({
+        ok: false,
+        mensaje: "Usuario o contraseña incorrectos",
+      });
+    }
+
+    const passwordCorrecta = await bcrypt.compare(
+      password,
+      usuario.password_hash,
+    );
+
+    if (!passwordCorrecta) {
+      return res.status(401).json({
+        ok: false,
+        mensaje: "Usuario o contraseña incorrectos",
+      });
+    }
+
+    req.session.usuarioId = usuario.id;
+
+    res.json({
+      ok: true,
+      usuario: {
+        id: usuario.id,
+        usuario: usuario.usuario,
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error iniciando sesión:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "Error iniciando sesión",
+    });
+  }
+});
+
+// =============================
+// LOGOUT
+// =============================
+
+app.post("/logout", (req, res) => {
+  req.session.destroy((error) => {
+    if (error) {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "No se pudo cerrar la sesión",
+      });
+    }
+
+    res.clearCookie("connect.sid");
+
+    res.json({
+      ok: true,
+    });
+  });
+});
+
+// =============================
+// USUARIO ACTUAL
+// =============================
+
+app.get("/api/usuario-actual", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      autenticado: false,
+    });
+  }
+
+  res.json({
+    autenticado: true,
+    usuario: {
+      id: req.user.id,
+      usuario: req.user.usuario,
+      nombre: req.user.nombre,
+      rol: req.user.rol,
+    },
+  });
+});
+
+// =============================
+// ADMINISTRACION DE USUARIOS
+// =============================
+
+// LISTAR USUARIOS
+app.get("/api/usuarios", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const usuarios = db
+      .prepare(`
+        SELECT
+          id,
+          usuario,
+          nombre,
+          rol,
+          activo,
+          fecha_creacion
+        FROM usuarios
+        ORDER BY nombre ASC
+      `)
+      .all();
+
+    res.json({
+      ok: true,
+      usuarios,
+    });
+  } catch (error) {
+    console.error("❌ Error cargando usuarios:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudieron cargar los usuarios",
+    });
+  }
+});
+
+
+// =============================
+// CREAR USUARIO
+// =============================
+
+app.post("/api/usuarios", async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const usuario = String(
+      req.body.usuario || "",
+    ).trim();
+
+    const nombre = String(
+      req.body.nombre || "",
+    ).trim();
+
+    const password = String(
+      req.body.password || "",
+    );
+
+    if (!usuario || !nombre || !password) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "Completá todos los campos",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        ok: false,
+        mensaje:
+          "La contraseña debe tener al menos 6 caracteres",
+      });
+    }
+
+    const existe = db
+      .prepare(`
+        SELECT id
+        FROM usuarios
+        WHERE usuario = ?
+      `)
+      .get(usuario);
+
+    if (existe) {
+      return res.status(409).json({
+        ok: false,
+        mensaje: "Ese usuario ya existe",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(
+      password,
+      12,
+    );
+
+    const fechaCreacion =
+      new Date().toISOString();
+
+    const resultado = db
+      .prepare(`
+        INSERT INTO usuarios (
+          usuario,
+          nombre,
+          password_hash,
+          rol,
+          activo,
+          fecha_creacion
+        )
+        VALUES (?, ?, ?, 'ADMIN', 1, ?)
+      `)
+      .run(
+        usuario,
+        nombre,
+        passwordHash,
+        fechaCreacion,
+      );
+
+    registrarAccion(
+      obtenerUsuario(req),
+      "CREO_USUARIO",
+      `${nombre} (${usuario})`,
+    );
+
+    res.json({
+      ok: true,
+      mensaje: "Usuario creado correctamente",
+      id: resultado.lastInsertRowid,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Error creando usuario:",
+      error,
+    );
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo crear el usuario",
+    });
+  }
+});
+
+
+// =============================
+// CAMBIAR CONTRASEÑA
+// =============================
+
+app.put(
+  "/api/usuarios/:id/password",
+  async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({
+        ok: false,
+        mensaje: "Sesión no iniciada",
+      });
+    }
+
+    try {
+      const id = Number(req.params.id);
+
+      const password = String(
+        req.body.password || "",
+      );
+
+      if (!Number.isInteger(id)) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: "Usuario inválido",
+        });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          ok: false,
+          mensaje:
+            "La contraseña debe tener al menos 6 caracteres",
+        });
+      }
+
+      const usuario = db
+        .prepare(`
+          SELECT id, usuario, nombre
+          FROM usuarios
+          WHERE id = ?
+        `)
+        .get(id);
+
+      if (!usuario) {
+        return res.status(404).json({
+          ok: false,
+          mensaje: "Usuario no encontrado",
+        });
+      }
+
+      const passwordHash =
+        await bcrypt.hash(password, 12);
+
+      db.prepare(`
+        UPDATE usuarios
+        SET password_hash = ?
+        WHERE id = ?
+      `).run(passwordHash, id);
+
+      registrarAccion(
+        obtenerUsuario(req),
+        "CAMBIO_PASSWORD_USUARIO",
+        `${usuario.nombre} (${usuario.usuario})`,
+      );
+
+      res.json({
+        ok: true,
+        mensaje:
+          "Contraseña actualizada correctamente",
+      });
+    } catch (error) {
+      console.error(
+        "❌ Error cambiando contraseña:",
+        error,
+      );
+
+      res.status(500).json({
+        ok: false,
+        mensaje:
+          "No se pudo cambiar la contraseña",
+      });
+    }
+  },
+);
+
+
+// =============================
+// ACTIVAR / DESACTIVAR USUARIO
+// =============================
+
+app.put(
+  "/api/usuarios/:id/estado",
+  (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({
+        ok: false,
+        mensaje: "Sesión no iniciada",
+      });
+    }
+
+    try {
+      const id = Number(req.params.id);
+      const activo =
+        req.body.activo === true ||
+        req.body.activo === 1
+          ? 1
+          : 0;
+
+      if (!Number.isInteger(id)) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: "Usuario inválido",
+        });
+      }
+
+      // Evitar que uno se desactive a sí mismo
+      if (id === req.user.id && activo === 0) {
+        return res.status(400).json({
+          ok: false,
+          mensaje:
+            "No podés desactivar tu propio usuario",
+        });
+      }
+
+      const usuario = db
+        .prepare(`
+          SELECT id, usuario, nombre
+          FROM usuarios
+          WHERE id = ?
+        `)
+        .get(id);
+
+      if (!usuario) {
+        return res.status(404).json({
+          ok: false,
+          mensaje: "Usuario no encontrado",
+        });
+      }
+
+      db.prepare(`
+        UPDATE usuarios
+        SET activo = ?
+        WHERE id = ?
+      `).run(activo, id);
+
+      registrarAccion(
+        obtenerUsuario(req),
+        activo
+          ? "ACTIVO_USUARIO"
+          : "DESACTIVO_USUARIO",
+        `${usuario.nombre} (${usuario.usuario})`,
+      );
+
+      res.json({
+        ok: true,
+        mensaje: activo
+          ? "Usuario activado"
+          : "Usuario desactivado",
+      });
+    } catch (error) {
+      console.error(
+        "❌ Error cambiando estado del usuario:",
+        error,
+      );
+
+      res.status(500).json({
+        ok: false,
+        mensaje:
+          "No se pudo modificar el usuario",
+      });
+    }
+  },
+);
+// =============================
+// PROTEGER SISTEMA
+// =============================
+
+app.use((req, res, next) => {
+  if (req.user) {
+    return next();
+  }
+
+  // APIs / peticiones internas
+  if (
+    req.path.startsWith("/api/") ||
+    req.path === "/estado-actual" ||
+    req.path === "/historial" ||
+    req.path === "/progreso" ||
+    req.path === "/analizar" ||
+    req.path === "/analizar-todas" ||
+    req.path === "/iniciar-analisis-todas" ||
+    req.path === "/cancelar-escaneo" ||
+    req.path.startsWith("/autoescaneo/") ||
+    req.path.startsWith("/tiles/")
+  ) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  return res.redirect("/login");
+});
+
+// =============================
+// ARCHIVOS PUBLIC DEL SISTEMA
+// =============================
+
+app.use(
+  express.static(
+    path.join(__dirname, "public")
+  )
+);
 
 // =============================
 // AUDITORIA DE ACCIONES

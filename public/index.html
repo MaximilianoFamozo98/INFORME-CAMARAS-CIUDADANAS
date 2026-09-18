@@ -232,7 +232,6 @@
         margin-bottom: 15px;
       }
 
-
       /* FILTROS RAPIDOS DE ESTADO Y ORDEN */
       .quick-tools {
         display: flex;
@@ -265,8 +264,12 @@
         color: #fff;
       }
 
-      .quick-btn.caidas.active { background: #b91c1c; }
-      .quick-btn.online.active { background: #15803d; }
+      .quick-btn.caidas.active {
+        background: #b91c1c;
+      }
+      .quick-btn.online.active {
+        background: #15803d;
+      }
 
       #ordenHistorial {
         background: #111827;
@@ -464,13 +467,21 @@
         height: 15px;
         border-radius: 50%;
         display: inline-block;
-        border: 2px solid rgba(255,255,255,.08);
+        border: 2px solid rgba(255, 255, 255, 0.08);
       }
 
-      .hist-dot.ok { background: #22c55e; }
-      .hist-dot.bad { background: #ef4444; }
-      .hist-dot.warn { background: #f59e0b; }
-      .hist-dot.none { background: #475569; }
+      .hist-dot.ok {
+        background: #22c55e;
+      }
+      .hist-dot.bad {
+        background: #ef4444;
+      }
+      .hist-dot.warn {
+        background: #f59e0b;
+      }
+      .hist-dot.none {
+        background: #475569;
+      }
 
       .ultimo-cambio {
         color: #cbd5e1;
@@ -511,7 +522,7 @@
         background: #111827;
         border: 1px solid #263449;
         border-radius: 18px;
-        box-shadow: 0 25px 70px rgba(0,0,0,.55);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.55);
         padding: 22px;
       }
 
@@ -592,10 +603,18 @@
         font-weight: 800;
       }
 
-      .timeline-estado.ok { color: #86efac; }
-      .timeline-estado.bad { color: #fca5a5; }
-      .timeline-estado.warn { color: #fde68a; }
-      .timeline-estado.none { color: #cbd5e1; }
+      .timeline-estado.ok {
+        color: #86efac;
+      }
+      .timeline-estado.bad {
+        color: #fca5a5;
+      }
+      .timeline-estado.warn {
+        color: #fde68a;
+      }
+      .timeline-estado.none {
+        color: #cbd5e1;
+      }
 
       /* MEJORAS VISUALES HISTORIAL DIARIO */
       .periodo-info {
@@ -617,15 +636,19 @@
       }
       .days button.periodo-activo {
         background: #2563eb;
-        box-shadow: 0 0 0 2px rgba(96,165,250,.22);
+        box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.22);
       }
-      .hist-mini { align-items: center; }
+      .hist-mini {
+        align-items: center;
+      }
       .hist-dot {
-        transition: transform .15s ease, box-shadow .15s ease;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
       }
       .hist-dot:hover {
         transform: scale(1.35);
-        box-shadow: 0 0 0 3px rgba(255,255,255,.08);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
       }
       .hist-dot.sin-registro {
         background: transparent;
@@ -637,38 +660,41 @@
         margin-top: 4px;
       }
       .timeline-item.sin-registro {
-        opacity: .72;
+        opacity: 0.72;
         border-style: dashed;
       }
-      .timeline-estado.sin-registro { color: #64748b; }
+      .timeline-estado.sin-registro {
+        color: #64748b;
+      }
       .resumen-periodo {
         margin-bottom: 14px;
         padding: 11px 13px;
         border-radius: 12px;
-        background: rgba(37,99,235,.08);
-        border: 1px solid rgba(96,165,250,.18);
+        background: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(96, 165, 250, 0.18);
         color: #bfdbfe;
         font-size: 13px;
       }
 
-
       /* INFORME DE CAMARAS CAIDAS */
       .btn-informe-caidas {
         background: linear-gradient(135deg, #b91c1c, #dc2626);
-        box-shadow: 0 8px 20px rgba(220,38,38,.18);
+        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.18);
       }
       #modalInformeCaidas {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(2, 6, 23, .82);
+        background: rgba(2, 6, 23, 0.82);
         backdrop-filter: blur(4px);
         z-index: 13000;
         padding: 24px;
         align-items: center;
         justify-content: center;
       }
-      #modalInformeCaidas.abierto { display: flex; }
+      #modalInformeCaidas.abierto {
+        display: flex;
+      }
       .informe-card {
         width: min(1180px, 97vw);
         max-height: 91vh;
@@ -676,7 +702,7 @@
         background: #0f172a;
         border: 1px solid #263449;
         border-radius: 20px;
-        box-shadow: 0 28px 80px rgba(0,0,0,.6);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
         padding: 22px;
       }
       .informe-head {
@@ -686,8 +712,14 @@
         align-items: flex-start;
         margin-bottom: 16px;
       }
-      .informe-head h2 { margin: 0 0 5px; font-size: 24px; }
-      .informe-sub { color: #94a3b8; font-size: 13px; }
+      .informe-head h2 {
+        margin: 0 0 5px;
+        font-size: 24px;
+      }
+      .informe-sub {
+        color: #94a3b8;
+        font-size: 13px;
+      }
       .informe-kpis {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
@@ -700,8 +732,14 @@
         border-radius: 14px;
         padding: 13px;
       }
-      .informe-kpi small { color:#94a3b8; display:block; margin-bottom:5px; }
-      .informe-kpi strong { font-size: 22px; }
+      .informe-kpi small {
+        color: #94a3b8;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .informe-kpi strong {
+        font-size: 22px;
+      }
 
       .informe-kpi {
         position: relative;
@@ -714,7 +752,7 @@
       .informe-kpi small {
         font-size: 12px;
         font-weight: 900;
-        letter-spacing: .35px;
+        letter-spacing: 0.35px;
         margin-bottom: 7px;
       }
       .informe-kpi strong {
@@ -727,36 +765,62 @@
         font-size: 12px;
         line-height: 1.35;
       }
-      .informe-kpi-total { border-left: 4px solid #ef4444; }
-      .informe-kpi-critica { border-left: 4px solid #dc2626; background: rgba(127,29,29,.12); }
-      .informe-kpi-media { border-left: 4px solid #f97316; }
-      .informe-kpi-reciente { border-left: 4px solid #eab308; }
+      .informe-kpi-total {
+        border-left: 4px solid #ef4444;
+      }
+      .informe-kpi-critica {
+        border-left: 4px solid #dc2626;
+        background: rgba(127, 29, 29, 0.12);
+      }
+      .informe-kpi-media {
+        border-left: 4px solid #f97316;
+      }
+      .informe-kpi-reciente {
+        border-left: 4px solid #eab308;
+      }
 
       .informe-tools {
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        align-items:center;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
         margin-bottom: 14px;
       }
-      .informe-tools input, .informe-tools select {
-        background:#111827;
-        color:#fff;
-        border:1px solid #334155;
-        border-radius:10px;
-        padding:10px 12px;
-        outline:none;
+      .informe-tools input,
+      .informe-tools select {
+        background: #111827;
+        color: #fff;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 10px 12px;
+        outline: none;
       }
-      .informe-tabla-wrap { overflow:auto; border:1px solid #1e293b; border-radius:14px; }
-      .informe-tabla { min-width: 980px; }
-      .informe-tabla td { text-align:left; }
-      .dias-consecutivos { font-weight:900; color:#fca5a5; font-size:16px; }
-      .desde-caida { color:#fecaca; font-weight:800; white-space:nowrap; }
+      .informe-tabla-wrap {
+        overflow: auto;
+        border: 1px solid #1e293b;
+        border-radius: 14px;
+      }
+      .informe-tabla {
+        min-width: 980px;
+      }
+      .informe-tabla td {
+        text-align: left;
+      }
+      .dias-consecutivos {
+        font-weight: 900;
+        color: #fca5a5;
+        font-size: 16px;
+      }
+      .desde-caida {
+        color: #fecaca;
+        font-weight: 800;
+        white-space: nowrap;
+      }
       .nota-informe {
         margin-top: 12px;
-        color:#94a3b8;
-        font-size:12px;
-        line-height:1.5;
+        color: #94a3b8;
+        font-size: 12px;
+        line-height: 1.5;
       }
 
       footer {
@@ -819,6 +883,37 @@
         font-size: 20px;
         color: #94a3b8;
       }
+
+      /* USUARIO CONECTADO */
+
+      .usuario-sesion {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .usuario-nombre {
+        font-size: 13px;
+        color: #cbd5e1;
+        font-weight: 700;
+      }
+
+      .btn-logout {
+        background: #7f1d1d;
+        color: white;
+        border: none;
+        padding: 7px 11px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn-logout:hover {
+        background: #991b1b;
+      }
     </style>
   </head>
 
@@ -834,7 +929,18 @@
 
       <div class="header-right">
         <div id="hora"></div>
+
         <div id="ultimoEscaneo">Último escaneo: nunca</div>
+
+        <div class="usuario-sesion">
+          <span id="usuarioConectado" class="usuario-nombre">
+            👤 Cargando...
+          </span>
+
+          <button class="btn-logout" onclick="cerrarSesion()">
+            Cerrar sesión
+          </button>
+        </div>
       </div>
     </header>
 
@@ -867,7 +973,11 @@
           <button class="btn-green" onclick="analizarTexto()">
             Analizar Texto
           </button>
-          <button class="btn-blue" id="btnAnalizarTodas" onclick="analizarTodas()">
+          <button
+            class="btn-blue"
+            id="btnAnalizarTodas"
+            onclick="analizarTodas()"
+          >
             Analizar todas
           </button>
           <button class="btn-gray" onclick="verHistorial()">
@@ -875,7 +985,10 @@
           </button>
 
           <a href="/mapa" class="btn-link btn-purple"> 📍 Ir al Mapa </a>
-          <a href="/historial-acciones" class="btn-link btn-purple">📋 Historial</a>
+          <a href="/historial-acciones" class="btn-link btn-purple"
+            >📋 Historial</a
+          >
+          <a href="/usuarios.html" class="btn-link btn-purple"> 👥 Usuarios </a>
         </div>
         <div
           id="estadoEscaneo"
@@ -960,26 +1073,62 @@
         </div>
 
         <div class="days">
-          <button id="btnPeriodo7" class="btn-gray" onclick="verHistorial(7)">7 días</button>
-          <button id="btnPeriodo30" class="btn-gray" onclick="verHistorial(30)">30 días</button>
-          <button id="btnPeriodoTodo" class="btn-blue periodo-activo" onclick="verHistorial()">Todo</button>
-          <button class="btn-informe-caidas" onclick="abrirInformeCaidas()">📋 Informe de cámaras caídas</button>
+          <button id="btnPeriodo7" class="btn-gray" onclick="verHistorial(7)">
+            7 días
+          </button>
+          <button id="btnPeriodo30" class="btn-gray" onclick="verHistorial(30)">
+            30 días
+          </button>
+          <button
+            id="btnPeriodoTodo"
+            class="btn-blue periodo-activo"
+            onclick="verHistorial()"
+          >
+            Todo
+          </button>
+          <button class="btn-informe-caidas" onclick="abrirInformeCaidas()">
+            📋 Informe de cámaras caídas
+          </button>
         </div>
 
         <div class="periodo-info">
-          <span class="periodo-badge" id="periodoSeleccionado">Histórico completo</span>
-          <span id="resumenPeriodo">Los días sin medición no cuentan como caída ni como online.</span>
+          <span class="periodo-badge" id="periodoSeleccionado"
+            >Histórico completo</span
+          >
+          <span id="resumenPeriodo"
+            >Los días sin medición no cuentan como caída ni como online.</span
+          >
         </div>
-
 
         <div class="quick-tools">
           <span class="quick-label">Estado actual:</span>
-          <button class="quick-btn active" data-estado="TODOS" onclick="cambiarFiltroEstado('TODOS', this)">Todos</button>
-          <button class="quick-btn caidas" data-estado="CAIDAS" onclick="cambiarFiltroEstado('CAIDAS', this)">🔴 Solo caídas</button>
-          <button class="quick-btn online" data-estado="ONLINE" onclick="cambiarFiltroEstado('ONLINE', this)">🟢 Solo online</button>
+          <button
+            class="quick-btn active"
+            data-estado="TODOS"
+            onclick="cambiarFiltroEstado('TODOS', this)"
+          >
+            Todos
+          </button>
+          <button
+            class="quick-btn caidas"
+            data-estado="CAIDAS"
+            onclick="cambiarFiltroEstado('CAIDAS', this)"
+          >
+            🔴 Solo caídas
+          </button>
+          <button
+            class="quick-btn online"
+            data-estado="ONLINE"
+            onclick="cambiarFiltroEstado('ONLINE', this)"
+          >
+            🟢 Solo online
+          </button>
 
-          <span class="quick-label" style="margin-left:8px">Ordenar:</span>
-          <select id="ordenHistorial" onchange="cambiarOrdenHistorial(this.value)">
+          <span class="quick-label" style="margin-left: 8px">Ordenar:</span>
+          <select
+            id="ordenHistorial"
+            onchange="cambiarOrdenHistorial(this.value)"
+          >
             <option value="NOMBRE">Nombre</option>
             <option value="MAS_CAIDA">🔴 Más caída</option>
             <option value="MAS_ONLINE">🟢 Más online</option>
@@ -1006,16 +1155,17 @@
             <h2 id="modalCamaraNombre">Cámara</h2>
             <div id="modalCamaraInfo" class="modal-camara-sub"></div>
           </div>
-          <button class="cerrar-modal-camara" onclick="cerrarModalCamara()">✕</button>
+          <button class="cerrar-modal-camara" onclick="cerrarModalCamara()">
+            ✕
+          </button>
         </div>
 
         <div id="modalCamaraResumen" class="camara-resumen"></div>
 
-        <h3 style="margin:0 0 12px">Historial completo</h3>
+        <h3 style="margin: 0 0 12px">Historial completo</h3>
         <div id="modalCamaraTimeline" class="timeline-camara"></div>
       </div>
     </div>
-
 
     <!-- MODAL INFORME DE CAMARAS CAIDAS -->
     <div id="modalInformeCaidas" onclick="cerrarInformeCaidasFondo(event)">
@@ -1023,26 +1173,43 @@
         <div class="informe-head">
           <div>
             <h2>📋 Informe de cámaras caídas</h2>
-            <div class="informe-sub" id="informeFecha">Preparando informe...</div>
+            <div class="informe-sub" id="informeFecha">
+              Preparando informe...
+            </div>
           </div>
-          <button class="cerrar-modal-camara" onclick="cerrarInformeCaidas()">✕</button>
+          <button class="cerrar-modal-camara" onclick="cerrarInformeCaidas()">
+            ✕
+          </button>
         </div>
 
         <div class="informe-kpis" id="informeKpis"></div>
 
         <div class="informe-tools">
-          <input id="buscarInformeCaidas" placeholder="Buscar cámara o ubicación..." oninput="renderInformeCaidas()" />
+          <input
+            id="buscarInformeCaidas"
+            placeholder="Buscar cámara o ubicación..."
+            oninput="renderInformeCaidas()"
+          />
           <select id="proveedorInformeCaidas" onchange="renderInformeCaidas()">
             <option value="">Todos los proveedores</option>
           </select>
-          <button class="btn-gray" onclick="copiarInformeCaidas()">📋 Copiar informe</button>
-          <button class="btn-green" onclick="descargarInformeCaidasCSV()">📥 Descargar para Excel</button>
+          <button class="btn-gray" onclick="copiarInformeCaidas()">
+            📋 Copiar informe
+          </button>
+          <button class="btn-green" onclick="descargarInformeCaidasCSV()">
+            📥 Descargar para Excel
+          </button>
         </div>
 
         <div class="informe-tabla-wrap">
           <div id="tablaInformeCaidas"></div>
         </div>
-        <div class="nota-informe">Los días sin registro no se cuentan como caída confirmada. “Primera caída registrada” busca hacia atrás hasta el último ONLINE conocido; “Días transcurridos” mide el tiempo calendario y “Días confirmados caída” cuenta únicamente jornadas con una falla observada.</div>
+        <div class="nota-informe">
+          Los días sin registro no se cuentan como caída confirmada. “Primera
+          caída registrada” busca hacia atrás hasta el último ONLINE conocido;
+          “Días transcurridos” mide el tiempo calendario y “Días confirmados
+          caída” cuenta únicamente jornadas con una falla observada.
+        </div>
       </div>
     </div>
 
@@ -1065,6 +1232,76 @@
       let filtroEstadoHistorial = "TODOS";
       let ordenHistorialActual = "NOMBRE";
       let datosInformeCaidas = [];
+
+      // =============================
+// USUARIO CONECTADO
+// =============================
+
+async function cargarUsuarioActual() {
+  try {
+    const respuesta =
+      await fetch("/api/usuario-actual");
+
+    if (!respuesta.ok) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const data =
+      await respuesta.json();
+
+    document.getElementById(
+      "usuarioConectado"
+    ).innerText =
+      `👤 ${data.usuario.nombre}`;
+
+  } catch (error) {
+    console.error(
+      "Error cargando usuario:",
+      error
+    );
+  }
+}
+
+
+// =============================
+// CERRAR SESION
+// =============================
+
+async function cerrarSesion() {
+
+  const confirmar =
+    confirm("¿Cerrar la sesión actual?");
+
+  if (!confirmar) {
+    return;
+  }
+
+  try {
+
+    const respuesta =
+      await fetch("/logout", {
+        method: "POST",
+      });
+
+    if (!respuesta.ok) {
+      throw new Error(
+        "No se pudo cerrar la sesión"
+      );
+    }
+
+    window.location.href = "/login";
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+}
+
+
+// CARGAR USUARIO AL ABRIR EL SISTEMA
+cargarUsuarioActual();
 
       /* reloj */
       setInterval(() => {
@@ -1273,11 +1510,12 @@
           if (el) el.classList.remove("periodo-activo");
         });
 
-        const activo = dias === 7
-          ? document.getElementById("btnPeriodo7")
-          : dias === 30
-            ? document.getElementById("btnPeriodo30")
-            : document.getElementById("btnPeriodoTodo");
+        const activo =
+          dias === 7
+            ? document.getElementById("btnPeriodo7")
+            : dias === 30
+              ? document.getElementById("btnPeriodo30")
+              : document.getElementById("btnPeriodoTodo");
 
         if (activo) activo.classList.add("periodo-activo");
 
@@ -1367,13 +1605,29 @@
           const { nombre, info, ultimoEstado } = cam;
 
           if (qCamara && !nombre.toUpperCase().includes(qCamara)) return false;
-          if (qProveedor && !(info.proveedor || "").toUpperCase().includes(qProveedor)) return false;
-          if (qUbicacion && !(info.ubicacion || "").toUpperCase().includes(qUbicacion)) return false;
-          if (qConexion && !(info.conexion || "").toUpperCase().includes(qConexion)) return false;
+          if (
+            qProveedor &&
+            !(info.proveedor || "").toUpperCase().includes(qProveedor)
+          )
+            return false;
+          if (
+            qUbicacion &&
+            !(info.ubicacion || "").toUpperCase().includes(qUbicacion)
+          )
+            return false;
+          if (
+            qConexion &&
+            !(info.conexion || "").toUpperCase().includes(qConexion)
+          )
+            return false;
           if (qIP && !(info.ip || "").toUpperCase().includes(qIP)) return false;
 
           if (filtroEstadoHistorial === "CAIDAS") {
-            return ultimoEstado === "SIN RESPUESTA" || ultimoEstado === "INESTABLE" || ultimoEstado === "ERROR";
+            return (
+              ultimoEstado === "SIN RESPUESTA" ||
+              ultimoEstado === "INESTABLE" ||
+              ultimoEstado === "ERROR"
+            );
           }
 
           if (filtroEstadoHistorial === "ONLINE") {
@@ -1387,11 +1641,23 @@
           if (ordenHistorialActual === "MAS_CAIDA") {
             const fallasA = a.diasCaida + a.diasInestable;
             const fallasB = b.diasCaida + b.diasInestable;
-            return fallasB - fallasA || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+            return (
+              fallasB - fallasA ||
+              a.nombre.localeCompare(b.nombre, "es", {
+                numeric: true,
+                sensitivity: "base",
+              })
+            );
           }
 
           if (ordenHistorialActual === "MAS_ONLINE") {
-            return b.diasOnline - a.diasOnline || a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+            return (
+              b.diasOnline - a.diasOnline ||
+              a.nombre.localeCompare(b.nombre, "es", {
+                numeric: true,
+                sensitivity: "base",
+              })
+            );
           }
 
           return a.nombre.localeCompare(b.nombre, "es", {
@@ -1419,25 +1685,36 @@
 
         filas.forEach((cam) => {
           const {
-            nombre, info, estados, ultimoEstado, diasCaida, diasOnline,
-            diasInestable, diasSinRegistro, diasConRegistro, disponibilidad,
+            nombre,
+            info,
+            estados,
+            ultimoEstado,
+            diasCaida,
+            diasOnline,
+            diasInestable,
+            diasSinRegistro,
+            diasConRegistro,
+            disponibilidad,
           } = cam;
 
           const prov = info.proveedor || "SIN DATO";
-          if (!proveedores[prov]) proveedores[prov] = { online: 0, caidas: 0, total: 0 };
+          if (!proveedores[prov])
+            proveedores[prov] = { online: 0, caidas: 0, total: 0 };
           proveedores[prov].total++;
           if (ultimoEstado.includes("ONLINE")) proveedores[prov].online++;
           else proveedores[prov].caidas++;
 
           const ultimasFechas = fechasVista.slice(-10);
           const miniHistorial = ultimasFechas.length
-            ? ultimasFechas.map((f) => {
-                const e = estados[f];
-                if (!e) {
-                  return `<span class="hist-dot sin-registro" title="${escaparHtml(f)} · SIN REGISTRO"></span>`;
-                }
-                return `<span class="hist-dot ${claseEstado(e)}" title="${escaparHtml(f)} · ${escaparHtml(e)}"></span>`;
-              }).join("")
+            ? ultimasFechas
+                .map((f) => {
+                  const e = estados[f];
+                  if (!e) {
+                    return `<span class="hist-dot sin-registro" title="${escaparHtml(f)} · SIN REGISTRO"></span>`;
+                  }
+                  return `<span class="hist-dot ${claseEstado(e)}" title="${escaparHtml(f)} · ${escaparHtml(e)}"></span>`;
+                })
+                .join("")
             : '<span style="color:#64748b">Sin datos</span>';
 
           const ultimoCambio = obtenerUltimoCambio(fechasTodas, estados);
@@ -1483,8 +1760,12 @@
 
         let kpi = "";
         Object.entries(proveedores).forEach(([prov, v]) => {
-          const porcOnline = v.total ? ((v.online / v.total) * 100).toFixed(1) : 0;
-          const porcCaidas = v.total ? ((v.caidas / v.total) * 100).toFixed(1) : 0;
+          const porcOnline = v.total
+            ? ((v.online / v.total) * 100).toFixed(1)
+            : 0;
+          const porcCaidas = v.total
+            ? ((v.caidas / v.total) * 100).toFixed(1)
+            : 0;
           kpi += `
             <div class="kpi-box">
               <div style="font-size:18px;font-weight:800;margin-bottom:12px">${escaparHtml(prov)}</div>
@@ -1512,7 +1793,9 @@
         const ultimaFecha = fechasTodas[fechasTodas.length - 1];
         const ultimoEstado = ultimaFecha ? estados[ultimaFecha] || "-" : "-";
         const ultimoCambio = obtenerUltimoCambio(fechasTodas, estados);
-        const periodoTexto = filtroDias ? `Últimos ${filtroDias} días calendario` : "Histórico completo";
+        const periodoTexto = filtroDias
+          ? `Últimos ${filtroDias} días calendario`
+          : "Histórico completo";
 
         modalCamaraNombre.innerText = nombre;
         modalCamaraInfo.innerHTML = `
@@ -1564,7 +1847,10 @@
       }
 
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") { cerrarModalCamara(); cerrarInformeCaidas(); }
+        if (event.key === "Escape") {
+          cerrarModalCamara();
+          cerrarInformeCaidas();
+        }
       });
 
       function estadoEsCaida(estado = "") {
@@ -1578,7 +1864,8 @@
         if (Array.isArray(data?.resultado)) return data.resultado;
         if (data && typeof data === "object") {
           return Object.entries(data).map(([nombre, valor]) => {
-            if (valor && typeof valor === "object") return { DENOMINACION: nombre, ...valor };
+            if (valor && typeof valor === "object")
+              return { DENOMINACION: nombre, ...valor };
             return { DENOMINACION: nombre, ESTADO: valor };
           });
         }
@@ -1650,7 +1937,10 @@
 
         // El estado actual confirma una falla hoy aunque todavía no exista
         // una foto diaria de hoy en el historial.
-        if (estadoEsCaida(estadoActual) && !estadoEsCaida(estadoHoyHist || "")) {
+        if (
+          estadoEsCaida(estadoActual) &&
+          !estadoEsCaida(estadoHoyHist || "")
+        ) {
           diasConfirmados++;
         }
 
@@ -1667,7 +1957,8 @@
       async function abrirInformeCaidas() {
         const modal = document.getElementById("modalInformeCaidas");
         modal.classList.add("abierto");
-        document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:24px;color:#94a3b8">Cargando estados actuales e historial...</div>';
+        document.getElementById("tablaInformeCaidas").innerHTML =
+          '<div style="padding:24px;color:#94a3b8">Cargando estados actuales e historial...</div>';
 
         try {
           const [resHistorial, resActual] = await Promise.all([
@@ -1678,7 +1969,9 @@
           const historial = await resHistorial.json();
           const actualRaw = await resActual.json();
           const actuales = normalizarEstadoActualRespuesta(actualRaw);
-          const fechasTodas = Array.isArray(historial.fechas) ? historial.fechas : [];
+          const fechasTodas = Array.isArray(historial.fechas)
+            ? historial.fechas
+            : [];
           const camarasHist = historial.camaras || {};
 
           datosInformeCaidas = actuales
@@ -1690,13 +1983,20 @@
               const hist = camarasHist[nombre] || {};
               const infoHist = hist.info || {};
               const estados = hist.estados || {};
-              const caida = calcularCaidaDesde(nombre, estado, fechasTodas, estados);
+              const caida = calcularCaidaDesde(
+                nombre,
+                estado,
+                fechasTodas,
+                estados,
+              );
 
               return {
                 nombre,
                 estado,
-                proveedor: cam.PROVEEDOR || cam.proveedor || infoHist.proveedor || "-",
-                ubicacion: cam.UBICACION || cam.ubicacion || infoHist.ubicacion || "-",
+                proveedor:
+                  cam.PROVEEDOR || cam.proveedor || infoHist.proveedor || "-",
+                ubicacion:
+                  cam.UBICACION || cam.ubicacion || infoHist.ubicacion || "-",
                 ip: cam.IP || cam.ip || infoHist.ip || "-",
                 desde: caida.desde,
                 dias: caida.dias,
@@ -1706,26 +2006,52 @@
               };
             })
             .filter(Boolean)
-            .sort((a, b) => b.dias - a.dias || a.nombre.localeCompare(b.nombre, "es", { numeric: true }));
+            .sort(
+              (a, b) =>
+                b.dias - a.dias ||
+                a.nombre.localeCompare(b.nombre, "es", { numeric: true }),
+            );
 
           const select = document.getElementById("proveedorInformeCaidas");
-          const proveedores = [...new Set(datosInformeCaidas.map((x) => x.proveedor).filter(Boolean))].sort();
-          select.innerHTML = '<option value="">Todos los proveedores</option>' + proveedores.map((p) => `<option value="${escaparHtml(p)}">${escaparHtml(p)}</option>`).join("");
+          const proveedores = [
+            ...new Set(
+              datosInformeCaidas.map((x) => x.proveedor).filter(Boolean),
+            ),
+          ].sort();
+          select.innerHTML =
+            '<option value="">Todos los proveedores</option>' +
+            proveedores
+              .map(
+                (p) =>
+                  `<option value="${escaparHtml(p)}">${escaparHtml(p)}</option>`,
+              )
+              .join("");
 
-          document.getElementById("informeFecha").innerText = `Estado actual · ${new Date().toLocaleString("es-AR")}`;
+          document.getElementById("informeFecha").innerText =
+            `Estado actual · ${new Date().toLocaleString("es-AR")}`;
           renderInformeCaidas();
         } catch (err) {
           console.error("Error generando informe de caídas:", err);
-          document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:24px;color:#fca5a5">No se pudo generar el informe. Verificá que el servidor esté activo.</div>';
+          document.getElementById("tablaInformeCaidas").innerHTML =
+            '<div style="padding:24px;color:#fca5a5">No se pudo generar el informe. Verificá que el servidor esté activo.</div>';
         }
       }
 
       function obtenerInformeFiltrado() {
-        const q = (document.getElementById("buscarInformeCaidas")?.value || "").toUpperCase().trim();
-        const proveedor = document.getElementById("proveedorInformeCaidas")?.value || "";
+        const q = (document.getElementById("buscarInformeCaidas")?.value || "")
+          .toUpperCase()
+          .trim();
+        const proveedor =
+          document.getElementById("proveedorInformeCaidas")?.value || "";
         return datosInformeCaidas.filter((cam) => {
           if (proveedor && cam.proveedor !== proveedor) return false;
-          if (q && !`${cam.nombre} ${cam.ubicacion} ${cam.proveedor} ${cam.ip}`.toUpperCase().includes(q)) return false;
+          if (
+            q &&
+            !`${cam.nombre} ${cam.ubicacion} ${cam.proveedor} ${cam.ip}`
+              .toUpperCase()
+              .includes(q)
+          )
+            return false;
           return true;
         });
       }
@@ -1759,7 +2085,8 @@
           </div>`;
 
         if (!filas.length) {
-          document.getElementById("tablaInformeCaidas").innerHTML = '<div style="padding:28px;text-align:center;color:#86efac;font-weight:800">✅ No hay cámaras caídas con estos filtros.</div>';
+          document.getElementById("tablaInformeCaidas").innerHTML =
+            '<div style="padding:28px;text-align:center;color:#86efac;font-weight:800">✅ No hay cámaras caídas con estos filtros.</div>';
           return;
         }
 
@@ -1819,25 +2146,52 @@
         const filas = obtenerInformeFiltrado();
         const escaparCSV = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
         const lineas = [
-          ["CAMARA", "UBICACION", "PROVEEDOR", "ESTADO", "PRIMERA CAIDA REGISTRADA", "DIAS TRANSCURRIDOS", "DIAS CONFIRMADOS CON FALLA", "DIAS SIN MEDICION", "ULTIMO ONLINE REGISTRADO", "IP"],
-          ...filas.map((cam) => [cam.nombre, cam.ubicacion, cam.proveedor, cam.estado, cam.desde, cam.dias, cam.diasConfirmados, cam.sinRegistro, cam.ultimoOnline, cam.ip]),
+          [
+            "CAMARA",
+            "UBICACION",
+            "PROVEEDOR",
+            "ESTADO",
+            "PRIMERA CAIDA REGISTRADA",
+            "DIAS TRANSCURRIDOS",
+            "DIAS CONFIRMADOS CON FALLA",
+            "DIAS SIN MEDICION",
+            "ULTIMO ONLINE REGISTRADO",
+            "IP",
+          ],
+          ...filas.map((cam) => [
+            cam.nombre,
+            cam.ubicacion,
+            cam.proveedor,
+            cam.estado,
+            cam.desde,
+            cam.dias,
+            cam.diasConfirmados,
+            cam.sinRegistro,
+            cam.ultimoOnline,
+            cam.ip,
+          ]),
         ];
-        const csv = "\uFEFF" + lineas.map((fila) => fila.map(escaparCSV).join(";")).join("\r\n");
+        const csv =
+          "\uFEFF" +
+          lineas.map((fila) => fila.map(escaparCSV).join(";")).join("\r\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `informe_camaras_caidas_${new Date().toISOString().slice(0,10)}.csv`;
+        a.download = `informe_camaras_caidas_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
       }
 
       function cerrarInformeCaidas() {
-        document.getElementById("modalInformeCaidas").classList.remove("abierto");
+        document
+          .getElementById("modalInformeCaidas")
+          .classList.remove("abierto");
       }
 
       function cerrarInformeCaidasFondo(event) {
-        if (event.target === document.getElementById("modalInformeCaidas")) cerrarInformeCaidas();
+        if (event.target === document.getElementById("modalInformeCaidas"))
+          cerrarInformeCaidas();
       }
 
       /* RANKING */
@@ -1884,129 +2238,81 @@
       }
       let estabaEscaneando = false;
 
-async function revisarAutoEscaneo() {
-  try {
+      async function revisarAutoEscaneo() {
+        try {
+          const res = await fetch("/progreso");
 
-    const res = await fetch("/progreso");
+          const p = await res.json();
 
-    const p = await res.json();
+          const contenedor = document.getElementById("estadoEscaneo");
 
-    const contenedor =
-      document.getElementById("estadoEscaneo");
+          const barra = document.getElementById("barraEscaneo");
 
-    const barra =
-      document.getElementById("barraEscaneo");
+          const texto = document.getElementById("textoEscaneo");
 
-    const texto =
-      document.getElementById("textoEscaneo");
+          const detalle = document.getElementById("detalleEscaneo");
 
-    const detalle =
-      document.getElementById("detalleEscaneo");
+          const btn = document.getElementById("btnAnalizarTodas");
 
-    const btn =
-      document.getElementById("btnAnalizarTodas");
+          if (p.escaneoEnCurso) {
+            estabaEscaneando = true;
 
+            contenedor.style.display = "block";
 
-    if (p.escaneoEnCurso) {
+            if (btn) {
+              btn.disabled = true;
+              btn.style.opacity = "0.5";
+              btn.style.cursor = "not-allowed";
+            }
 
-      estabaEscaneando = true;
+            const total = Number(p.total || 0);
 
-      contenedor.style.display = "block";
+            const procesadas = Number(p.procesadas || 0);
 
-      if (btn) {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-        btn.style.cursor = "not-allowed";
+            let porcentaje = 0;
+
+            if (total > 0) {
+              porcentaje = Math.round((procesadas / total) * 100);
+            }
+
+            barra.style.width = porcentaje + "%";
+
+            texto.innerText = "🔄 Autoescaneo en curso... " + porcentaje + "%";
+
+            detalle.innerText = `Procesadas: ${procesadas} / ${total}`;
+          } else {
+            if (btn) {
+              btn.disabled = false;
+              btn.style.opacity = "1";
+              btn.style.cursor = "pointer";
+            }
+
+            if (estabaEscaneando) {
+              texto.innerText = "✅ Autoescaneo finalizado";
+
+              barra.style.width = "100%";
+
+              detalle.innerText = "Escaneo completado";
+
+              setTimeout(() => {
+                contenedor.style.display = "none";
+
+                barra.style.width = "0%";
+              }, 5000);
+
+              estabaEscaneando = false;
+            } else {
+              contenedor.style.display = "none";
+            }
+          }
+        } catch (err) {
+          console.error("Error consultando autoescaneo:", err);
+        }
       }
 
+      setInterval(revisarAutoEscaneo, 1000);
 
-      const total = Number(p.total || 0);
-
-      const procesadas =
-        Number(p.procesadas || 0);
-
-
-      let porcentaje = 0;
-
-      if (total > 0) {
-        porcentaje =
-          Math.round(
-            (procesadas / total) * 100
-          );
-      }
-
-
-      barra.style.width =
-        porcentaje + "%";
-
-
-      texto.innerText =
-        "🔄 Autoescaneo en curso... " +
-        porcentaje +
-        "%";
-
-
-      detalle.innerText =
-        `Procesadas: ${procesadas} / ${total}`;
-
-    } else {
-
-      if (btn) {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
-      }
-
-
-      if (estabaEscaneando) {
-
-        texto.innerText =
-          "✅ Autoescaneo finalizado";
-
-        barra.style.width =
-          "100%";
-
-        detalle.innerText =
-          "Escaneo completado";
-
-
-        setTimeout(() => {
-          contenedor.style.display =
-            "none";
-
-          barra.style.width =
-            "0%";
-        }, 5000);
-
-
-        estabaEscaneando = false;
-
-      } else {
-
-        contenedor.style.display =
-          "none";
-
-      }
-
-    }
-
-  } catch (err) {
-
-    console.error(
-      "Error consultando autoescaneo:",
-      err
-    );
-
-  }
-}
-
-
-setInterval(
-  revisarAutoEscaneo,
-  1000
-);
-
-revisarAutoEscaneo();
+      revisarAutoEscaneo();
 
       verHistorial();
       cargarUltimoEscaneo();

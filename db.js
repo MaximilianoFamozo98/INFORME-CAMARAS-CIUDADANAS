@@ -67,5 +67,20 @@ CREATE TABLE IF NOT EXISTS estado_actual (
     fecha TEXT
 )
 `).run();
+/* =========================
+TABLA USUARIOS
+========================= */
+
+db.prepare(`
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT NOT NULL UNIQUE,
+    nombre TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    rol TEXT NOT NULL DEFAULT 'OPERADOR',
+    activo INTEGER NOT NULL DEFAULT 1,
+    fecha_creacion TEXT NOT NULL
+)
+`).run();
 
 module.exports = db;

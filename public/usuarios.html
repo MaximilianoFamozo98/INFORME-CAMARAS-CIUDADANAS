@@ -1,377 +1,330 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Usuarios | Cámaras Ciudadanas</title>
+    <title>Usuarios | Cámaras Ciudadanas</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0b1422;
-      color: #fff;
-    }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0b1422;
+        color: #fff;
+      }
 
-    .contenedor {
-      width: 1100px;
-      max-width: calc(100% - 40px);
-      margin: 35px auto;
-    }
+      .contenedor {
+        width: 1100px;
+        max-width: calc(100% - 40px);
+        margin: 35px auto;
+      }
 
-    .encabezado {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
+      .encabezado {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
 
-    h1 {
-      margin: 0;
-      font-size: 27px;
-    }
+      h1 {
+        margin: 0;
+        font-size: 27px;
+      }
 
-    .subtitulo {
-      color: #91a4bd;
-      margin-top: 7px;
-      font-size: 14px;
-    }
+      .subtitulo {
+        color: #91a4bd;
+        margin-top: 7px;
+        font-size: 14px;
+      }
 
-    .volver {
-      text-decoration: none;
-      color: white;
-      background: #24364e;
-      padding: 10px 16px;
-      border-radius: 8px;
-    }
+      .volver {
+        text-decoration: none;
+        color: white;
+        background: #24364e;
+        padding: 10px 16px;
+        border-radius: 8px;
+      }
 
-    .panel {
-      background: #111c2d;
-      border: 1px solid #263951;
-      border-radius: 14px;
-      padding: 22px;
-      margin-bottom: 25px;
-    }
+      .panel {
+        background: #111c2d;
+        border: 1px solid #263951;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 25px;
+      }
 
-    .panel h2 {
-      margin-top: 0;
-      font-size: 19px;
-    }
+      .panel h2 {
+        margin-top: 0;
+        font-size: 19px;
+      }
 
-    .formulario {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    label {
-      display: block;
-      color: #aebed2;
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    input {
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #344a67;
-      border-radius: 7px;
-      background: #0a1422;
-      color: white;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #3f8cff;
-    }
-
-    button {
-      border: 0;
-      border-radius: 7px;
-      padding: 11px 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .crear {
-      background: #2874d0;
-      color: white;
-      min-width: 140px;
-    }
-
-    .crear:hover {
-      background: #3485e5;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      color: #8fa4bf;
-      font-size: 12px;
-      padding: 12px;
-      border-bottom: 1px solid #2a3d56;
-    }
-
-    td {
-      padding: 14px 12px;
-      border-bottom: 1px solid #1f3046;
-      font-size: 14px;
-    }
-
-    .estado {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .activo {
-      background: rgba(40, 167, 69, .18);
-      color: #70dc8b;
-    }
-
-    .inactivo {
-      background: rgba(220, 53, 69, .18);
-      color: #ff818d;
-    }
-
-    .acciones {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-    }
-
-    .password {
-      background: #334b69;
-      color: white;
-    }
-
-    .desactivar {
-      background: #7d3038;
-      color: white;
-    }
-
-    .activar {
-      background: #25683a;
-      color: white;
-    }
-
-    #mensaje {
-      display: none;
-      margin-top: 15px;
-      padding: 11px;
-      border-radius: 7px;
-      font-size: 13px;
-    }
-
-    .mensaje-ok {
-      background: rgba(40, 167, 69, .15);
-      color: #78e393;
-    }
-
-    .mensaje-error {
-      background: rgba(220, 53, 69, .15);
-      color: #ff8995;
-    }
-
-    @media (max-width: 850px) {
       .formulario {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 12px;
+        align-items: end;
       }
 
-      .tabla-contenedor {
-        overflow-x: auto;
+      label {
+        display: block;
+        color: #aebed2;
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 6px;
       }
-    }
-  </style>
-</head>
 
-<body>
+      input {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #344a67;
+        border-radius: 7px;
+        background: #0a1422;
+        color: white;
+        outline: none;
+      }
 
-<div class="contenedor">
+      input:focus {
+        border-color: #3f8cff;
+      }
 
-  <div class="encabezado">
-    <div>
-      <h1>👥 Administración de usuarios</h1>
-      <div class="subtitulo">
-        Cámaras Ciudadanas
+      button {
+        border: 0;
+        border-radius: 7px;
+        padding: 11px 15px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .crear {
+        background: #2874d0;
+        color: white;
+        min-width: 140px;
+      }
+
+      .crear:hover {
+        background: #3485e5;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        text-align: left;
+        color: #8fa4bf;
+        font-size: 12px;
+        padding: 12px;
+        border-bottom: 1px solid #2a3d56;
+      }
+
+      td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #1f3046;
+        font-size: 14px;
+      }
+
+      .estado {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .activo {
+        background: rgba(40, 167, 69, 0.18);
+        color: #70dc8b;
+      }
+
+      .inactivo {
+        background: rgba(220, 53, 69, 0.18);
+        color: #ff818d;
+      }
+
+      .acciones {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .password {
+        background: #334b69;
+        color: white;
+      }
+
+      .desactivar {
+        background: #7d3038;
+        color: white;
+      }
+
+      .activar {
+        background: #25683a;
+        color: white;
+      }
+      .eliminar {
+        background: #991b1b;
+        color: white;
+      }
+
+      .eliminar:hover {
+        background: #b91c1c;
+      }
+
+      #mensaje {
+        display: none;
+        margin-top: 15px;
+        padding: 11px;
+        border-radius: 7px;
+        font-size: 13px;
+      }
+
+      .mensaje-ok {
+        background: rgba(40, 167, 69, 0.15);
+        color: #78e393;
+      }
+
+      .mensaje-error {
+        background: rgba(220, 53, 69, 0.15);
+        color: #ff8995;
+      }
+
+      @media (max-width: 850px) {
+        .formulario {
+          grid-template-columns: 1fr;
+        }
+
+        .tabla-contenedor {
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="contenedor">
+      <div class="encabezado">
+        <div>
+          <h1>👥 Administración de usuarios</h1>
+          <div class="subtitulo">Cámaras Ciudadanas</div>
+        </div>
+
+        <a class="volver" href="/"> ← Volver </a>
+      </div>
+
+      <div class="panel">
+        <h2>Crear usuario</h2>
+
+        <form id="formUsuario" class="formulario">
+          <div>
+            <label>NOMBRE</label>
+
+            <input id="nombre" placeholder="Ej: Juan Pérez" required />
+          </div>
+
+          <div>
+            <label>USUARIO</label>
+
+            <input id="usuario" placeholder="Ej: jperez" required />
+          </div>
+
+          <div>
+            <label>CONTRASEÑA</label>
+
+            <input
+              id="password"
+              type="password"
+              minlength="6"
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+          </div>
+
+          <button class="crear" type="submit">Crear usuario</button>
+        </form>
+
+        <div id="mensaje"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Usuarios del sistema</h2>
+
+        <div class="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>USUARIO</th>
+                <th>ROL</th>
+                <th>ESTADO</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+
+            <tbody id="usuarios"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <a class="volver" href="/">
-      ← Volver
-    </a>
-  </div>
+    <script>
+      const tbody = document.getElementById("usuarios");
 
+      const mensaje = document.getElementById("mensaje");
 
-  <div class="panel">
+      // =============================
+      // MENSAJES
+      // =============================
 
-    <h2>Crear usuario</h2>
+      function mostrarMensaje(texto, error = false) {
+        mensaje.textContent = texto;
 
-    <form
-      id="formUsuario"
-      class="formulario"
-    >
+        mensaje.className = error ? "mensaje-error" : "mensaje-ok";
 
-      <div>
-        <label>NOMBRE</label>
+        mensaje.style.display = "block";
 
-        <input
-          id="nombre"
-          placeholder="Ej: Juan Pérez"
-          required
-        >
-      </div>
+        setTimeout(() => {
+          mensaje.style.display = "none";
+        }, 4000);
+      }
 
-      <div>
-        <label>USUARIO</label>
+      // =============================
+      // CARGAR USUARIOS
+      // =============================
 
-        <input
-          id="usuario"
-          placeholder="Ej: jperez"
-          required
-        >
-      </div>
+      async function cargarUsuarios() {
+        try {
+          const respuesta = await fetch("/api/usuarios");
 
-      <div>
-        <label>CONTRASEÑA</label>
+          if (respuesta.status === 401) {
+            window.location.href = "/login";
+            return;
+          }
 
-        <input
-          id="password"
-          type="password"
-          minlength="6"
-          placeholder="Mínimo 6 caracteres"
-          required
-        >
-      </div>
+          const data = await respuesta.json();
 
-      <button
-        class="crear"
-        type="submit"
-      >
-        Crear usuario
-      </button>
+          if (!respuesta.ok) {
+            throw new Error(
+              data.mensaje || "No se pudieron cargar los usuarios",
+            );
+          }
 
-    </form>
+          tbody.innerHTML = "";
 
-    <div id="mensaje"></div>
+          data.usuarios.forEach((u) => {
+            const tr = document.createElement("tr");
 
-  </div>
+            const estado = u.activo
+              ? `<span class="estado activo">ACTIVO</span>`
+              : `<span class="estado inactivo">INACTIVO</span>`;
 
-
-  <div class="panel">
-
-    <h2>Usuarios del sistema</h2>
-
-    <div class="tabla-contenedor">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>NOMBRE</th>
-            <th>USUARIO</th>
-            <th>ROL</th>
-            <th>ESTADO</th>
-            <th>ACCIONES</th>
-          </tr>
-        </thead>
-
-        <tbody id="usuarios">
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<script>
-
-const tbody =
-  document.getElementById("usuarios");
-
-const mensaje =
-  document.getElementById("mensaje");
-
-
-// =============================
-// MENSAJES
-// =============================
-
-function mostrarMensaje(texto, error = false) {
-
-  mensaje.textContent = texto;
-
-  mensaje.className =
-    error
-      ? "mensaje-error"
-      : "mensaje-ok";
-
-  mensaje.style.display = "block";
-
-  setTimeout(() => {
-    mensaje.style.display = "none";
-  }, 4000);
-}
-
-
-// =============================
-// CARGAR USUARIOS
-// =============================
-
-async function cargarUsuarios() {
-
-  try {
-
-    const respuesta =
-      await fetch("/api/usuarios");
-
-    if (respuesta.status === 401) {
-      window.location.href = "/login";
-      return;
-    }
-
-    const data =
-      await respuesta.json();
-
-    if (!respuesta.ok) {
-      throw new Error(
-        data.mensaje ||
-        "No se pudieron cargar los usuarios"
-      );
-    }
-
-    tbody.innerHTML = "";
-
-    data.usuarios.forEach((u) => {
-
-      const tr =
-        document.createElement("tr");
-
-      const estado =
-        u.activo
-          ? `<span class="estado activo">ACTIVO</span>`
-          : `<span class="estado inactivo">INACTIVO</span>`;
-
-      const botonEstado =
-        u.activo
-          ? `
+            const botonEstado = u.activo
+              ? `
             <button
               class="desactivar"
               onclick="cambiarEstado(${u.id}, false)"
@@ -379,7 +332,7 @@ async function cargarUsuarios() {
               Desactivar
             </button>
           `
-          : `
+              : `
             <button
               class="activar"
               onclick="cambiarEstado(${u.id}, true)"
@@ -388,7 +341,7 @@ async function cargarUsuarios() {
             </button>
           `;
 
-      tr.innerHTML = `
+            tr.innerHTML = `
         <td>${escapar(u.nombre)}</td>
 
         <td>
@@ -417,126 +370,173 @@ async function cargarUsuarios() {
             </button>
 
             ${botonEstado}
+${botonEstado}
 
+<button
+  class="eliminar"
+  onclick="eliminarUsuario(
+    ${u.id},
+    '${escaparJS(u.nombre)}'
+  )"
+>
+  🗑️ Eliminar
+</button>
+
+</div>
           </div>
         </td>
       `;
 
-      tbody.appendChild(tr);
+            tbody.appendChild(tr);
+          });
+        } catch (error) {
+          mostrarMensaje(error.message, true);
+        }
+      }
 
-    });
+      // =============================
+      // CREAR USUARIO
+      // =============================
 
-  } catch (error) {
+      document
+        .getElementById("formUsuario")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-    mostrarMensaje(
-      error.message,
-      true
-    );
-
-  }
-}
-
-
-// =============================
-// CREAR USUARIO
-// =============================
-
-document
-  .getElementById("formUsuario")
-  .addEventListener(
-    "submit",
-    async (e) => {
-
-      e.preventDefault();
-
-      try {
-
-        const respuesta =
-          await fetch(
-            "/api/usuarios",
-            {
+          try {
+            const respuesta = await fetch("/api/usuarios", {
               method: "POST",
 
               headers: {
-                "Content-Type":
-                  "application/json",
+                "Content-Type": "application/json",
               },
 
               body: JSON.stringify({
-                nombre:
-                  document.getElementById(
-                    "nombre"
-                  ).value,
+                nombre: document.getElementById("nombre").value,
 
-                usuario:
-                  document.getElementById(
-                    "usuario"
-                  ).value,
+                usuario: document.getElementById("usuario").value,
 
-                password:
-                  document.getElementById(
-                    "password"
-                  ).value,
+                password: document.getElementById("password").value,
               }),
+            });
+
+            const data = await respuesta.json();
+
+            if (!respuesta.ok) {
+              throw new Error(data.mensaje || "No se pudo crear el usuario");
             }
-          );
 
-        const data =
-          await respuesta.json();
+            mostrarMensaje(data.mensaje);
 
-        if (!respuesta.ok) {
-          throw new Error(
-            data.mensaje ||
-            "No se pudo crear el usuario"
-          );
+            e.target.reset();
+
+            cargarUsuarios();
+          } catch (error) {
+            mostrarMensaje(error.message, true);
+          }
+        });
+
+      // =============================
+      // CAMBIAR CONTRASEÑA
+      // =============================
+
+      async function cambiarPassword(id, nombre) {
+        const password = prompt(`Nueva contraseña para ${nombre}:`);
+
+        if (password === null) {
+          return;
         }
 
-        mostrarMensaje(
-          data.mensaje
-        );
+        if (password.length < 6) {
+          mostrarMensaje(
+            "La contraseña debe tener al menos 6 caracteres",
+            true,
+          );
 
-        e.target.reset();
+          return;
+        }
 
-        cargarUsuarios();
+        try {
+          const respuesta = await fetch(`/api/usuarios/${id}/password`, {
+            method: "PUT",
 
-      } catch (error) {
+            headers: {
+              "Content-Type": "application/json",
+            },
 
-        mostrarMensaje(
-          error.message,
-          true
-        );
+            body: JSON.stringify({
+              password,
+            }),
+          });
 
+          const data = await respuesta.json();
+
+          if (!respuesta.ok) {
+            throw new Error(data.mensaje || "No se pudo cambiar la contraseña");
+          }
+
+          mostrarMensaje(data.mensaje);
+        } catch (error) {
+          mostrarMensaje(error.message, true);
+        }
       }
 
-    }
-  );
+      // =============================
+      // ACTIVAR / DESACTIVAR
+      // =============================
+
+      async function cambiarEstado(id, activo) {
+        const texto = activo
+          ? "¿Activar este usuario?"
+          : "¿Desactivar este usuario?";
+
+        if (!confirm(texto)) {
+          return;
+        }
+
+        try {
+          const respuesta = await fetch(`/api/usuarios/${id}/estado`, {
+            method: "PUT",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              activo,
+            }),
+          });
+
+          const data = await respuesta.json();
+
+          if (!respuesta.ok) {
+            throw new Error(data.mensaje || "No se pudo modificar el usuario");
+          }
+
+          mostrarMensaje(data.mensaje);
+
+          cargarUsuarios();
+        } catch (error) {
+          mostrarMensaje(error.message, true);
+        }
+      }
 
 
+      // =============================
+// ELIMINAR USUARIO
 // =============================
-// CAMBIAR CONTRASEÑA
-// =============================
 
-async function cambiarPassword(
+async function eliminarUsuario(
   id,
   nombre
 ) {
 
-  const password =
-    prompt(
-      `Nueva contraseña para ${nombre}:`
-    );
+  const confirmar = confirm(
+    `¿Eliminar definitivamente al usuario "${nombre}"?\n\n` +
+    `Esta acción eliminará su acceso al sistema.`
+  );
 
-  if (password === null) {
-    return;
-  }
-
-  if (password.length < 6) {
-
-    mostrarMensaje(
-      "La contraseña debe tener al menos 6 caracteres",
-      true
-    );
-
+  if (!confirmar) {
     return;
   }
 
@@ -544,18 +544,9 @@ async function cambiarPassword(
 
     const respuesta =
       await fetch(
-        `/api/usuarios/${id}/password`,
+        `/api/usuarios/${id}`,
         {
-          method: "PUT",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            password
-          }),
+          method: "DELETE",
         }
       );
 
@@ -565,69 +556,7 @@ async function cambiarPassword(
     if (!respuesta.ok) {
       throw new Error(
         data.mensaje ||
-        "No se pudo cambiar la contraseña"
-      );
-    }
-
-    mostrarMensaje(
-      data.mensaje
-    );
-
-  } catch (error) {
-
-    mostrarMensaje(
-      error.message,
-      true
-    );
-
-  }
-}
-
-
-// =============================
-// ACTIVAR / DESACTIVAR
-// =============================
-
-async function cambiarEstado(
-  id,
-  activo
-) {
-
-  const texto =
-    activo
-      ? "¿Activar este usuario?"
-      : "¿Desactivar este usuario?";
-
-  if (!confirm(texto)) {
-    return;
-  }
-
-  try {
-
-    const respuesta =
-      await fetch(
-        `/api/usuarios/${id}/estado`,
-        {
-          method: "PUT",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            activo
-          }),
-        }
-      );
-
-    const data =
-      await respuesta.json();
-
-    if (!respuesta.ok) {
-      throw new Error(
-        data.mensaje ||
-        "No se pudo modificar el usuario"
+        "No se pudo eliminar el usuario"
       );
     }
 
@@ -646,35 +575,25 @@ async function cambiarEstado(
 
   }
 }
+      // =============================
+      // SEGURIDAD HTML
+      // =============================
 
+      function escapar(valor) {
+        return String(valor)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
 
-// =============================
-// SEGURIDAD HTML
-// =============================
+      function escaparJS(valor) {
+        return String(valor).replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+      }
 
-function escapar(valor) {
-
-  return String(valor)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-
-function escaparJS(valor) {
-
-  return String(valor)
-    .replaceAll("\\", "\\\\")
-    .replaceAll("'", "\\'");
-}
-
-
-// INICIAR
-cargarUsuarios();
-
-</script>
-
-</body>
+      // INICIAR
+      cargarUsuarios();
+    </script>
+  </body>
 </html>

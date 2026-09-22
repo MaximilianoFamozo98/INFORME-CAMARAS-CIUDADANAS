@@ -6,25 +6,16 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 //------  Archivo mapa -------------------
 const Database = require("better-sqlite3");
-const exeDir = process.pkg
-  ? path.dirname(process.execPath)
-  : __dirname;
+const exeDir = process.pkg ? path.dirname(process.execPath) : __dirname;
 
-const rutaMapa = path.join(
-  exeDir,
-  "data",
-  "mapa.mbtiles"
-);
+const rutaMapa = path.join(exeDir, "data", "mapa.mbtiles");
 
 console.log("🗺️ Ruta MBTiles:", rutaMapa);
 
-const mapaDB = new Database(
-  rutaMapa,
-  {
-    readonly: true,
-    fileMustExist: true,
-  }
-);
+const mapaDB = new Database(rutaMapa, {
+  readonly: true,
+  fileMustExist: true,
+});
 //--------------------------
 const { exec } = require("child_process");
 const db = require("./db");
@@ -93,11 +84,13 @@ app.use((req, res, next) => {
 
   try {
     const usuario = db
-      .prepare(`
+      .prepare(
+        `
         SELECT id, usuario, nombre, rol, activo
         FROM usuarios
         WHERE id = ?
-      `)
+      `,
+      )
       .get(req.session.usuarioId);
 
     if (!usuario || !usuario.activo) {
@@ -123,28 +116,24 @@ app.get("/login", (req, res) => {
     return res.redirect("/");
   }
 
-  res.sendFile(
-    path.join(__dirname, "public", "login.html"),
-  );
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
 app.post("/login", async (req, res) => {
   try {
-    const usuarioIngresado = String(
-      req.body.usuario || "",
-    ).trim();
+    const usuarioIngresado = String(req.body.usuario || "").trim();
 
-    const password = String(
-      req.body.password || "",
-    );
+    const password = String(req.body.password || "");
 
     const usuario = db
-      .prepare(`
+      .prepare(
+        `
         SELECT *
         FROM usuarios
         WHERE usuario = ?
           AND activo = 1
-      `)
+      `,
+      )
       .get(usuarioIngresado);
 
     if (!usuario) {
@@ -245,7 +234,8 @@ app.get("/api/usuarios", (req, res) => {
 
   try {
     const usuarios = db
-      .prepare(`
+      .prepare(
+        `
         SELECT
           id,
           usuario,
@@ -255,7 +245,8 @@ app.get("/api/usuarios", (req, res) => {
           fecha_creacion
         FROM usuarios
         ORDER BY nombre ASC
-      `)
+      `,
+      )
       .all();
 
     res.json({
@@ -272,7 +263,6 @@ app.get("/api/usuarios", (req, res) => {
   }
 });
 
-
 // =============================
 // CREAR USUARIO
 // =============================
@@ -286,17 +276,11 @@ app.post("/api/usuarios", async (req, res) => {
   }
 
   try {
-    const usuario = String(
-      req.body.usuario || "",
-    ).trim();
+    const usuario = String(req.body.usuario || "").trim();
 
-    const nombre = String(
-      req.body.nombre || "",
-    ).trim();
+    const nombre = String(req.body.nombre || "").trim();
 
-    const password = String(
-      req.body.password || "",
-    );
+    const password = String(req.body.password || "");
 
     if (!usuario || !nombre || !password) {
       return res.status(400).json({
@@ -308,17 +292,18 @@ app.post("/api/usuarios", async (req, res) => {
     if (password.length < 6) {
       return res.status(400).json({
         ok: false,
-        mensaje:
-          "La contraseña debe tener al menos 6 caracteres",
+        mensaje: "La contraseña debe tener al menos 6 caracteres",
       });
     }
 
     const existe = db
-      .prepare(`
+      .prepare(
+        `
         SELECT id
         FROM usuarios
         WHERE usuario = ?
-      `)
+      `,
+      )
       .get(usuario);
 
     if (existe) {
@@ -328,16 +313,13 @@ app.post("/api/usuarios", async (req, res) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(
-      password,
-      12,
-    );
+    const passwordHash = await bcrypt.hash(password, 12);
 
-    const fechaCreacion =
-      new Date().toISOString();
+    const fechaCreacion = new Date().toISOString();
 
     const resultado = db
-      .prepare(`
+      .prepare(
+        `
         INSERT INTO usuarios (
           usuario,
           nombre,
@@ -347,13 +329,9 @@ app.post("/api/usuarios", async (req, res) => {
           fecha_creacion
         )
         VALUES (?, ?, ?, 'ADMIN', 1, ?)
-      `)
-      .run(
-        usuario,
-        nombre,
-        passwordHash,
-        fechaCreacion,
-      );
+      `,
+      )
+      .run(usuario, nombre, passwordHash, fechaCreacion);
 
     registrarAccion(
       obtenerUsuario(req),
@@ -367,10 +345,7 @@ app.post("/api/usuarios", async (req, res) => {
       id: resultado.lastInsertRowid,
     });
   } catch (error) {
-    console.error(
-      "❌ Error creando usuario:",
-      error,
-    );
+    console.error("❌ Error creando usuario:", error);
 
     res.status(500).json({
       ok: false,
@@ -379,181 +354,437 @@ app.post("/api/usuarios", async (req, res) => {
   }
 });
 
-
 // =============================
 // CAMBIAR CONTRASEÑA
 // =============================
 
-app.put(
-  "/api/usuarios/:id/password",
-  async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({
+app.put("/api/usuarios/:id/password", async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const id = Number(req.params.id);
+
+    const password = String(req.body.password || "");
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
         ok: false,
-        mensaje: "Sesión no iniciada",
+        mensaje: "Usuario inválido",
       });
     }
 
-    try {
-      const id = Number(req.params.id);
+    if (password.length < 6) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "La contraseña debe tener al menos 6 caracteres",
+      });
+    }
 
-      const password = String(
-        req.body.password || "",
-      );
-
-      if (!Number.isInteger(id)) {
-        return res.status(400).json({
-          ok: false,
-          mensaje: "Usuario inválido",
-        });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({
-          ok: false,
-          mensaje:
-            "La contraseña debe tener al menos 6 caracteres",
-        });
-      }
-
-      const usuario = db
-        .prepare(`
+    const usuario = db
+      .prepare(
+        `
           SELECT id, usuario, nombre
           FROM usuarios
           WHERE id = ?
-        `)
-        .get(id);
+        `,
+      )
+      .get(id);
 
-      if (!usuario) {
-        return res.status(404).json({
-          ok: false,
-          mensaje: "Usuario no encontrado",
-        });
-      }
+    if (!usuario) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: "Usuario no encontrado",
+      });
+    }
 
-      const passwordHash =
-        await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 12);
 
-      db.prepare(`
+    db.prepare(
+      `
         UPDATE usuarios
         SET password_hash = ?
         WHERE id = ?
-      `).run(passwordHash, id);
+      `,
+    ).run(passwordHash, id);
 
-      registrarAccion(
-        obtenerUsuario(req),
-        "CAMBIO_PASSWORD_USUARIO",
-        `${usuario.nombre} (${usuario.usuario})`,
-      );
+    registrarAccion(
+      obtenerUsuario(req),
+      "CAMBIO_PASSWORD_USUARIO",
+      `${usuario.nombre} (${usuario.usuario})`,
+    );
 
-      res.json({
-        ok: true,
-        mensaje:
-          "Contraseña actualizada correctamente",
-      });
-    } catch (error) {
-      console.error(
-        "❌ Error cambiando contraseña:",
-        error,
-      );
+    res.json({
+      ok: true,
+      mensaje: "Contraseña actualizada correctamente",
+    });
+  } catch (error) {
+    console.error("❌ Error cambiando contraseña:", error);
 
-      res.status(500).json({
-        ok: false,
-        mensaje:
-          "No se pudo cambiar la contraseña",
-      });
-    }
-  },
-);
-
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo cambiar la contraseña",
+    });
+  }
+});
 
 // =============================
 // ACTIVAR / DESACTIVAR USUARIO
 // =============================
 
-app.put(
-  "/api/usuarios/:id/estado",
-  (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({
+app.put("/api/usuarios/:id/estado", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const id = Number(req.params.id);
+    const activo = req.body.activo === true || req.body.activo === 1 ? 1 : 0;
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
         ok: false,
-        mensaje: "Sesión no iniciada",
+        mensaje: "Usuario inválido",
       });
     }
 
-    try {
-      const id = Number(req.params.id);
-      const activo =
-        req.body.activo === true ||
-        req.body.activo === 1
-          ? 1
-          : 0;
+    // Evitar que uno se desactive a sí mismo
+    if (id === req.user.id && activo === 0) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "No podés desactivar tu propio usuario",
+      });
+    }
 
-      if (!Number.isInteger(id)) {
-        return res.status(400).json({
-          ok: false,
-          mensaje: "Usuario inválido",
-        });
-      }
-
-      // Evitar que uno se desactive a sí mismo
-      if (id === req.user.id && activo === 0) {
-        return res.status(400).json({
-          ok: false,
-          mensaje:
-            "No podés desactivar tu propio usuario",
-        });
-      }
-
-      const usuario = db
-        .prepare(`
+    const usuario = db
+      .prepare(
+        `
           SELECT id, usuario, nombre
           FROM usuarios
           WHERE id = ?
-        `)
-        .get(id);
+        `,
+      )
+      .get(id);
 
-      if (!usuario) {
-        return res.status(404).json({
-          ok: false,
-          mensaje: "Usuario no encontrado",
-        });
-      }
+    if (!usuario) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: "Usuario no encontrado",
+      });
+    }
 
-      db.prepare(`
+    db.prepare(
+      `
         UPDATE usuarios
         SET activo = ?
         WHERE id = ?
-      `).run(activo, id);
+      `,
+    ).run(activo, id);
 
-      registrarAccion(
-        obtenerUsuario(req),
-        activo
-          ? "ACTIVO_USUARIO"
-          : "DESACTIVO_USUARIO",
-        `${usuario.nombre} (${usuario.usuario})`,
-      );
+    registrarAccion(
+      obtenerUsuario(req),
+      activo ? "ACTIVO_USUARIO" : "DESACTIVO_USUARIO",
+      `${usuario.nombre} (${usuario.usuario})`,
+    );
 
-      res.json({
-        ok: true,
-        mensaje: activo
-          ? "Usuario activado"
-          : "Usuario desactivado",
-      });
-    } catch (error) {
-      console.error(
-        "❌ Error cambiando estado del usuario:",
-        error,
-      );
+    res.json({
+      ok: true,
+      mensaje: activo ? "Usuario activado" : "Usuario desactivado",
+    });
+  } catch (error) {
+    console.error("❌ Error cambiando estado del usuario:", error);
 
-      res.status(500).json({
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo modificar el usuario",
+    });
+  }
+});
+
+// =============================
+// ELIMINAR USUARIO
+// =============================
+
+app.delete("/api/usuarios/:id", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
         ok: false,
-        mensaje:
-          "No se pudo modificar el usuario",
+        mensaje: "Usuario inválido",
       });
     }
-  },
-);
+
+    // No permitir eliminarse a uno mismo
+    if (id === req.user.id) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "No podés eliminar tu propio usuario",
+      });
+    }
+
+    const usuario = db
+      .prepare(
+        `
+          SELECT
+            id,
+            usuario,
+            nombre
+          FROM usuarios
+          WHERE id = ?
+        `,
+      )
+      .get(id);
+
+    if (!usuario) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: "Usuario no encontrado",
+      });
+    }
+
+    // Guardamos quién lo elimina ANTES
+    // de borrar el usuario
+    registrarAccion(
+      obtenerUsuario(req),
+      "ELIMINO_USUARIO",
+      `${usuario.nombre} (${usuario.usuario})`,
+    );
+
+    db.prepare(
+      `
+        DELETE FROM usuarios
+        WHERE id = ?
+      `,
+    ).run(id);
+
+    res.json({
+      ok: true,
+      mensaje: `Usuario ${usuario.nombre} eliminado correctamente`,
+    });
+  } catch (error) {
+    console.error("❌ Error eliminando usuario:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo eliminar el usuario",
+    });
+  }
+});
+
+// =============================
+// OBSERVACIONES + SITUACION DE CAMARAS
+// =============================
+
+// OBTENER OBSERVACION Y SITUACION
+app.get("/api/camaras/:nombre/observacion", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const nombre = decodeURIComponent(req.params.nombre);
+
+    const registro = db
+      .prepare(`
+        SELECT
+          observacion,
+          situacion,
+          fecha_modificacion,
+          usuario_modificacion
+        FROM observaciones_camaras
+        WHERE nombre = ?
+      `)
+      .get(nombre);
+
+    res.json({
+      ok: true,
+      observacion: registro?.observacion || "",
+      situacion: registro?.situacion || "",
+      fecha_modificacion: registro?.fecha_modificacion || null,
+      usuario_modificacion: registro?.usuario_modificacion || null,
+    });
+  } catch (error) {
+    console.error("❌ Error obteniendo observación:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo obtener la observación",
+    });
+  }
+});
+
+// =============================
+// GUARDAR OBSERVACION Y SITUACION
+// =============================
+
+app.put("/api/camaras/:nombre/observacion", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const nombre = decodeURIComponent(req.params.nombre);
+
+    const observacion = String(req.body.observacion || "").trim();
+    const situacion = String(req.body.situacion || "").trim();
+
+    const situacionesPermitidas = [
+      "",
+      "CAIDA_POSTE",
+      "REEMPLAZAR_CAMARA",
+    ];
+
+    if (!situacionesPermitidas.includes(situacion)) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "Situación de cámara inválida",
+      });
+    }
+
+    const usuario = obtenerUsuario(req);
+    const fecha = new Date().toISOString();
+
+    const anterior = db
+      .prepare(`
+        SELECT
+          observacion,
+          situacion
+        FROM observaciones_camaras
+        WHERE nombre = ?
+      `)
+      .get(nombre);
+
+    db.prepare(`
+      INSERT INTO observaciones_camaras (
+        nombre,
+        observacion,
+        situacion,
+        fecha_modificacion,
+        usuario_modificacion
+      )
+      VALUES (?, ?, ?, ?, ?)
+
+      ON CONFLICT(nombre)
+      DO UPDATE SET
+        observacion = excluded.observacion,
+        situacion = excluded.situacion,
+        fecha_modificacion = excluded.fecha_modificacion,
+        usuario_modificacion = excluded.usuario_modificacion
+    `).run(
+      nombre,
+      observacion,
+      situacion,
+      fecha,
+      usuario
+    );
+
+    const observacionAnterior = anterior?.observacion || "";
+    const situacionAnterior = anterior?.situacion || "";
+
+    if (
+      observacionAnterior !== observacion ||
+      situacionAnterior !== situacion
+    ) {
+      let detalleSituacion = "SIN SITUACIÓN";
+
+      if (situacion === "CAIDA_POSTE") {
+        detalleSituacion = "CAÍDA POR POSTE";
+      }
+
+      if (situacion === "REEMPLAZAR_CAMARA") {
+        detalleSituacion = "REEMPLAZAR CÁMARA";
+      }
+
+      registrarAccion(
+        usuario,
+        "MODIFICO_OBSERVACION",
+        `${nombre} | ${detalleSituacion} | ${
+          observacion || "Sin observación"
+        }`
+      );
+    }
+
+    res.json({
+      ok: true,
+      mensaje: "Información guardada correctamente",
+      observacion,
+      situacion,
+      fecha_modificacion: fecha,
+      usuario_modificacion: usuario,
+    });
+  } catch (error) {
+    console.error("❌ Error guardando observación:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo guardar la información",
+    });
+  }
+});
+
+// =============================
+// LISTAR SITUACIONES ESPECIALES
+// =============================
+
+app.get("/api/camaras-situaciones", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada",
+    });
+  }
+
+  try {
+    const registros = db
+      .prepare(`
+        SELECT
+          nombre,
+          situacion,
+          observacion,
+          fecha_modificacion,
+          usuario_modificacion
+        FROM observaciones_camaras
+        WHERE situacion IS NOT NULL
+          AND situacion != ''
+        ORDER BY nombre
+      `)
+      .all();
+
+    res.json({
+      ok: true,
+      camaras: registros,
+    });
+  } catch (error) {
+    console.error("❌ Error cargando situaciones:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudieron cargar las situaciones",
+    });
+  }
+});
 // =============================
 // PROTEGER SISTEMA
 // =============================
@@ -589,16 +820,13 @@ app.use((req, res, next) => {
 // ARCHIVOS PUBLIC DEL SISTEMA
 // =============================
 
-app.use(
-  express.static(
-    path.join(__dirname, "public")
-  )
-);
+app.use(express.static(path.join(__dirname, "public")));
 
 // =============================
 // AUDITORIA DE ACCIONES
 // =============================
-db.prepare(`
+db.prepare(
+  `
   CREATE TABLE IF NOT EXISTS acciones (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fecha TEXT NOT NULL,
@@ -606,24 +834,28 @@ db.prepare(`
     accion TEXT NOT NULL,
     detalle TEXT
   )
-`).run();
+`,
+).run();
 
 try {
   const columnasAcciones = db.prepare("PRAGMA table_info(acciones)").all();
 
   // Crear columna tipo si todavía no existe
   if (!columnasAcciones.some((c) => c.name === "tipo")) {
-    db.prepare(`
+    db.prepare(
+      `
       ALTER TABLE acciones
       ADD COLUMN tipo TEXT
-    `).run();
+    `,
+    ).run();
   }
 
   // =============================
   // CLASIFICAR ACCIONES ANTIGUAS
   // =============================
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE acciones
     SET tipo = 'ANALISIS'
     WHERE accion IN (
@@ -637,9 +869,11 @@ try {
       tipo IS NULL
       OR tipo = ''
     )
-  `).run();
+  `,
+  ).run();
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE acciones
     SET tipo = 'AUTOESCANEO'
     WHERE accion IN (
@@ -650,9 +884,11 @@ try {
       tipo IS NULL
       OR tipo = ''
     )
-  `).run();
+  `,
+  ).run();
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE acciones
     SET tipo = 'COORDENADAS'
     WHERE accion IN (
@@ -663,36 +899,31 @@ try {
       tipo IS NULL
       OR tipo = ''
     )
-  `).run();
+  `,
+  ).run();
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE acciones
     SET tipo = 'OTROS'
     WHERE (
       tipo IS NULL
       OR tipo = ''
     )
-  `).run();
+  `,
+  ).run();
 
   console.log("✅ Historial de acciones clasificado");
-
 } catch (err) {
-  console.error(
-    "❌ Error preparando tabla de acciones:",
-    err
-  );
+  console.error("❌ Error preparando tabla de acciones:", err);
 }
 
 function obtenerTipoAccion(accion) {
-  if (
-    ["PAUSO_AUTOESCANEO", "REANUDO_AUTOESCANEO"].includes(accion)
-  ) {
+  if (["PAUSO_AUTOESCANEO", "REANUDO_AUTOESCANEO"].includes(accion)) {
     return "AUTOESCANEO";
   }
 
-  if (
-    ["GUARDO_COORDENADA", "ELIMINO_COORDENADA"].includes(accion)
-  ) {
+  if (["GUARDO_COORDENADA", "ELIMINO_COORDENADA"].includes(accion)) {
     return "COORDENADAS";
   }
 
@@ -732,7 +963,8 @@ function registrarAccion(usuario, accion, detalle = "") {
   };
 
   try {
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO acciones (
         fecha,
         usuario,
@@ -741,13 +973,8 @@ function registrarAccion(usuario, accion, detalle = "") {
         tipo
       )
       VALUES (?, ?, ?, ?, ?)
-    `).run(
-      fecha,
-      usuarioFinal,
-      accion,
-      detalle,
-      obtenerTipoAccion(accion),
-    );
+    `,
+    ).run(fecha, usuarioFinal, accion, detalle, obtenerTipoAccion(accion));
   } catch (err) {
     console.error("❌ Error registrando acción:", err);
   }
@@ -822,19 +1049,14 @@ function finalizarEscaneo({ cancelado = false, error = false } = {}) {
     const inicio = new Date(horaInicio).getTime();
     const fin = new Date(horaFin).getTime();
 
-    duracionSegundos = Math.max(
-      0,
-      Math.round((fin - inicio) / 1000),
-    );
+    duracionSegundos = Math.max(0, Math.round((fin - inicio) / 1000));
   }
 
   const minutos = Math.floor(duracionSegundos / 60);
   const segundos = duracionSegundos % 60;
 
   const duracionTexto =
-    minutos > 0
-      ? `${minutos}m ${segundos}s`
-      : `${segundos}s`;
+    minutos > 0 ? `${minutos}m ${segundos}s` : `${segundos}s`;
 
   // =============================
   // RESUMEN DEL ANALISIS
@@ -856,7 +1078,6 @@ function finalizarEscaneo({ cancelado = false, error = false } = {}) {
       "ANALISIS_CANCELADO",
       detalleEscaneo,
     );
-
   } else if (error) {
     estadoEscaneo = "ERROR";
 
@@ -865,7 +1086,6 @@ function finalizarEscaneo({ cancelado = false, error = false } = {}) {
       "ERROR_ANALISIS",
       detalleEscaneo,
     );
-
   } else {
     estadoEscaneo = "FINALIZADO";
 
@@ -912,25 +1132,14 @@ app.get("/progreso", (req, res) => {
 // =============================
 app.get(["/api/auditoria", "/acciones"], (req, res) => {
   try {
-    const limite = Math.min(
-      Math.max(Number(req.query.limit) || 100, 1),
-      500,
-    );
+    const limite = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500);
 
-    const tipo = String(
-      req.query.tipo || "TODOS",
-    ).toUpperCase();
+    const tipo = String(req.query.tipo || "TODOS").toUpperCase();
 
-    const buscar = String(
-      req.query.buscar || "",
-    ).trim();
-    const desde = String(
-  req.query.desde || "",
-).trim();
+    const buscar = String(req.query.buscar || "").trim();
+    const desde = String(req.query.desde || "").trim();
 
-const hasta = String(
-  req.query.hasta || "",
-).trim();
+    const hasta = String(req.query.hasta || "").trim();
 
     let sql = `
       SELECT
@@ -968,46 +1177,33 @@ const hasta = String(
 
       const termino = `%${buscar}%`;
 
-      params.push(
-        termino,
-        termino,
-        termino,
-        termino,
-      );
+      params.push(termino, termino, termino, termino);
     }
     // =============================
-// FILTRAR DESDE
-// =============================
-if (desde) {
-  sql += `
+    // FILTRAR DESDE
+    // =============================
+    if (desde) {
+      sql += `
     AND fecha >= ?
   `;
 
-  params.push(
-    `${desde}T00:00:00.000Z`
-  );
-}
+      params.push(`${desde}T00:00:00.000Z`);
+    }
 
-// =============================
-// FILTRAR HASTA
-// =============================
-if (hasta) {
-  const fechaHasta = new Date(
-    `${hasta}T00:00:00`
-  );
+    // =============================
+    // FILTRAR HASTA
+    // =============================
+    if (hasta) {
+      const fechaHasta = new Date(`${hasta}T00:00:00`);
 
-  fechaHasta.setDate(
-    fechaHasta.getDate() + 1
-  );
+      fechaHasta.setDate(fechaHasta.getDate() + 1);
 
-  sql += `
+      sql += `
     AND fecha < ?
   `;
 
-  params.push(
-    fechaHasta.toISOString()
-  );
-}
+      params.push(fechaHasta.toISOString());
+    }
 
     // MÁS NUEVAS PRIMERO
     sql += `
@@ -1017,22 +1213,15 @@ if (hasta) {
 
     params.push(limite);
 
-    const acciones = db
-      .prepare(sql)
-      .all(...params);
+    const acciones = db.prepare(sql).all(...params);
 
     res.json(acciones);
-
   } catch (err) {
-    console.error(
-      "❌ Error leyendo historial de acciones:",
-      err,
-    );
+    console.error("❌ Error leyendo historial de acciones:", err);
 
     res.status(500).json({
       error: true,
-      mensaje:
-        "No se pudo cargar el historial de acciones",
+      mensaje: "No se pudo cargar el historial de acciones",
     });
   }
 });
@@ -1041,47 +1230,74 @@ if (hasta) {
 // =============================
 app.get("/api/auditoria/resumen", (req, res) => {
   try {
-
-    const total = db.prepare(`
+    const total = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const analisis = db.prepare(`
+    const analisis = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE tipo = 'ANALISIS'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const autoescaneo = db.prepare(`
+    const autoescaneo = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE tipo = 'AUTOESCANEO'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const coordenadas = db.prepare(`
+    const coordenadas = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE tipo = 'COORDENADAS'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const finalizados = db.prepare(`
+    const finalizados = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE accion = 'ANALISIS_FINALIZADO'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const cancelados = db.prepare(`
+    const cancelados = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE accion = 'ANALISIS_CANCELADO'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
-    const errores = db.prepare(`
+    const errores = db
+      .prepare(
+        `
       SELECT COUNT(*) AS cantidad
       FROM acciones
       WHERE accion = 'ERROR_ANALISIS'
-    `).get().cantidad;
+    `,
+      )
+      .get().cantidad;
 
     res.json({
       total,
@@ -1092,13 +1308,8 @@ app.get("/api/auditoria/resumen", (req, res) => {
       cancelados,
       errores,
     });
-
   } catch (err) {
-
-    console.error(
-      "❌ Error generando resumen:",
-      err
-    );
+    console.error("❌ Error generando resumen:", err);
 
     res.status(500).json({
       error: true,
@@ -1109,13 +1320,7 @@ app.get("/api/auditoria/resumen", (req, res) => {
 // PAGINA HISTORIAL DE ACCIONES
 // =============================
 app.get("/historial-acciones", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "public",
-      "historial.html",
-    ),
-  );
+  res.sendFile(path.join(__dirname, "public", "historial.html"));
 });
 
 app.post("/cancelar-escaneo", (req, res) => {
@@ -1141,7 +1346,8 @@ app.post("/cancelar-escaneo", (req, res) => {
 
   res.json({
     ok: true,
-    mensaje: "Cancelación solicitada. Se detendrá al terminar las tareas activas.",
+    mensaje:
+      "Cancelación solicitada. Se detendrá al terminar las tareas activas.",
   });
 });
 
@@ -1197,11 +1403,13 @@ function existeHistorialDeHoy() {
   const fechaHoy = obtenerFechaLocal();
 
   const registros = db
-    .prepare(`
+    .prepare(
+      `
       SELECT fecha
       FROM historial
       ORDER BY fecha DESC
-    `)
+    `,
+    )
     .all();
 
   return registros.some((registro) => {
@@ -1216,13 +1424,12 @@ function existeHistorialDeHoy() {
 }
 
 function guardarHistorial(resultado) {
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO historial (fecha, data)
     VALUES (?, ?)
-  `).run(
-    new Date().toISOString(),
-    JSON.stringify(resultado),
-  );
+  `,
+  ).run(new Date().toISOString(), JSON.stringify(resultado));
 
   console.log("✅ Historial guardado en SQLite");
 }
@@ -1238,22 +1445,20 @@ function guardarHistorialDiarioSiCorresponde(resultado) {
 
   // No aceptar un resultado vacío
   // Solo guardar si el análisis fue realmente completo
-if (
-  !Array.isArray(resultado) ||
-  resultado.length === 0 ||
-  progreso.procesadas !== progreso.total
-) {
-  console.warn(
-    `⚠️ Historial diario: análisis incompleto (${progreso.procesadas}/${progreso.total}). No se guardó.`,
-  );
-  return false;
-}
+  if (
+    !Array.isArray(resultado) ||
+    resultado.length === 0 ||
+    progreso.procesadas !== progreso.total
+  ) {
+    console.warn(
+      `⚠️ Historial diario: análisis incompleto (${progreso.procesadas}/${progreso.total}). No se guardó.`,
+    );
+    return false;
+  }
 
   // Ya tenemos la foto oficial de hoy
   if (existeHistorialDeHoy()) {
-    console.log(
-      "📅 Historial diario: la foto de hoy ya está guardada",
-    );
+    console.log("📅 Historial diario: la foto de hoy ya está guardada");
     return false;
   }
 
@@ -1270,9 +1475,11 @@ if (
 // GUARDAR ESTADO ACTUAL SQLITE
 // =============================
 async function guardarEstadoActual(resultado) {
-  db.prepare(`
+  db.prepare(
+    `
     DELETE FROM estado_actual
-  `).run();
+  `,
+  ).run();
 
   const insertar = db.prepare(`
     INSERT INTO estado_actual
@@ -1299,12 +1506,7 @@ async function guardarEstadoActual(resultado) {
   });
 
   camarasUnicas.forEach((cam, nombre) => {
-    insertar.run(
-      nombre,
-      cam.ESTADO,
-      cam.LATENCIA,
-      ahora,
-    );
+    insertar.run(nombre, cam.ESTADO, cam.LATENCIA, ahora);
   });
 
   console.log(
@@ -1340,10 +1542,10 @@ async function autoEscaneo() {
 
     await guardarEstadoActual(resultado);
 
-guardarHistorialDiarioSiCorresponde(resultado);
+    guardarHistorialDiarioSiCorresponde(resultado);
 
-console.log("✅ Autoescaneo finalizado");
-finalizarEscaneo();
+    console.log("✅ Autoescaneo finalizado");
+    finalizarEscaneo();
   } catch (err) {
     console.error("❌ Error autoescaneo:", err);
     finalizarEscaneo({ error: true });
@@ -1522,8 +1724,8 @@ app.get("/analizar-todas", async (req, res) => {
     }
 
     await guardarEstadoActual(resultado);
-guardarHistorialDiarioSiCorresponde(resultado);
-await sincronizarCoordenadas();
+    guardarHistorialDiarioSiCorresponde(resultado);
+    await sincronizarCoordenadas();
 
     finalizarEscaneo();
 
@@ -1572,8 +1774,8 @@ app.post("/iniciar-analisis-todas", (req, res) => {
       }
 
       await guardarEstadoActual(datos.resultado);
-guardarHistorialDiarioSiCorresponde(datos.resultado);
-await sincronizarCoordenadas();
+      guardarHistorialDiarioSiCorresponde(datos.resultado);
+      await sincronizarCoordenadas();
 
       finalizarEscaneo();
     } catch (error) {
@@ -1705,6 +1907,90 @@ app.get("/estado-actual", (req, res) => {
 });
 
 // =============================
+// RESUMEN OPERATIVO PROVEEDORES
+// =============================
+
+app.get("/api/resumen-proveedores-actual", async (req, res) => {
+  try {
+    // Inventario actual desde Excel
+    const excel = await obtenerTodasLasCamarasExcel();
+
+    // Último estado operativo
+    const estados = db
+      .prepare(
+        `
+          SELECT
+            nombre,
+            estado
+          FROM estado_actual
+        `,
+      )
+      .all();
+
+    // Estado por nombre de cámara
+    const mapaEstados = new Map();
+
+    estados.forEach((cam) => {
+      mapaEstados.set(normalizarNombre(cam.nombre), cam.estado);
+    });
+
+    const proveedores = {};
+
+    excel.forEach((cam) => {
+      const nombre = normalizarNombre(cam["[Denominacion]"]);
+
+      if (!nombre) return;
+
+      const proveedor = String(
+        cam["[Empresa Mantenimiento]"] || "SIN PROVEEDOR",
+      )
+        .trim()
+        .toUpperCase();
+
+      if (!proveedores[proveedor]) {
+        proveedores[proveedor] = {
+          total: 0,
+          online: 0,
+          caidas: 0,
+          ipVacia: 0,
+          noEncontrada: 0,
+        };
+      }
+
+      const estado = String(mapaEstados.get(nombre) || "").toUpperCase();
+
+      proveedores[proveedor].total++;
+
+      if (estado.includes("ONLINE")) {
+        proveedores[proveedor].online++;
+      } else if (
+        estado === "SIN RESPUESTA" ||
+        estado === "INESTABLE" ||
+        estado === "ERROR"
+      ) {
+        proveedores[proveedor].caidas++;
+      } else if (estado.includes("IP VACIA") || estado.includes("IP VACÍA")) {
+        proveedores[proveedor].ipVacia++;
+      } else if (estado.includes("NO ENCONTRADA")) {
+        proveedores[proveedor].noEncontrada++;
+      }
+    });
+
+    res.json({
+      ok: true,
+      proveedores,
+    });
+  } catch (error) {
+    console.error("❌ Error resumen proveedores:", error);
+
+    res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo obtener el resumen de proveedores",
+    });
+    console.log("PRIMERA CAMARA EXCEL:", excel[0]);
+  }
+});
+// =============================
 // HOME
 // =============================
 app.get("/", (req, res) => {
@@ -1715,13 +2001,7 @@ app.get("/", (req, res) => {
 // MAPA
 // =============================
 app.get("/mapa", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "public",
-      "mapa.html"
-    )
-  );
+  res.sendFile(path.join(__dirname, "public", "mapa.html"));
 });
 
 // TRAER COORDENADAS
@@ -1787,16 +2067,17 @@ app.delete("/api/coords/:nombre", (req, res) => {
   `,
     ).run(req.params.nombre);
 
-    registrarAccion(obtenerUsuario(req), "ELIMINO_COORDENADA", req.params.nombre);
+    registrarAccion(
+      obtenerUsuario(req),
+      "ELIMINO_COORDENADA",
+      req.params.nombre,
+    );
     res.json({ ok: true });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: true });
   }
 });
-
-
-
 
 // =============================
 // PROGRAMAR PRIMER AUTOESCANEO
@@ -1818,13 +2099,15 @@ app.get("/tiles/:z/:x/:y.pbf", (req, res) => {
     const tmsY = Math.pow(2, z) - 1 - y;
 
     const tile = mapaDB
-      .prepare(`
+      .prepare(
+        `
         SELECT tile_data
         FROM tiles
         WHERE zoom_level = ?
           AND tile_column = ?
           AND tile_row = ?
-      `)
+      `,
+      )
       .get(z, x, tmsY);
 
     if (!tile) {
@@ -1840,7 +2123,6 @@ app.get("/tiles/:z/:x/:y.pbf", (req, res) => {
     res.status(500).end();
   }
 });
-
 
 // =============================
 // SERVER

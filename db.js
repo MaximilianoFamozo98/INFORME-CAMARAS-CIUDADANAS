@@ -82,5 +82,87 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_creacion TEXT NOT NULL
 )
 `).run();
+// =============================
+// OBSERVACIONES DE CAMARAS
+// =============================
+
+db.prepare(`
+CREATE TABLE IF NOT EXISTS observaciones_camaras (
+    nombre TEXT PRIMARY KEY,
+    observacion TEXT NOT NULL DEFAULT '',
+    fecha_modificacion TEXT,
+    usuario_modificacion TEXT
+)
+`).run();
+
+// MIGRACIÓN - situación especial de la cámara
+const columnasObservaciones = db
+  .prepare(`PRAGMA table_info(observaciones_camaras)`)
+  .all();
+
+const tieneSituacion = columnasObservaciones.some(
+  (col) => col.name === "situacion"
+);
+
+if (!tieneSituacion) {
+  db.prepare(`
+    ALTER TABLE observaciones_camaras
+    ADD COLUMN situacion TEXT NOT NULL DEFAULT ''
+  `).run();
+
+  console.log("✅ Columna situacion agregada a observaciones_camaras");
+}
+
+// =============================
+// ADMIN INICIAL
+// =============================
+
+const bcrypt = require("bcryptjs");
+
+const cantidadUsuarios = db
+  .prepare(`
+    SELECT COUNT(*) AS total
+    FROM usuarios
+  `)
+  .get();
+
+if (cantidadUsuarios.total === 0) {
+
+  const passwordInicial = "admin123";
+
+  const passwordHash =
+    bcrypt.hashSync(passwordInicial, 12);
+
+  db.prepare(`
+    INSERT INTO usuarios (
+      usuario,
+      nombre,
+      password_hash,
+      rol,
+      activo,
+      fecha_creacion
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(
+    "admin",
+    "Administrador",
+    passwordHash,
+    "ADMIN",
+    1,
+    new Date().toISOString()
+  );
+
+  console.log(
+    "👤 Usuario administrador inicial creado"
+  );
+
+  console.log(
+    "   Usuario: admin"
+  );
+
+  console.log(
+    "   Contraseña temporal: admin123"
+  );
+}
 
 module.exports = db;

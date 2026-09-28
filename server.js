@@ -604,7 +604,8 @@ app.get("/api/camaras/:nombre/observacion", (req, res) => {
     const nombre = decodeURIComponent(req.params.nombre);
 
     const registro = db
-      .prepare(`
+      .prepare(
+        `
         SELECT
           observacion,
           situacion,
@@ -612,7 +613,8 @@ app.get("/api/camaras/:nombre/observacion", (req, res) => {
           usuario_modificacion
         FROM observaciones_camaras
         WHERE nombre = ?
-      `)
+      `,
+      )
       .get(nombre);
 
     res.json({
@@ -650,11 +652,7 @@ app.put("/api/camaras/:nombre/observacion", (req, res) => {
     const observacion = String(req.body.observacion || "").trim();
     const situacion = String(req.body.situacion || "").trim();
 
-    const situacionesPermitidas = [
-      "",
-      "CAIDA_POSTE",
-      "REEMPLAZAR_CAMARA",
-    ];
+    const situacionesPermitidas = ["", "CAIDA_POSTE", "REEMPLAZAR_CAMARA"];
 
     if (!situacionesPermitidas.includes(situacion)) {
       return res.status(400).json({
@@ -667,16 +665,19 @@ app.put("/api/camaras/:nombre/observacion", (req, res) => {
     const fecha = new Date().toISOString();
 
     const anterior = db
-      .prepare(`
+      .prepare(
+        `
         SELECT
           observacion,
           situacion
         FROM observaciones_camaras
         WHERE nombre = ?
-      `)
+      `,
+      )
       .get(nombre);
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO observaciones_camaras (
         nombre,
         observacion,
@@ -692,13 +693,8 @@ app.put("/api/camaras/:nombre/observacion", (req, res) => {
         situacion = excluded.situacion,
         fecha_modificacion = excluded.fecha_modificacion,
         usuario_modificacion = excluded.usuario_modificacion
-    `).run(
-      nombre,
-      observacion,
-      situacion,
-      fecha,
-      usuario
-    );
+    `,
+    ).run(nombre, observacion, situacion, fecha, usuario);
 
     const observacionAnterior = anterior?.observacion || "";
     const situacionAnterior = anterior?.situacion || "";
@@ -720,9 +716,7 @@ app.put("/api/camaras/:nombre/observacion", (req, res) => {
       registrarAccion(
         usuario,
         "MODIFICO_OBSERVACION",
-        `${nombre} | ${detalleSituacion} | ${
-          observacion || "Sin observación"
-        }`
+        `${nombre} | ${detalleSituacion} | ${observacion || "Sin observación"}`,
       );
     }
 
@@ -758,7 +752,8 @@ app.get("/api/camaras-situaciones", (req, res) => {
 
   try {
     const registros = db
-      .prepare(`
+      .prepare(
+        `
         SELECT
           nombre,
           situacion,
@@ -769,7 +764,8 @@ app.get("/api/camaras-situaciones", (req, res) => {
         WHERE situacion IS NOT NULL
           AND situacion != ''
         ORDER BY nombre
-      `)
+      `,
+      )
       .all();
 
     res.json({
@@ -1385,9 +1381,6 @@ app.post("/autoescaneo/reanudar", (req, res) => {
 // =============================
 // GUARDAR HISTORIAL SQLITE
 // =============================
-// =============================
-// HISTORIAL DIARIO SQLITE
-// =============================
 
 function obtenerFechaLocal() {
   const ahora = new Date();
@@ -1806,9 +1799,41 @@ app.get("/historial", async (req, res) => {
 
     const excel = await obtenerTodasLasCamarasExcel();
 
-    const nombresExcel = new Set(
-      excel.map((x) => normalizarNombre(x["[Denominacion]"])),
-    );
+    const mapaExcel = new Map();
+
+    excel.forEach((fila) => {
+      const nombre = normalizarNombre(fila["[Denominacion]"]);
+
+      if (!nombre) return;
+
+      mapaExcel.set(nombre, fila);
+    });
+
+    const nombresExcel = new Set(mapaExcel.keys());
+
+    // ==========================================
+    // CREAR PARQUE ACTUAL DESDE EL EXCEL
+    // ==========================================
+    // El Excel define qué cámaras existen HOY.
+    // El historial solamente aporta sus estados históricos.
+
+    mapaExcel.forEach((fila, nombre) => {
+      mapa[nombre] = {
+        info: {
+          proveedor: fila["[Empresa Mantenimiento]"] || "",
+          ubicacion: fila["[Ubicacion]"] || "",
+          conexion: fila["[Tipo de Conexion]"] || "",
+          ip: fila["[IP]"]
+            ? fila["[IP]"].toString().replace(/[, ]/g, ".").trim()
+            : "",
+        },
+        estados: {},
+      };
+    });
+
+    // ==========================================
+    // AGREGAR ESTADOS HISTORICOS
+    // ==========================================
 
     rows.forEach((h) => {
       const fechaObj = new Date(h.fecha);
@@ -1824,41 +1849,12 @@ app.get("/historial", async (req, res) => {
       const camaras = JSON.parse(h.data);
 
       camaras.forEach((cam) => {
-        let nombre = normalizarNombre(cam.DENOMINACION);
+        const nombre = normalizarNombre(cam.DENOMINACION);
+
+        // Si ya no existe en el Excel actual, no se muestra.
+        // Su historial permanece intacto en SQLite.
         if (!nombresExcel.has(nombre)) {
           return;
-        }
-        if (!mapa[nombre]) {
-          // =========================
-          // CREAR COORD VACIA SI NO EXISTE
-          // =========================
-
-          const existeCoord = db
-            .prepare(
-              `
-    SELECT id
-    FROM coordenadas
-    WHERE UPPER(TRIM(nombre)) = ?
-  `,
-            )
-            .get(nombre);
-
-          if (!existeCoord) {
-            console.log("⚠️ Cámara sin coordenadas:", nombre);
-          }
-          if (mapa[nombre]) {
-            console.log("COLISION HISTORIAL:", nombre);
-          }
-
-          mapa[nombre] = {
-            info: {
-              proveedor: cam.PROVEEDOR || "",
-              ubicacion: cam.UBICACION || "",
-              conexion: cam.CONEXION || "",
-              ip: cam.IP || "",
-            },
-            estados: {},
-          };
         }
 
         mapa[nombre].estados[fecha] = cam.ESTADO;
@@ -1987,7 +1983,6 @@ app.get("/api/resumen-proveedores-actual", async (req, res) => {
       ok: false,
       mensaje: "No se pudo obtener el resumen de proveedores",
     });
-    console.log("PRIMERA CAMARA EXCEL:", excel[0]);
   }
 });
 // =============================

@@ -73,39 +73,99 @@ app.use(
   }),
 );
 
+// ==========================================
+// CONTROL DE SESION UNICA POR USUARIO
+// ==========================================
+
+const crypto = require("crypto");
+
+const columnasUsuarios = db.prepare("PRAGMA table_info(usuarios)").all();
+
+if (!columnasUsuarios.some((col) => col.name === "sesion_activa")) {
+  db.prepare(`
+    ALTER TABLE usuarios
+    ADD COLUMN sesion_activa TEXT
+  `).run();
+
+  console.log("✅ Control de sesión única habilitado");
+}
 // =============================
 // CARGAR USUARIO DE LA SESION
 // =============================
 app.use((req, res, next) => {
+
   if (!req.session.usuarioId) {
     req.user = null;
     return next();
   }
 
   try {
-    const usuario = db
-      .prepare(
-        `
-        SELECT id, usuario, nombre, rol, activo
-        FROM usuarios
-        WHERE id = ?
-      `,
-      )
-      .get(req.session.usuarioId);
+
+    const usuario = db.prepare(`
+      SELECT
+        id,
+        usuario,
+        nombre,
+        rol,
+        activo,
+        sesion_activa
+      FROM usuarios
+      WHERE id = ?
+    `).get(req.session.usuarioId);
 
     if (!usuario || !usuario.activo) {
-      req.session.destroy(() => {});
-      req.user = null;
-      return next();
+      return req.session.destroy(() => {
+        req.user = null;
+        next();
+      });
+    }
+
+    // Verificar que esta sea la sesión vigente
+    if (
+      !req.session.tokenSesion ||
+      req.session.tokenSesion !== usuario.sesion_activa
+    ) {
+
+      return req.session.destroy(() => {
+
+        req.user = null;
+
+        // Evitar que una sesión reemplazada siga utilizando las API
+        if (
+          req.path.startsWith("/api/") ||
+          req.path === "/progreso" ||
+          req.path === "/historial" ||
+          req.path === "/estado-actual"
+        ) {
+          return res.status(401).json({
+            ok: false,
+            codigo: "SESION_REEMPLAZADA",
+            mensaje: "Tu sesión se cerró porque se inició sesión desde otro dispositivo."
+          });
+        }
+
+        return res.redirect("/login?motivo=sesion_reemplazada");
+
+      });
+
     }
 
     req.user = usuario;
     next();
+
   } catch (error) {
-    console.error("❌ Error cargando usuario:", error);
+
+    console.error("❌ Error verificando sesión:", error);
+
     req.user = null;
-    next();
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error verificando la sesión"
+    });
+
   }
+
 });
 // =============================
 // LOGIN
@@ -155,7 +215,40 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    req.session.usuarioId = usuario.id;
+// Crear una sesión nueva y segura
+req.session.regenerate((error) => {
+
+  if (error) {
+    console.error("Error regenerando sesión:", error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: "No se pudo iniciar sesión"
+    });
+  }
+
+  const tokenSesion = crypto.randomUUID();
+
+  // Esta sesión reemplaza cualquier sesión anterior
+  db.prepare(`
+    UPDATE usuarios
+    SET sesion_activa = ?
+    WHERE id = ?
+  `).run(tokenSesion, usuario.id);
+
+  req.session.usuarioId = usuario.id;
+  req.session.tokenSesion = tokenSesion;
+
+  req.session.save((error) => {
+
+    if (error) {
+      console.error("Error guardando sesión:", error);
+
+      return res.status(500).json({
+        ok: false,
+        mensaje: "No se pudo guardar la sesión"
+      });
+    }
 
     res.json({
       ok: true,
@@ -163,9 +256,13 @@ app.post("/login", async (req, res) => {
         id: usuario.id,
         usuario: usuario.usuario,
         nombre: usuario.nombre,
-        rol: usuario.rol,
-      },
+        rol: usuario.rol
+      }
     });
+
+  });
+
+});
   } catch (error) {
     console.error("❌ Error iniciando sesión:", error);
 
@@ -216,6 +313,97 @@ app.get("/api/usuario-actual", (req, res) => {
       nombre: req.user.nombre,
       rol: req.user.rol,
     },
+  });
+});
+
+// ==========================================
+// USUARIOS CONECTADOS - PRESENCIA EN TIEMPO REAL
+// ==========================================
+
+// Registro temporal en memoria.
+// No modifica la base de datos.
+const usuariosConectados = new Map();
+
+// Consideramos desconectado al usuario
+// si pasan 60 segundos sin actividad.
+const TIEMPO_PRESENCIA = 60 * 1000;
+
+function limpiarUsuariosInactivos() {
+  const ahora = Date.now();
+
+  for (const [id, datos] of usuariosConectados) {
+    if (ahora - datos.ultimaActividad > TIEMPO_PRESENCIA) {
+      usuariosConectados.delete(id);
+    }
+  }
+}
+
+// Registrar actividad del usuario autenticado
+app.post("/api/presencia", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada"
+    });
+  }
+
+  usuariosConectados.set(req.user.id, {
+    id: req.user.id,
+    nombre: req.user.nombre,
+    usuario: req.user.usuario,
+    tokenSesion: req.session.tokenSesion,
+    ultimaActividad: Date.now()
+  });
+
+  limpiarUsuariosInactivos();
+
+  res.json({ ok: true });
+});
+
+// Consultar usuarios activos
+app.get("/api/usuarios-conectados", (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      ok: false,
+      mensaje: "Sesión no iniciada"
+    });
+  }
+
+  limpiarUsuariosInactivos();
+
+  const usuarios = [];
+
+  for (const datos of usuariosConectados.values()) {
+    const vigente = db.prepare(`
+      SELECT sesion_activa, activo
+      FROM usuarios
+      WHERE id = ?
+    `).get(datos.id);
+
+    if (
+      !vigente ||
+      !vigente.activo ||
+      vigente.sesion_activa !== datos.tokenSesion
+    ) {
+      usuariosConectados.delete(datos.id);
+      continue;
+    }
+
+    usuarios.push({
+      id: datos.id,
+      nombre: datos.nombre,
+      usuario: datos.usuario
+    });
+  }
+
+  usuarios.sort((a, b) =>
+    a.nombre.localeCompare(b.nombre, "es")
+  );
+
+  res.json({
+    ok: true,
+    cantidad: usuarios.length,
+    usuarios
   });
 });
 

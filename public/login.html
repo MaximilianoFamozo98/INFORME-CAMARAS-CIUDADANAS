@@ -160,6 +160,18 @@
     const form = document.getElementById("formLogin");
     const boton = document.getElementById("btnLogin");
     const mensaje = document.getElementById("mensaje");
+    // Avisar cuando otro dispositivo reemplazó la sesión
+const parametros = new URLSearchParams(window.location.search);
+
+if (parametros.get("motivo") === "sesion_reemplazada") {
+  mensaje.textContent =
+    "Tu sesión se cerró porque se inició sesión desde otro dispositivo.";
+
+  mensaje.style.display = "block";
+
+  // Limpiar el parámetro sin recargar la página
+  window.history.replaceState({}, "", "/login");
+}
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();

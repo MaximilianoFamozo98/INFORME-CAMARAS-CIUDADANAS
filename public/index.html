@@ -914,6 +914,39 @@
       .btn-logout:hover {
         background: #991b1b;
       }
+      /* PANEL USUARIOS CONECTADOS */
+
+.panel-conectados {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #0b1220;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  min-width: 220px;
+  text-align: left;
+}
+
+.conectados-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#cantidadConectados {
+  color: #22c55e;
+  font-size: 15px;
+}
+
+.conectados-lista {
+  margin-top: 9px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.8;
+}
       /* OBSERVACION DE CAMARA */
 
       .observacion-camara {
@@ -1079,6 +1112,16 @@
             Cerrar sesión
           </button>
         </div>
+        <div class="panel-conectados">
+  <div class="conectados-titulo">
+    <span>🟢 Usuarios conectados</span>
+    <span id="cantidadConectados">0</span>
+  </div>
+
+  <div id="listaConectados" class="conectados-lista">
+    Cargando...
+  </div>
+</div>
       </div>
     </header>
 
@@ -1496,6 +1539,76 @@
       // CARGAR USUARIO AL ABRIR EL SISTEMA
       cargarUsuarioActual();
 
+
+      // Comprobar periódicamente si la sesión sigue vigente
+setInterval(async () => {
+  try {
+    const respuesta = await fetch("/api/usuario-actual", {
+      cache: "no-store"
+    });
+
+    if (respuesta.status === 401 || respuesta.redirected) {
+      window.location.replace(
+        "/login?motivo=sesion_reemplazada"
+      );
+    }
+  } catch (error) {
+    // No cerrar la sesión por una caída temporal de red
+    console.warn("No se pudo verificar la sesión:", error);
+  }
+}, 5000);
+
+// ==========================================
+// PANEL DE USUARIOS CONECTADOS
+// ==========================================
+
+async function actualizarUsuariosConectados() {
+  try {
+    // Informar al servidor que seguimos conectados
+    const presencia = await fetch("/api/presencia", {
+      method: "POST",
+      cache: "no-store"
+    });
+
+    if (!presencia.ok) return;
+
+    // Consultar usuarios activos
+    const respuesta = await fetch("/api/usuarios-conectados", {
+      cache: "no-store"
+    });
+
+    if (!respuesta.ok) return;
+
+    const data = await respuesta.json();
+
+    document.getElementById("cantidadConectados").textContent =
+      data.cantidad;
+
+    const lista = document.getElementById("listaConectados");
+
+    lista.replaceChildren();
+
+    if (data.usuarios.length === 0) {
+      lista.textContent = "Sin usuarios conectados";
+      return;
+    }
+
+    data.usuarios.forEach(usuario => {
+      const fila = document.createElement("div");
+      fila.textContent = "🟢 " + usuario.nombre;
+      lista.appendChild(fila);
+    });
+
+  } catch (error) {
+    console.error("Error consultando usuarios conectados:", error);
+  }
+}
+
+// Actualizar al abrir la página
+actualizarUsuariosConectados();
+
+// Actualizar cada 15 segundos
+setInterval(actualizarUsuariosConectados, 15000);
       /* reloj */
       setInterval(() => {
         hora.innerText = new Date().toLocaleTimeString("es-AR", {
